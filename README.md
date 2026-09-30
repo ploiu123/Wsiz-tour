@@ -1,6 +1,6 @@
 # WSiZ Tour
 
-Gra planszowa w przeglądarce, w stylu Business Tour i Monopoly, osadzona na uczelni. Plansza jest w 3D, a boki planszy to kolejne piętra budynku. Projekt powstaje jako praca inżynierska.
+Gra planszowa w przeglądarce, w stylu Business Tour i Monopoly, osadzona na uczelni. Plansza jest w 3D. Projekt powstaje jako praca inżynierska.
 
 ## Uruchomienie
 

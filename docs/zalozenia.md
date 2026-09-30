@@ -54,6 +54,7 @@ Do ustalenia: co z Salą balową i Kuchnią.
 
 - Plansza jest płaska i ma się dać wydrukować jako gra planszowa.
 - Plansza i pola mają proste, pionowe ściany i ostre rogi, bez zaokrągleń.
+- Na planszy nie ma pięter: ani napisów pięter na środku, ani na polach. Pola bez grupy mają szary pasek, pola z grupą pasek w kolorze grupy.
 - Wygląd ma być dopracowany i nowoczesny, w stylu Business Tour, a nie jak tania animacja 3D. W grze jest przełącznik 5 wersji wyglądu (Trawnik, Kampus, Drewniany stół, Nocny, Pastelowy). Po wyborze zostaje jedna.
 - Środek planszy i kolory planszy będą w kolorach uczelni, z logo na środku (**później**, po otrzymaniu logo i kolorów).
 - Nazwy gry nie ma na planszy.
@@ -91,9 +92,13 @@ Do ustalenia: co z Salą balową i Kuchnią.
 
 ## Pionki
 
-- Pionki to przedmioty, nie postacie, np. sztandar uczelni.
-- W prototypie są tymczasowe: sztandar, biret, książki, kubek kawy.
-- 4 docelowe pionki i 4 warianty kolorów: **do ustalenia**. Autor poda swoje pomysły.
+- Pionki to przedmioty, nie postacie. Każdy stoi na podstawce w kolorze gracza.
+- 4 pionki:
+  1. **Sztandar uczelni** z logo uczelni na fladze (na razie napis „LOGO”, podmienimy po otrzymaniu pliku),
+  2. **Drukarka 3D** z wydrukiem na stole i szpulą filamentu,
+  3. **Koparka kryptowalut**: rama z kartami graficznymi i obracająca się złota moneta,
+  4. **Ekspres do kawy** z filiżanką i parą.
+- Pionki mają kolor gracza. Warianty kolorów do wyboru: czerwony, niebieski, zielony, żółty.
 
 ## Serwer i logowanie
 
@@ -121,7 +126,7 @@ Do ustalenia: co z Salą balową i Kuchnią.
 |---|---|---|
 | 0 | Repozytorium na GitHubie, folder projektu, uruchamianie gry lokalnie | w trakcie |
 | 1 | Wygląd całej gry: logo, kolory uczelni, tło | czeka na logo |
-| 2 | Pionki i panel wyboru pionka i koloru | czeka na pomysły na pionki |
+| 2 | Pionki i panel wyboru pionka i koloru | 4 pionki gotowe, panel gotowy (na razie wyłączony) |
 | 3 | Karty: rewersy, awersy, treść | karty „Przekup dziekanat” gotowe |
 | 4 | Pola planszy: nazwy, grupy kolorów, pola specjalne | pola 1–21 i 31 gotowe |
 | 5 | Pieniądze: waluta, banknoty, pula na środku | |

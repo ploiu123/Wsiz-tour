@@ -313,7 +313,7 @@
   <div class="hud hud-top">
     <div class="brand panel">
       <h1>WSiZ Tour</h1>
-      <p id="hint">32 pola · 4 piętra · przeciągnij, aby obracać · kliknij pole lub stos kart</p>
+      <p id="hint">32 pola · przeciągnij, aby obracać · kliknij pole lub stos kart</p>
       <div class="looks" id="looks" role="group" aria-label="Wersja wyglądu"></div>
     </div>
     <div class="seg panel" role="group" aria-label="Widok">
@@ -454,7 +454,7 @@ const GOLD = '#E0B04A';
 // Wersje wyglądu do porównania. Po wyborze zostanie jedna.
 const LOOKS = [
   {
-    name: 'Trawnik', floors: ['#4C7BE8', '#12B49A', '#FF8A34', '#A259F0'],
+    name: 'Trawnik',
     paper: '#FFFFFF', tileBody: '#E6EAF1', roomFill: 0, tileH: 0.12,
     center: 'grass', baseTop: '#F4F6FA', baseSide: '#CDD4E0', baseH: 0.45, margin: 0.5, trim: false,
     tone: 'neutral', exposure: 0.85, env: 0.7,
@@ -462,7 +462,7 @@ const LOOKS = [
     bg: ['#8FD3F4', '#E6F6FF'], floor: 'shadow', shadow: 0.28, vignette: 0.08,
   },
   {
-    name: 'Kampus', floors: ['#5B86E5', '#1FB59E', '#F5A03A', '#9B6BE8'],
+    name: 'Kampus',
     paper: '#FFFFFF', tileBody: '#E2E6EE', roomFill: 0, tileH: 0.12,
     center: 'plaza', baseTop: NAVY, baseSide: '#162039', baseH: 0.4, margin: 0.6, trim: true,
     tone: 'neutral', exposure: 0.9, env: 0.7,
@@ -470,7 +470,7 @@ const LOOKS = [
     bg: ['#BFE6CC', '#F4FBF6'], floor: 'shadow', shadow: 0.25, vignette: 0.08,
   },
   {
-    name: 'Drewniany stół', floors: ['#7F8DAA', '#3F9C8C', '#E08F48', '#8069C8'],
+    name: 'Drewniany stół',
     paper: '#F6F0E2', tileBody: '#E4DCCB', roomFill: 0, tileH: 0.05, grain: 0.06,
     center: 'paper', baseTop: NAVY, baseSide: NAVY, baseH: 0.16, margin: 0.34, trim: true,
     tone: 'aces', exposure: 1.0, env: 0.45,
@@ -478,7 +478,7 @@ const LOOKS = [
     bg: ['#2A1C12', '#140D08'], floor: 'wood', fog: [55, 130], vignette: 0.45,
   },
   {
-    name: 'Nocny', floors: ['#6D8DFF', '#2DD4B4', '#FFA14A', '#B77CFF'],
+    name: 'Nocny',
     paper: '#FFFFFF', tileBody: '#C9D0DE', roomFill: 0, tileH: 0.12,
     center: 'navy', baseTop: '#141C33', baseSide: '#0E1426', baseH: 0.4, margin: 0.6, trim: true,
     tone: 'aces', exposure: 1.15, env: 0.5,
@@ -486,7 +486,7 @@ const LOOKS = [
     bg: ['#1B2750', '#070B18'], floor: 'shadow', shadow: 0.5, vignette: 0.45,
   },
   {
-    name: 'Pastelowy', floors: ['#9FB1EC', '#86D6C4', '#FFBC84', '#C5A9F4'],
+    name: 'Pastelowy',
     paper: '#FFFDF8', tileBody: '#F1E8DD', roomFill: 0.55, tileH: 0.12,
     center: 'pastel', baseTop: '#FFFFFF', baseSide: '#EFE3D6', baseH: 0.4, margin: 0.5, trim: false,
     tone: 'neutral', exposure: 0.85, env: 0.7,
@@ -508,13 +508,8 @@ const TILE_H = LOOK.tileH;
 const BASE_H = LOOK.baseH;
 const CENTER_Y = 0.016;
 
-// Ściana 1 = piwnica i parter, 2 = 1. piętro, 3 = 2. piętro, 4 = 3. piętro
-const FLOORS = [
-  { name: 'PIWNICA · PARTER', label: 'Piwnica / parter', color: LOOK.floors[0] },
-  { name: '1. PIĘTRO', label: '1. piętro', color: LOOK.floors[1] },
-  { name: '2. PIĘTRO', label: '2. piętro', color: LOOK.floors[2] },
-  { name: '3. PIĘTRO', label: '3. piętro', color: LOOK.floors[3] },
-];
+// Kolor pasków na polach, które nie mają jeszcze grupy kolorów
+const NO_GROUP = '#AEB7C6';
 const CORNER_INFO = {
   0: ['Pole 1 · START', 'Narożnik startowy'],
   8: ['Pole 9 · Dziekanat', 'Zasady dziekanatu rozpiszemy od nowa'],
@@ -527,13 +522,13 @@ const GROUPS = {
 };
 // Pola ustalone do tej pory (klucz = numer pola - 1)
 const FIELDS = {
-  1: { type: 'room', name: 'Sala 04', part: 'Piwnica', group: 1 },
-  2: { type: 'room', name: 'Sala 05', part: 'Piwnica', group: 1 },
-  3: { type: 'tax', name: 'Czesne', part: 'Piwnica' },
-  4: { type: 'special', name: 'Pracownia ceramiki', part: 'Piwnica', icon: 'vase', no: 1 },
-  5: { type: 'chance', name: 'Szansa', part: 'Parter' },
-  6: { type: 'room', name: 'Sala 12', part: 'Parter' },
-  7: { type: 'room', name: 'Sala 13', part: 'Parter' },
+  1: { type: 'room', name: 'Sala 04', group: 1 },
+  2: { type: 'room', name: 'Sala 05', group: 1 },
+  3: { type: 'tax', name: 'Czesne' },
+  4: { type: 'special', name: 'Pracownia ceramiki', icon: 'vase', no: 1 },
+  5: { type: 'chance', name: 'Szansa' },
+  6: { type: 'room', name: 'Sala 12' },
+  7: { type: 'room', name: 'Sala 13' },
 };
 const FIELD_DESC = {
   room: 'sala do kupienia (pytanie przy zakupie)',
@@ -548,9 +543,9 @@ const FIELD_DESC = {
 
 const PLAYERS = [
   { name: 'Gracz 1', pawn: 'Sztandar', color: '#E5484D', make: c => makeBanner(c) },
-  { name: 'Gracz 2', pawn: 'Biret', color: '#2F7FF0', make: c => makeCap(c) },
-  { name: 'Gracz 3', pawn: 'Książki', color: '#1FA463', make: c => makeBooks(c) },
-  { name: 'Gracz 4', pawn: 'Kubek kawy', color: '#F2B72E', make: c => makeMug(c) },
+  { name: 'Gracz 2', pawn: 'Drukarka 3D', color: '#2F7FF0', make: c => makePrinter(c) },
+  { name: 'Gracz 3', pawn: 'Koparka kryptowalut', color: '#1FA463', make: c => makeMiner(c) },
+  { name: 'Gracz 4', pawn: 'Ekspres do kawy', color: '#F2B72E', make: c => makeEspresso(c) },
 ];
 
 // Stosy kart na środku: ułatwienia przy narożniku START, utrudnienia naprzeciwko (od strony dziekanatu)
@@ -746,6 +741,7 @@ const aluMat = mat('#C9CFDA', { metalness: 0.55, roughness: 0.35 });
 const bezelMat = mat('#161A24', { roughness: 0.4 });
 const flags = [];
 const steams = [];
+const coins = [];
 
 // ---------------------------------------------------------------------------
 // Tekstury pól
@@ -892,7 +888,7 @@ function drawCorner(g, i, w, h) {
   }
 }
 function tileTexture(i) {
-  const side = Math.floor(i / SIDE), corner = i % SIDE === 0, floor = FLOORS[side];
+  const corner = i % SIDE === 0;
   const field = FIELDS[i];
   const [c, g] = makeCanvas(corner ? 640 : 384, 640);
   const w = c.width, h = c.height;
@@ -902,10 +898,10 @@ function tileTexture(i) {
     drawCorner(g, i, w, h);
   } else {
     const type = field ? field.type : 'blank';
-    let numColor = NAVY, floorColor = '#7A849C';
+    let numColor = NAVY;
     if (type === 'room' || type === 'blank') {
       const grp = field && GROUPS[field.group];
-      const band = grp ? grp.color : floor.color;   // pas w kolorze grupy, bez grupy w kolorze piętra
+      const band = grp ? grp.color : NO_GROUP;   // pas w kolorze grupy
       if (LOOK.roomFill) { g.fillStyle = mix(band, '#ffffff', 1 - LOOK.roomFill * 0.35); g.fillRect(0, 0, w, h); }
       g.fillStyle = mix(band, '#ffffff', 0.72); g.fillRect(0, 0, w, h * 0.34);   // działka na budynki
       g.fillStyle = band; g.fillRect(0, 0, w, grp ? 92 : 64);
@@ -913,7 +909,7 @@ function tileTexture(i) {
       if (field) { g.fillStyle = NAVY; drawLines(g, field.name.toUpperCase(), w / 2, h * 0.44, w - 44, 54); }
     } else if (type === 'tax') {
       g.fillStyle = '#FFF7E6'; g.fillRect(0, 0, w, h);
-      g.fillStyle = floor.color; g.fillRect(0, 0, w, 20);
+      g.fillStyle = NO_GROUP; g.fillRect(0, 0, w, 20);
       for (let k = 0; k < 2; k++) {   // banknoty
         g.save();
         g.translate(w / 2 + (k ? 14 : -10), h * 0.22 + (k ? 10 : -6));
@@ -935,9 +931,9 @@ function tileTexture(i) {
       else drawChandelier(g, w / 2, h * 0.2);
       g.fillStyle = '#FFFFFF'; drawLines(g, field.name.toUpperCase(), w / 2, h * 0.47, w - 60, 58);
       g.fillStyle = GOLD; g.font = '600 24px Fredoka, sans-serif'; g.fillText(`POLE SPECJALNE · ${field.no}/4`, w / 2, h * 0.6);
-      numColor = GOLD; floorColor = 'rgba(255,255,255,.72)';
+      numColor = GOLD;
     } else if (type === 'chance') {
-      g.fillStyle = floor.color; g.fillRect(0, 0, w, 20);
+      g.fillStyle = NO_GROUP; g.fillRect(0, 0, w, 20);
       const cy = h * 0.24;
       g.fillStyle = '#2E9E8A'; g.beginPath(); g.arc(w / 2, cy, 80, Math.PI / 2, Math.PI * 1.5); g.fill();
       g.fillStyle = '#D6534F'; g.beginPath(); g.arc(w / 2, cy, 80, -Math.PI / 2, Math.PI / 2); g.fill();
@@ -948,13 +944,13 @@ function tileTexture(i) {
       g.fillStyle = '#D6534F'; g.fillText('ŹLE: UTRUDNIENIE', w / 2, h * 0.58);
     } else if (type === 'earn') {
       g.fillStyle = '#FFF3E6'; g.fillRect(0, 0, w, h);
-      g.fillStyle = floor.color; g.fillRect(0, 0, w, 20);
+      g.fillStyle = NO_GROUP; g.fillRect(0, 0, w, 20);
       drawPot(g, w / 2, h * 0.25);
       g.fillStyle = NAVY; drawLines(g, field.name.toUpperCase(), w / 2, h * 0.45, w - 44, 60);
       g.fillStyle = '#C4652A'; g.font = '600 26px Fredoka, sans-serif'; g.fillText('POLE ZAROBKOWE', w / 2, h * 0.545);
     } else if (type === 'station') {
       g.fillStyle = '#EEF4FB'; g.fillRect(0, 0, w, h);
-      g.fillStyle = floor.color; g.fillRect(0, 0, w, 20);
+      g.fillStyle = NO_GROUP; g.fillRect(0, 0, w, 20);
       const cy = h * 0.24;   // znak parkingu
       g.fillStyle = '#FFFFFF'; g.beginPath(); g.roundRect(w / 2 - 86, cy - 86, 172, 172, 22); g.fill();
       g.fillStyle = '#1F5FBF'; g.beginPath(); g.roundRect(w / 2 - 76, cy - 76, 152, 152, 16); g.fill();
@@ -964,7 +960,7 @@ function tileTexture(i) {
       g.font = '600 22px Fredoka, sans-serif'; g.fillText('Z BONUSAMI', w / 2, h * 0.585);
     } else if (type === 'exam') {
       g.fillStyle = '#FBF1F0'; g.fillRect(0, 0, w, h);
-      g.fillStyle = floor.color; g.fillRect(0, 0, w, 20);
+      g.fillStyle = NO_GROUP; g.fillRect(0, 0, w, 20);
       drawExamSheet(g, w / 2, h * 0.21);
       g.fillStyle = NAVY; drawLines(g, field.name.toUpperCase(), w / 2, h * 0.47, w - 44, 50);
       g.fillStyle = '#B4533F'; g.font = '600 26px Fredoka, sans-serif'; g.fillText('PYTANIE', w / 2, h * 0.59);
@@ -977,9 +973,7 @@ function tileTexture(i) {
     }
     g.fillStyle = numColor;
     g.font = `700 ${field ? 72 : 150}px Fredoka, sans-serif`;
-    g.fillText(String(i + 1), w / 2, field ? h * 0.8 : h * 0.745);
-    g.fillStyle = floorColor; g.font = '600 29px Fredoka, sans-serif';
-    g.fillText(field ? field.part.toUpperCase() : floor.name, w / 2, h * 0.925);
+    g.fillText(String(i + 1), w / 2, field ? h * 0.82 : h * 0.745);
   }
   addGrain(g, w, h, LOOK.grain);
   g.strokeStyle = 'rgba(30,42,71,.14)'; g.lineWidth = 6; g.strokeRect(3, 3, w - 6, h - 6);
@@ -1044,18 +1038,6 @@ function centerTexture() {
   const [c, g] = makeCanvas(s, s);
   centerBackground(g, s);
   g.textAlign = 'center'; g.textBaseline = 'middle';
-  // nazwy pięter przy każdej ścianie, czytane od strony tej ściany
-  const edges = [[s / 2, s - 150, 0], [150, s / 2, Math.PI / 2], [s / 2, 150, Math.PI], [s - 150, s / 2, -Math.PI / 2]];
-  FLOORS.forEach((f, idx) => {
-    const [x, y, r] = edges[idx];
-    g.save(); g.translate(x, y); g.rotate(r);
-    g.font = '700 80px Fredoka, sans-serif';
-    const tw = g.measureText(f.name).width;
-    g.fillStyle = f.color;
-    g.beginPath(); g.roundRect(-tw / 2 - 52, -64, tw + 104, 128, 64); g.fill();
-    g.fillStyle = NAVY; g.fillText(f.name, 0, 4);
-    g.restore();
-  });
   // logo na samym środku
   g.save();
   g.shadowColor = 'rgba(0,0,0,.22)'; g.shadowBlur = 40; g.shadowOffsetY = 12;
@@ -1104,17 +1086,11 @@ function bannerTexture(color) {
   g.strokeStyle = GOLD; g.lineWidth = 9; g.strokeRect(14, 12, 228, 196);
   g.fillStyle = GOLD;
   for (let x = 0; x < 256; x += 16) { g.beginPath(); g.moveTo(x, 216); g.lineTo(x + 8, 240); g.lineTo(x + 16, 216); g.fill(); }
-  g.strokeStyle = '#FFFFFF'; g.lineWidth = 7;
-  g.beginPath(); g.arc(128, 110, 60, 0, Math.PI * 2); g.stroke();
+  // miejsce na logo uczelni (podmienimy, gdy będzie plik z logo)
   g.fillStyle = '#FFFFFF';
-  for (const dir of [-1, 1]) {   // otwarta księga
-    g.beginPath();
-    g.moveTo(128, 98);
-    g.quadraticCurveTo(128 + dir * 20, 86, 128 + dir * 42, 90);
-    g.lineTo(128 + dir * 42, 134);
-    g.quadraticCurveTo(128 + dir * 20, 130, 128, 142);
-    g.closePath(); g.fill();
-  }
+  g.beginPath(); g.arc(128, 110, 64, 0, Math.PI * 2); g.fill();
+  g.fillStyle = color; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.font = '700 34px Fredoka, sans-serif'; g.fillText('LOGO', 128, 110);
   return tex(c);
 }
 function makeBanner(color) {
@@ -1134,79 +1110,105 @@ function makeBanner(color) {
   return g;
 }
 
-function makeCap(color) {
+// Drukarka 3D: rama w kolorze gracza, stół, głowica i wydruk
+function makePrinter(color) {
+  const p = pal(color);
   const g = new THREE.Group();
   g.add(pawnBase(color));
-  const body = mat(color, { roughness: 0.4 });
-  const pts = [[0, 0.07], [0.15, 0.07], [0.15, 0.09], [0.11, 0.12], [0.075, 0.2], [0.062, 0.29], [0.07, 0.33], [0.12, 0.35], [0.12, 0.37], [0, 0.37]]
-    .map(([x, y]) => new THREE.Vector2(x, y));
-  const torso = mesh(new THREE.LatheGeometry(pts, 40), body);
-  const head = mesh(new THREE.SphereGeometry(0.105, 28, 20), body); head.position.y = 0.46;
-  const dark = mat('#1B2233', { roughness: 0.6 });
-  const skull = mesh(new THREE.CylinderGeometry(0.098, 0.1, 0.07, 28), dark); skull.position.y = 0.535;
-  const board = mesh(new THREE.BoxGeometry(0.32, 0.022, 0.32), dark); board.position.y = 0.58; board.rotation.y = Math.PI / 4;
-  const button = mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.014, 16), goldMat); button.position.y = 0.598;
-  const len = 0.16 * Math.SQRT2;
-  const cord = mesh(new THREE.CylinderGeometry(0.006, 0.006, len, 8), goldMat); cord.rotation.z = Math.PI / 2; cord.position.set(len / 2, 0.596, 0);
-  const hang = mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.12, 8), goldMat); hang.position.set(len, 0.535, 0);
-  const tassel = mesh(new THREE.ConeGeometry(0.026, 0.07, 12), goldMat); tassel.position.set(len, 0.47, 0);
-  g.add(torso, head, skull, board, button, cord, hang, tassel);
-  return g;
-}
-
-function makeBooks(color) {
-  const g = new THREE.Group();
-  g.add(pawnBase(color));
-  const pages = mat('#F5EFDF', { roughness: 0.9 });
-  const specs = [[0.34, 0.075, 0.25, 0.12, -0.15], [0.3, 0.08, 0.23, -0.2, 0], [0.32, 0.07, 0.24, 0.28, 0.3], [0.27, 0.075, 0.2, -0.06, -0.35]];
-  let y = 0.07;
-  for (const [w, h, d, r, shade] of specs) {
-    const book = new THREE.Group();
-    const cover = mat(mix(color, shade < 0 ? '#000000' : '#ffffff', Math.abs(shade)), { roughness: 0.5 });
-    const t = 0.012;
-    const top = mesh(new RoundedBoxGeometry(w, t, d, 1, 0.004), cover); top.position.y = h / 2 - t / 2;
-    const bottom = top.clone(); bottom.position.y = -h / 2 + t / 2;
-    const spine = mesh(new RoundedBoxGeometry(t * 1.4, h, d, 1, 0.005), cover); spine.position.x = -w / 2 + t * 0.7;
-    const block = mesh(new THREE.BoxGeometry(w - 0.02, h - 2 * t, d - 0.016), pages); block.position.x = 0.002;
-    book.add(top, bottom, spine, block);
-    book.position.y = y + h / 2; book.rotation.y = r;
-    y += h;
-    g.add(book);
+  const y0 = 0.07, W = 0.3, H = 0.4;
+  const base = mesh(new RoundedBoxGeometry(W, 0.06, W, 2, 0.01), p.main); base.position.y = y0 + 0.03;
+  g.add(base);
+  for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {   // słupki ramy
+    const post = mesh(new THREE.BoxGeometry(0.03, H, 0.03), p.main);
+    post.position.set(x * (W / 2 - 0.015), y0 + 0.06 + H / 2, z * (W / 2 - 0.015));
+    g.add(post);
   }
-  const scroll = mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.24, 20), pages);
-  scroll.rotation.set(0, 0.5, Math.PI / 2, 'YXZ');
-  scroll.position.y = y + 0.03;
-  const ribbon = mesh(new THREE.CylinderGeometry(0.033, 0.033, 0.03, 20), goldMat);
-  scroll.add(ribbon);
-  g.add(scroll);
+  const roof = mesh(new THREE.BoxGeometry(W, 0.03, W), p.main); roof.position.y = y0 + 0.06 + H;
+  const bed = mesh(new THREE.BoxGeometry(W - 0.07, 0.015, W - 0.07), p.dark); bed.position.y = y0 + 0.1;
+  const rail = mesh(new THREE.BoxGeometry(W - 0.03, 0.02, 0.02), p.light); rail.position.set(0, y0 + 0.32, 0);
+  const head = mesh(new THREE.BoxGeometry(0.06, 0.06, 0.06), p.light); head.position.set(0.03, y0 + 0.29, 0);
+  const nozzle = mesh(new THREE.ConeGeometry(0.012, 0.03, 10), goldMat); nozzle.rotation.x = Math.PI; nozzle.position.set(0.03, y0 + 0.245, 0);
+  const pts = [[0, 0], [0.045, 0], [0.05, 0.03], [0.035, 0.07], [0.04, 0.1], [0, 0.1]].map(([x, y]) => new THREE.Vector2(x, y));
+  const print = mesh(new THREE.LatheGeometry(pts, 24), p.light); print.position.set(0.03, y0 + 0.108, 0);   // wydruk na stole
+  const spool = mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.05, 28), p.dark); spool.rotation.z = Math.PI / 2; spool.position.set(0, y0 + 0.06 + H + 0.085, 0);
+  const fil = mesh(new THREE.CylinderGeometry(0.058, 0.058, 0.052, 28), p.light); fil.rotation.z = Math.PI / 2; fil.position.copy(spool.position);
+  const holder = mesh(new THREE.BoxGeometry(0.02, 0.07, 0.02), p.dark); holder.position.set(0, y0 + 0.06 + H + 0.035, 0);
+  g.add(roof, bed, rail, head, nozzle, print, holder, spool, fil);
   return g;
 }
 
-function makeMug(color) {
+// Koparka kryptowalut: otwarta rama z kartami graficznymi i złotą monetą nad nią
+function makeMiner(color) {
+  const p = pal(color);
   const g = new THREE.Group();
   g.add(pawnBase(color));
-  const m = mat(color, { roughness: 0.35, side: THREE.DoubleSide });
-  const pts = [[0, 0.075], [0.118, 0.075], [0.13, 0.085], [0.135, 0.1], [0.14, 0.36], [0.126, 0.36], [0.12, 0.1], [0, 0.1]]
-    .map(([x, y]) => new THREE.Vector2(x, y));
-  const cup = mesh(new THREE.LatheGeometry(pts, 48), m);
-  const band = mesh(new THREE.CylinderGeometry(0.1405, 0.14, 0.045, 48, 1, true), mat('#FFFFFF', { roughness: 0.4 }));
-  band.position.y = 0.26;
-  const coffee = mesh(new THREE.CircleGeometry(0.122, 40), mat('#4E321E', { roughness: 0.25 }), false);
-  coffee.rotation.x = -Math.PI / 2; coffee.position.y = 0.33;
-  const handle = mesh(new THREE.TorusGeometry(0.075, 0.02, 12, 28, Math.PI), m);
-  handle.rotation.z = -Math.PI / 2; handle.position.set(0.135, 0.22, 0);
-  g.add(cup, band, coffee, handle);
-  for (let s = 0; s < 2; s++) {   // para
+  const y0 = 0.07;
+  const plate = mesh(new THREE.BoxGeometry(0.34, 0.025, 0.24), p.dark); plate.position.y = y0 + 0.0125;
+  g.add(plate);
+  for (const x of [-0.16, 0.16]) for (const z of [-0.1, 0.1]) {
+    const post = mesh(new THREE.BoxGeometry(0.02, 0.26, 0.02), p.main); post.position.set(x, y0 + 0.155, z); g.add(post);
+  }
+  const top = mesh(new THREE.BoxGeometry(0.34, 0.02, 0.24), p.main); top.position.y = y0 + 0.29;
+  g.add(top);
+  const fanMat = new THREE.MeshBasicMaterial({ color: mix(color, '#ffffff', 0.55), toneMapped: false });
+  for (let k = 0; k < 3; k++) {   // karty graficzne z wentylatorami
+    const x = -0.09 + k * 0.09;
+    const card = mesh(new THREE.BoxGeometry(0.04, 0.2, 0.2), p.main); card.position.set(x, y0 + 0.13, 0);
+    g.add(card);
+    for (const z of [-0.05, 0.05]) {
+      const fan = new THREE.Mesh(new THREE.CircleGeometry(0.035, 20), fanMat);
+      fan.rotation.y = Math.PI / 2; fan.position.set(x + 0.021, y0 + 0.13, z);
+      const hub = new THREE.Mesh(new THREE.CircleGeometry(0.012, 12), p.dark);
+      hub.rotation.y = Math.PI / 2; hub.position.set(x + 0.022, y0 + 0.13, z);
+      g.add(fan, hub);
+    }
+  }
+  const coin = new THREE.Group();
+  const disc = mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.025, 36), goldMat); disc.rotation.x = Math.PI / 2;
+  const rim = mesh(new THREE.TorusGeometry(0.075, 0.008, 8, 32), mat('#C8962F', { metalness: 0.7, roughness: 0.3 }));
+  rim.position.z = 0.013;
+  coin.add(disc, rim);
+  coin.position.y = y0 + 0.45;
+  coin.userData.spin = true;
+  coins.push(coin);
+  g.add(coin);
+  return g;
+}
+
+// Ekspres do kawy: obudowa w kolorze gracza, kolba, filiżanka z parą
+function makeEspresso(color) {
+  const p = pal(color);
+  const g = new THREE.Group();
+  g.add(pawnBase(color));
+  const y0 = 0.07;
+  const body = mesh(new RoundedBoxGeometry(0.3, 0.34, 0.22, 3, 0.03), p.main); body.position.set(0, y0 + 0.17, -0.02);
+  const cut = mesh(new THREE.BoxGeometry(0.2, 0.13, 0.08), p.dark); cut.position.set(0, y0 + 0.09, 0.07);   // wnęka na filiżankę
+  const tray = mesh(new THREE.BoxGeometry(0.22, 0.02, 0.1), p.light); tray.position.set(0, y0 + 0.02, 0.07);
+  const top = mesh(new THREE.BoxGeometry(0.26, 0.02, 0.18), p.light); top.position.set(0, y0 + 0.35, -0.02);
+  const group = mesh(new THREE.CylinderGeometry(0.035, 0.03, 0.03, 20), aluMat); group.position.set(0, y0 + 0.19, 0.1);
+  const handle = mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.14, 10), p.dark);
+  handle.rotation.x = Math.PI / 2; handle.position.set(0, y0 + 0.19, 0.18);
+  const gauge = new THREE.Mesh(new THREE.CircleGeometry(0.03, 24), new THREE.MeshBasicMaterial({ color: '#ffffff', toneMapped: false }));
+  gauge.position.set(0.08, y0 + 0.28, 0.092);
+  const needle = mesh(new THREE.BoxGeometry(0.004, 0.022, 0.002), p.dark, false); needle.position.set(0.08, y0 + 0.285, 0.094); needle.rotation.z = -0.6;
+  const cupPts = [[0, 0], [0.03, 0], [0.036, 0.05], [0.032, 0.05], [0.027, 0.006], [0, 0.006]].map(([x, y]) => new THREE.Vector2(x, y));
+  const cup = mesh(new THREE.LatheGeometry(cupPts, 24), mat('#FFFFFF', { roughness: 0.35, side: THREE.DoubleSide }));
+  cup.position.set(0, y0 + 0.03, 0.07);
+  const coffee = mesh(new THREE.CircleGeometry(0.03, 20), mat('#4E321E', { roughness: 0.25 }), false);
+  coffee.rotation.x = -Math.PI / 2; coffee.position.set(0, y0 + 0.07, 0.07);
+  g.add(body, cut, tray, top, group, handle, gauge, needle, cup, coffee);
+  for (let k = 0; k < 2; k++) {   // para nad filiżanką
     const pts3 = [];
     for (let j = 0; j <= 8; j++) {
       const t = j / 8;
-      pts3.push(new THREE.Vector3((s ? 0.04 : -0.04) + Math.sin(t * Math.PI * 2 + s * 2) * 0.025, 0.37 + t * 0.24, 0));
+      pts3.push(new THREE.Vector3((k ? 0.015 : -0.015) + Math.sin(t * Math.PI * 2 + k * 2) * 0.012, y0 + 0.08 + t * 0.2, 0));
     }
     const steam = new THREE.Mesh(
-      new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts3), 24, 0.011, 8, false),
+      new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts3), 24, 0.008, 8, false),
       new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.45, depthWrite: false }),
     );
-    steam.userData.phase = s * 1.7;
+    steam.position.z = 0.07;
+    steam.userData.phase = k * 1.7;
     steams.push(steam);
     g.add(steam);
   }
@@ -1550,7 +1552,7 @@ function addShowItem(obj, x, z, scale, title, sub) {
   holder.add(label);
   show.add(holder);
 }
-PLAYERS.forEach((p, i) => addShowItem(p.make(p.color), -3.3 + i * 2.2, -2.3, 2.2, p.pawn, 'pionek'));
+PLAYERS.forEach((p, i) => addShowItem(p.make(p.color), -3.75 + i * 2.5, -2.3, 2.4, p.pawn, 'pionek'));
 const demoColor = PLAYERS[1].color;
 BUILDINGS.forEach((b, i) => addShowItem(b.make(demoColor), -4.4 + i * 2.2, 2.0, b.scale, b.name, i === 4 ? 'hotel · poziom 5' : `budynek · poziom ${i + 1}`));
 
@@ -1592,7 +1594,7 @@ function updateLimits() {
   controls.maxDistance = view === 'board' ? boardDist() * 1.6 : showDist() * 1.8;
 }
 const HINTS = {
-  board: '32 pola · 4 piętra · przeciągnij, aby obracać · kliknij pole lub stos kart',
+  board: '32 pola · przeciągnij, aby obracać · kliknij pole lub stos kart',
   models: 'Pionki i budynki · przeciągnij, aby obejrzeć z każdej strony',
   cards: 'Karty „Przekup dziekanat” · kliknij kartę, aby ją odwrócić',
 };
@@ -1640,20 +1642,19 @@ function selectCell(i) {
   updateBuildBtn();
   if (i === null) { highlight(null); $('fieldCard').hidden = true; return; }
   highlight(tileTops[i]);
-  const floor = FLOORS[Math.floor(i / SIDE)];
   const field = FIELDS[i];
   let title, sub;
   if (CORNER_INFO[i]) [title, sub] = CORNER_INFO[i];
   else if (field) {
     title = `Pole ${i + 1} · ${field.name}`;
-    sub = `${field.part} · ${FIELD_DESC[field.type]}`;
+    sub = FIELD_DESC[field.type];
     if (field.group) {
       const mates = Object.keys(FIELDS).filter(k => FIELDS[k].group === field.group).map(k => +k + 1);
       sub += ` · ${GROUPS[field.group].name}: pola ${mates.join(' i ')}, razem dają monopol`;
     }
   }
-  else { title = `Pole ${i + 1}`; sub = `${floor.label} · funkcję pola dopiszemy, gdy je rozpiszesz`; }
-  showCard(i + 1, i % SIDE === 0 ? '#E6EAF2' : (field && field.group ? GROUPS[field.group].color : floor.color), field && field.group ? '#ffffff' : '#1e2a47', title, sub);
+  else { title = `Pole ${i + 1}`; sub = 'Funkcję pola dopiszemy, gdy je rozpiszesz'; }
+  showCard(i + 1, i % SIDE === 0 ? '#E6EAF2' : (field && field.group ? GROUPS[field.group].color : NO_GROUP), field && field.group ? '#ffffff' : '#1e2a47', title, sub);
 }
 function selectDeck(face) {
   const deck = face.userData.deck;
@@ -1821,9 +1822,9 @@ const store = {
 };
 const PAWN_ICONS = {
   Sztandar: '<path d="M6 3v18" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M7 4h11l-3 4 3 4H7z" fill="currentColor"/>',
-  Biret: '<path d="M2 9l10-5 10 5-10 5z" fill="currentColor"/><path d="M6 11.5v3.5c0 2 12 2 12 0v-3.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 10v5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
-  'Książki': '<rect x="3" y="15" width="17" height="4" rx="1" fill="currentColor"/><rect x="5" y="10" width="15" height="4" rx="1" fill="currentColor" opacity=".75"/><rect x="4" y="5" width="14" height="4" rx="1" fill="currentColor"/>',
-  'Kubek kawy': '<path d="M4 8h12v7a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z" fill="currentColor"/><path d="M16 10h1.5a2.5 2.5 0 0 1 0 5H16" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 3c-1 1.5 1 2 0 3.5M12 3c-1 1.5 1 2 0 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
+  'Drukarka 3D': '<rect x="4" y="4" width="16" height="16" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M6 8h12" stroke="currentColor" stroke-width="2"/><rect x="10" y="8" width="4" height="3" fill="currentColor"/><path d="M9 17c0-3 6-3 6 0z" fill="currentColor"/>',
+  'Koparka kryptowalut': '<rect x="3" y="11" width="18" height="9" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="8" cy="15.5" r="2" fill="currentColor"/><circle cx="16" cy="15.5" r="2" fill="currentColor"/><circle cx="12" cy="5.5" r="3.5" fill="currentColor"/>',
+  'Ekspres do kawy': '<rect x="5" y="3" width="14" height="18" rx="2" fill="currentColor"/><rect x="8" y="12" width="8" height="6" rx="1" fill="#fff" opacity=".85"/><path d="M9 9h6" stroke="#fff" stroke-width="2" stroke-linecap="round"/>',
 };
 const pawnSvg = (name, color) => `<svg viewBox="0 0 24 24" aria-hidden="true" style="color:${color}">${PAWN_ICONS[name]}</svg>`;
 const PAWN_COLORS = [
@@ -2341,6 +2342,7 @@ function frame() {
       s.position.y = 0.02 * Math.sin(t * 1.5 + s.userData.phase);
     }
     if (view === 'models') turntables.forEach(o => { o.rotation.y += dt * 0.45; });
+    for (const c of coins) { c.rotation.y += dt * 2.2; c.position.y = 0.52 + 0.02 * Math.sin(t * 2); }
   }
   controls.update();
   renderer.render(scene, camera);
