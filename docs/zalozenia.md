@@ -25,21 +25,32 @@ Z gry usunięte są wszystkie dema: rzut kostkami, ruch pionków, przykładowe b
 
 ### Plansza (nowa wersja, w trakcie)
 
-Plansza będzie mniejsza. Pierwsza ściana:
-
 | Nr | Pole | Działanie |
 |---|---|---|
 | 1 | START | narożnik |
 | 2 | Sala 04 | sala do kupienia, grupa 1 |
 | 3 | Sala 05 | sala do kupienia, grupa 1 |
-| 4 | Zapłać czesne | pieniądze idą do puli na środku |
+| 4 | Parking uczelniany mały | stacja 1/2 |
 | 5 | Pracownia ceramiki | pole specjalne 1/4 |
 | 6 | Szansa | pytanie: dobrze = ułatwienie, źle = utrudnienie |
-| 7 | Sala 12 | sala do kupienia |
-| 8 | Sala 13 | sala do kupienia |
+| 7 | Sala 10 | sala do kupienia |
+| 8 | Sala 11 | sala do kupienia |
 | 9 | Dziekanat | narożnik |
+| 10 | Sala 12 | sala do kupienia |
+| 11 | Szansa | jak pole 6 |
+| 12 | Sala 13 | sala do kupienia |
+| 13 | Serwerownia | pole specjalne 2/4 |
+| 14 | Sala 21 | sala do kupienia |
+| 15 | Sala 22 | sala do kupienia |
+| 16 | Sala 23 | sala do kupienia |
+| 17 | Stypendium rektorskie | narożnik |
+| 18–24 | do rozpisania | |
+| 25 | Udaj się do dziekanatu | narożnik |
+| 26–30 | do rozpisania | |
+| 31 | Czesne | pieniądze idą do puli na środku |
+| 32 | do rozpisania | |
 
-Każda ściana ma 7 pól między narożnikami, razem **32 pola**. Narożniki: START (1), Dziekanat (9), Stypendium rektorskie (17), Udaj się do dziekanatu (25). Pola 10–16, 18–24 i 26–32 czekają na rozpisanie.
+Każda ściana ma 7 pól między narożnikami, razem **32 pola**. Narożniki: START (1), Dziekanat (9), Stypendium rektorskie (17), Udaj się do dziekanatu (25). Pola 18–24, 26–30 i 32 czekają na rozpisanie.
 
 Do ustalenia: co z Salą balową i Kuchnią.
 
@@ -114,7 +125,8 @@ Do ustalenia: co z Salą balową i Kuchnią.
 ## Otwarte sprawy
 
 - Wybór jednej z 5 wersji wyglądu planszy.
-- Pozostałe ściany planszy (pola 10–16, 18–24, 26–32).
+- Pozostałe pola: 18–24, 26–30 i 32.
+- Grupy kolorów dla Sal 10–13 i 21–23.
 - Sala balowa i Kuchnia: czy zostają i gdzie.
 - Zasady gry od nowa: pytania, kupowanie pól, dziekanat, karty, pola specjalne, 2 na 2, boty.
 - Logo i kolory uczelni.
