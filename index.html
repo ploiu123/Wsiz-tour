@@ -519,6 +519,13 @@ const CORNER_INFO = {
 // Grupy kolorów: kto ma wszystkie sale z grupy, ma monopol. 4 monopole = wygrana.
 const GROUPS = {
   1: { name: 'Grupa 1', color: '#9A5B3A' },
+  2: { name: 'Grupa 2', color: '#4FB3E8' },
+  3: { name: 'Grupa 3', color: '#E0569B' },
+  4: { name: 'Grupa 4', color: '#F08A2C' },
+  5: { name: 'Grupa 5', color: '#16A39A' },
+  6: { name: 'Grupa 6', color: '#8A5CD6' },
+  7: { name: 'Grupa 7', color: '#8DB83A' },
+  8: { name: 'Grupa 8', color: '#2B3F8C' },
 };
 // Pola ustalone do tej pory (klucz = numer pola - 1)
 const FIELDS = {
@@ -527,29 +534,29 @@ const FIELDS = {
   3: { type: 'station', name: 'Parking uczelniany mały', no: 1 },
   4: { type: 'special', name: 'Pracownia ceramiki', icon: 'vase', no: 1 },
   5: { type: 'chance', name: 'Szansa' },
-  6: { type: 'room', name: 'Sala 10' },
-  7: { type: 'room', name: 'Sala 11' },
-  9: { type: 'room', name: 'Sala 12' },
+  6: { type: 'room', name: 'Sala 10', group: 2 },
+  7: { type: 'room', name: 'Sala 11', group: 2 },
+  9: { type: 'room', name: 'Sala 12', group: 3 },
   10: { type: 'chance', name: 'Szansa' },
-  11: { type: 'room', name: 'Sala 13' },
+  11: { type: 'room', name: 'Sala 13', group: 3 },
   12: { type: 'special', name: 'Serwerownia', icon: 'server', no: 2 },
-  13: { type: 'room', name: 'Sala 21' },
-  14: { type: 'room', name: 'Sala 22' },
-  15: { type: 'room', name: 'Sala 23' },
-  17: { type: 'room', name: 'Sala 31' },
+  13: { type: 'room', name: 'Sala 21', group: 4 },
+  14: { type: 'room', name: 'Sala 22', group: 4 },
+  15: { type: 'room', name: 'Sala 23', group: 4 },
+  17: { type: 'room', name: 'Sala 31', group: 5 },
   18: { type: 'station', name: 'Parking duży', no: 2 },
-  19: { type: 'room', name: 'Pokój kwestora' },
+  19: { type: 'room', name: 'Pokój kwestora', group: 5 },
   20: { type: 'special', name: 'Sala senatu', icon: 'senate', no: 3 },
-  21: { type: 'room', name: 'Pokój kanclerza' },
+  21: { type: 'room', name: 'Pokój kanclerza', group: 6 },
   22: { type: 'chance', name: 'Szansa' },
-  23: { type: 'room', name: 'Pokój rektora' },
-  25: { type: 'room', name: 'Sala 41' },
+  23: { type: 'room', name: 'Pokój rektora', group: 6 },
+  25: { type: 'room', name: 'Sala 41', group: 7 },
   26: { type: 'chance', name: 'Szansa' },
-  27: { type: 'room', name: 'Sala 42' },
+  27: { type: 'room', name: 'Sala 42', group: 7 },
   28: { type: 'special', name: 'Sala balowa', icon: 'chandelier', no: 4 },
-  29: { type: 'room', name: 'Sala 43' },
+  29: { type: 'room', name: 'Sala 43', group: 8 },
   30: { type: 'tax', name: 'Czesne' },
-  31: { type: 'room', name: 'Sala 44' },
+  31: { type: 'room', name: 'Sala 44', group: 8 },
 };
 const FIELD_DESC = {
   room: 'sala do kupienia (pytanie przy zakupie)',
@@ -884,7 +891,7 @@ function drawCorner(g, i, w, h) {
     g.lineTo(170, h - 55); g.closePath(); g.fill();
     rotatedText(g, w, h, () => {
       g.fillStyle = GOLD; g.font = '700 128px Fredoka, sans-serif'; g.fillText('START', 0, -20);
-      g.fillStyle = 'rgba(255,255,255,.75)'; g.font = '600 40px Fredoka, sans-serif'; g.fillText('POLE 1', 0, 70);
+      g.fillStyle = 'rgba(255,255,255,.75)'; g.font = '600 40px Fredoka, sans-serif'; g.fillText(`POLE ${i + 1}`, 0, 70);
     });
   } else if (i === SIDE) {
     g.fillStyle = '#FFF4E2'; g.fillRect(0, 0, w, h);
@@ -893,7 +900,7 @@ function drawCorner(g, i, w, h) {
       g.beginPath(); g.arc(0, -135, 62, 0, Math.PI * 2); g.stroke();
       g.fillStyle = NAVY; g.font = '700 70px Fredoka, sans-serif'; g.fillText('D', 0, -130);
       g.font = '700 92px Fredoka, sans-serif'; g.fillText('DZIEKANAT', 0, 0);
-      g.fillStyle = '#7A849C'; g.font = '600 40px Fredoka, sans-serif'; g.fillText('POLE 11', 0, 85);
+      g.fillStyle = '#7A849C'; g.font = '600 40px Fredoka, sans-serif'; g.fillText(`POLE ${i + 1}`, 0, 85);
     });
   } else if (i === 2 * SIDE) {
     g.fillStyle = '#FFF4D2'; g.fillRect(0, 0, w, h);
@@ -905,7 +912,7 @@ function drawCorner(g, i, w, h) {
       }
       g.fillStyle = NAVY; g.font = '700 80px Fredoka, sans-serif';
       g.fillText('STYPENDIUM', 0, 5); g.fillText('REKTORSKIE', 0, 85);
-      g.fillStyle = '#8A7440'; g.font = '600 38px Fredoka, sans-serif'; g.fillText('POLE 21', 0, 160);
+      g.fillStyle = '#8A7440'; g.font = '600 38px Fredoka, sans-serif'; g.fillText(`POLE ${i + 1}`, 0, 160);
     });
   } else {
     g.fillStyle = '#FDE9E7'; g.fillRect(0, 0, w, h);
@@ -917,7 +924,7 @@ function drawCorner(g, i, w, h) {
       g.lineTo(4, -114); g.lineTo(4, -138); g.lineTo(-32, -138); g.closePath(); g.fill();
       g.fillStyle = NAVY; g.font = '700 58px Fredoka, sans-serif'; g.fillText('UDAJ SIĘ DO', 0, -35);
       g.font = '700 88px Fredoka, sans-serif'; g.fillText('DZIEKANATU', 0, 45);
-      g.fillStyle = '#A0706C'; g.font = '600 38px Fredoka, sans-serif'; g.fillText('POLE 31', 0, 125);
+      g.fillStyle = '#A0706C'; g.font = '600 38px Fredoka, sans-serif'; g.fillText(`POLE ${i + 1}`, 0, 125);
     });
   }
 }

@@ -33,32 +33,32 @@ Z gry usunięte są wszystkie dema: rzut kostkami, ruch pionków, przykładowe b
 | 4 | Parking uczelniany mały | stacja 1/2 |
 | 5 | Pracownia ceramiki | pole specjalne 1/4 |
 | 6 | Szansa | pytanie: dobrze = ułatwienie, źle = utrudnienie |
-| 7 | Sala 10 | sala do kupienia |
-| 8 | Sala 11 | sala do kupienia |
+| 7 | Sala 10 | sala do kupienia, grupa 2 |
+| 8 | Sala 11 | sala do kupienia, grupa 2 |
 | 9 | Dziekanat | narożnik |
-| 10 | Sala 12 | sala do kupienia |
+| 10 | Sala 12 | sala do kupienia, grupa 3 |
 | 11 | Szansa | jak pole 6 |
-| 12 | Sala 13 | sala do kupienia |
+| 12 | Sala 13 | sala do kupienia, grupa 3 |
 | 13 | Serwerownia | pole specjalne 2/4 |
-| 14 | Sala 21 | sala do kupienia |
-| 15 | Sala 22 | sala do kupienia |
-| 16 | Sala 23 | sala do kupienia |
+| 14 | Sala 21 | sala do kupienia, grupa 4 |
+| 15 | Sala 22 | sala do kupienia, grupa 4 |
+| 16 | Sala 23 | sala do kupienia, grupa 4 |
 | 17 | Stypendium rektorskie | narożnik |
-| 18 | Sala 31 | sala do kupienia |
+| 18 | Sala 31 | sala do kupienia, grupa 5 |
 | 19 | Parking duży | stacja 2/2 |
-| 20 | Pokój kwestora | sala do kupienia |
+| 20 | Pokój kwestora | sala do kupienia, grupa 5 |
 | 21 | Sala senatu | pole specjalne 3/4 (unikatowe, fasada z kolumnami) |
-| 22 | Pokój kanclerza | sala do kupienia |
+| 22 | Pokój kanclerza | sala do kupienia, grupa 6 |
 | 23 | Szansa | jak pole 6 |
-| 24 | Pokój rektora | sala do kupienia |
+| 24 | Pokój rektora | sala do kupienia, grupa 6 |
 | 25 | Udaj się do dziekanatu | narożnik |
-| 26 | Sala 41 | sala do kupienia |
+| 26 | Sala 41 | sala do kupienia, grupa 7 |
 | 27 | Szansa | jak pole 6 |
-| 28 | Sala 42 | sala do kupienia |
+| 28 | Sala 42 | sala do kupienia, grupa 7 |
 | 29 | Sala balowa | pole specjalne 4/4 (żyrandol) |
-| 30 | Sala 43 | sala do kupienia |
+| 30 | Sala 43 | sala do kupienia, grupa 8 |
 | 31 | Czesne | pieniądze idą do puli na środku |
-| 32 | Sala 44 | sala do kupienia |
+| 32 | Sala 44 | sala do kupienia, grupa 8 |
 
 Każda ściana ma 7 pól między narożnikami, razem **32 pola**. Narożniki: START (1), Dziekanat (9), Stypendium rektorskie (17), Udaj się do dziekanatu (25). Wszystkie 32 pola są rozpisane.
 
@@ -68,7 +68,16 @@ Do ustalenia: co z Kuchnią.
 - Sale z jednej grupy mają wspólny kolor na pasku pola.
 - Kto ma wszystkie sale z grupy, ma **monopol**.
 - **Kto zbierze 4 monopole, wygrywa grę.**
-- Grupa 1: Sala 04 i Sala 05 (pola 2 i 3). Kolejne grupy dopiszemy przy następnych ścianach.
+| Grupa | Kolor | Pola |
+|---|---|---|
+| 1 | brązowy | Sala 04, Sala 05 |
+| 2 | jasnoniebieski | Sala 10, Sala 11 |
+| 3 | różowy | Sala 12, Sala 13 |
+| 4 | pomarańczowy | Sala 21, Sala 22, Sala 23 |
+| 5 | morski | Sala 31, Pokój kwestora |
+| 6 | fioletowy | Pokój kanclerza, Pokój rektora |
+| 7 | limonkowy | Sala 41, Sala 42 |
+| 8 | granatowy | Sala 43, Sala 44 |
 - Do ustalenia: czy pola specjalne (np. Pracownia ceramiki) też dają wygraną, czy tylko monopole.
 
 ## Wygląd planszy
@@ -135,7 +144,6 @@ Do ustalenia: co z Kuchnią.
 ## Otwarte sprawy
 
 - Wybór jednej z 5 wersji wyglądu planszy.
-- Grupy kolorów dla pozostałych sal i pokoi.
 - Sala balowa i Kuchnia: czy zostają i gdzie.
 - Zasady gry od nowa: pytania, kupowanie pól, dziekanat, karty, pola specjalne, 2 na 2, boty.
 - Logo i kolory uczelni.
