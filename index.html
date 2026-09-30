@@ -989,17 +989,18 @@ function makeComputer(color) {
 // ---------------------------------------------------------------------------
 // Plansza
 // ---------------------------------------------------------------------------
+// Plansza i pola mają ostre krawędzie i proste ściany, jak prawdziwa plansza do druku.
 const board = new THREE.Group();
 scene.add(board);
 
-const base = mesh(new RoundedBoxGeometry(S + 0.8, 0.5, S + 0.8, 4, 0.2), mat(NAVY, { roughness: 0.6 }), true, true);
+const base = mesh(new THREE.BoxGeometry(S + 0.8, 0.5, S + 0.8), mat(NAVY, { roughness: 0.6 }), true, true);
 base.position.y = -0.25;
-const trim = mesh(new RoundedBoxGeometry(S + 0.3, 0.02, S + 0.3, 2, 0.008), goldMat, false, true);
+const trim = mesh(new THREE.BoxGeometry(S + 0.3, 0.02, S + 0.3), goldMat, false, true);
 board.add(base, trim);
 
 const tileBodyMat = mat('#DCE2EC', { roughness: 0.7 });
-const tileGeo = new RoundedBoxGeometry(W - 0.06, TILE_H, D - 0.06, 2, 0.025);
-const cornerGeo = new RoundedBoxGeometry(D - 0.06, TILE_H, D - 0.06, 2, 0.025);
+const tileGeo = new THREE.BoxGeometry(W - 0.06, TILE_H, D - 0.06);
+const cornerGeo = new THREE.BoxGeometry(D - 0.06, TILE_H, D - 0.06);
 const tileTops = [];
 const cellGroups = [];
 for (let i = 0; i < TOTAL; i++) {
