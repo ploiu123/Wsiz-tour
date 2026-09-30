@@ -306,7 +306,7 @@
   <div class="hud hud-top">
     <div class="brand panel">
       <h1>WSiZ Tour</h1>
-      <p id="hint">40 pól · 4 piętra · przeciągnij, aby obracać · kliknij pole lub stos kart</p>
+      <p id="hint">32 pola · 4 piętra · przeciągnij, aby obracać · kliknij pole lub stos kart</p>
       <div class="looks" id="looks" role="group" aria-label="Wersja wyglądu"></div>
     </div>
     <div class="seg panel" role="group" aria-label="Widok">
@@ -428,8 +428,9 @@ const $ = id => document.getElementById(id);
 // ---------------------------------------------------------------------------
 // Układ planszy
 // ---------------------------------------------------------------------------
-const N = 9;                  // zwykłe pola między narożnikami
-const TOTAL = 4 * (N + 1);    // 40 pól
+const N = 7;                  // zwykłe pola między narożnikami
+const SIDE = N + 1;           // pola na jednej ścianie razem z narożnikiem
+const TOTAL = 4 * SIDE;       // 32 pola
 const W = 1.2;                // szerokość zwykłego pola
 const D = 2.0;                // głębokość pola = bok narożnika
 const S = 2 * D + N * W;      // bok planszy
@@ -503,35 +504,24 @@ const FLOORS = [
 ];
 const CORNER_INFO = {
   0: ['Pole 1 · START', 'Narożnik startowy'],
-  10: ['Pole 11 · Dziekanat', 'Stajesz tu: pytanie, zła odpowiedź = 1 kolejka postoju'],
-  20: ['Pole 21 · Stypendium rektorskie', 'Zabierasz całą pulę pieniędzy ze środka planszy'],
-  30: ['Pole 31 · Udaj się do dziekanatu', 'Idziesz do dziekanatu na 2 kolejki, bez pytania'],
+  8: ['Pole 9 · Dziekanat', 'Zasady dziekanatu rozpiszemy od nowa'],
+  16: ['Pole 17 · Stypendium rektorskie', 'Narożnik, zasady do ustalenia'],
+  24: ['Pole 25 · Udaj się do dziekanatu', 'Narożnik, zasady do ustalenia'],
 };
 // Pola ustalone do tej pory (klucz = numer pola - 1)
 const FIELDS = {
   1: { type: 'room', name: 'Sala 04', part: 'Piwnica' },
   2: { type: 'room', name: 'Sala 05', part: 'Piwnica' },
-  3: { type: 'room', name: 'Pracownia ceramiki', part: 'Piwnica' },
+  3: { type: 'special', name: 'Pracownia ceramiki', part: 'Piwnica', icon: 'vase', no: 1 },
   4: { type: 'tax', name: 'Czesne', part: 'Piwnica' },
-  5: { type: 'special', name: 'Sala balowa', part: 'Parter', icon: 'chandelier', no: 1 },
-  6: { type: 'chance', name: 'Szansa', part: 'Parter' },
-  7: { type: 'room', name: 'Sala 12', part: 'Parter' },
-  8: { type: 'room', name: 'Sala 13', part: 'Parter' },
-  9: { type: 'earn', name: 'Kuchnia', part: 'Parter' },
-  11: { type: 'room', name: 'Sala 21', part: '1. piętro' },
-  12: { type: 'room', name: 'Sala 22', part: '1. piętro' },
-  13: { type: 'room', name: 'Sala 23', part: '1. piętro' },
-  14: { type: 'chance', name: 'Szansa', part: '1. piętro' },
-  15: { type: 'special', name: 'Serwerownia komputerowa', part: '1. piętro', icon: 'server', no: 2 },
-  16: { type: 'station', name: 'Parking', part: '1. piętro', no: 1 },
-  17: { type: 'exam', name: 'Niezdany egzamin', part: '1. piętro' },
-  18: { type: 'room', name: 'Biblioteka', part: '1. piętro' },
-  19: { type: 'room', name: 'Toaleta', part: '1. piętro' },
+  5: { type: 'chance', name: 'Szansa', part: 'Parter' },
+  6: { type: 'room', name: 'Sala 12', part: 'Parter' },
+  7: { type: 'room', name: 'Sala 13', part: 'Parter' },
 };
 const FIELD_DESC = {
   room: 'sala do kupienia (pytanie przy zakupie)',
   tax: 'płacisz czesne, pieniądze trafiają do puli na środku',
-  special: 'jedno z 4 pól specjalnych, mechanikę rozpiszesz później',
+  special: 'pole specjalne: kto zbierze wszystkie 4, wygrywa grę',
   chance: 'pytanie: dobrze = karta ułatwienia, źle = karta utrudnienia',
   todo: 'pole zostawione na później',
   earn: 'pole zarobkowe, zasady rozpiszesz później',
@@ -550,13 +540,13 @@ const PLAYERS = [
 const INNER = S - 2 * D - 0.12;   // bok środka planszy
 const CARD_W = 1.7, CARD_L = 2.4;
 const DECKS = [
-  { title: 'UŁATWIENIA', name: 'Ułatwienia', color: '#2E9E8A', icon: '+', x: 3.15, z: 3.15, rotY: Math.PI / 4 },
-  { title: 'UTRUDNIENIA', name: 'Utrudnienia', color: '#D6534F', icon: '!', x: -3.15, z: -3.15, rotY: Math.PI * 5 / 4 },
+  { title: 'UŁATWIENIA', name: 'Ułatwienia', color: '#2E9E8A', icon: '+', x: 2.35, z: 2.35, rotY: Math.PI / 4 },
+  { title: 'UTRUDNIENIA', name: 'Utrudnienia', color: '#D6534F', icon: '!', x: -2.35, z: -2.35, rotY: Math.PI * 5 / 4 },
 ];
 
 // Pozycja i obrót pola; start w prawym dolnym rogu, ruch zgodnie z zegarem.
 function cellPose(i) {
-  const side = Math.floor(i / 10), k = i % 10;
+  const side = Math.floor(i / SIDE), k = i % SIDE;
   const rotY = -side * Math.PI / 2;
   const u = k === 0 ? H - D / 2 : H - D - (k - 0.5) * W;
   const v = H - D / 2;
@@ -777,6 +767,24 @@ function drawChandelier(g, x, y) {
   }
   g.restore();
 }
+function drawVase(g, x, y) {
+  g.save(); g.translate(x, y);
+  g.fillStyle = '#D9895B'; g.strokeStyle = GOLD; g.lineWidth = 6;
+  g.beginPath();   // wazon z koła garncarskiego
+  g.moveTo(-26, -78); g.lineTo(26, -78);
+  g.bezierCurveTo(22, -50, 72, -30, 70, 12);
+  g.bezierCurveTo(68, 52, 38, 72, 30, 78);
+  g.lineTo(-30, 78);
+  g.bezierCurveTo(-38, 72, -68, 52, -70, 12);
+  g.bezierCurveTo(-72, -30, -22, -50, -26, -78);
+  g.closePath(); g.fill(); g.stroke();
+  g.fillStyle = '#B86A3E';
+  g.beginPath(); g.ellipse(0, -78, 30, 8, 0, 0, Math.PI * 2); g.fill();
+  g.strokeStyle = 'rgba(255,255,255,.6)'; g.lineWidth = 5;
+  g.beginPath(); g.moveTo(-64, 0); g.bezierCurveTo(-30, 14, 30, 14, 64, 0); g.stroke();
+  g.beginPath(); g.moveTo(-58, 30); g.bezierCurveTo(-26, 42, 26, 42, 58, 30); g.stroke();
+  g.restore();
+}
 function drawServerRack(g, x, y) {
   g.save(); g.translate(x, y);
   g.fillStyle = 'rgba(255,255,255,.08)'; g.strokeStyle = GOLD; g.lineWidth = 6;
@@ -831,7 +839,7 @@ function drawCorner(g, i, w, h) {
       g.fillStyle = GOLD; g.font = '700 128px Fredoka, sans-serif'; g.fillText('START', 0, -20);
       g.fillStyle = 'rgba(255,255,255,.75)'; g.font = '600 40px Fredoka, sans-serif'; g.fillText('POLE 1', 0, 70);
     });
-  } else if (i === 10) {
+  } else if (i === SIDE) {
     g.fillStyle = '#FFF4E2'; g.fillRect(0, 0, w, h);
     rotatedText(g, w, h, () => {
       g.strokeStyle = NAVY; g.lineWidth = 10;
@@ -840,7 +848,7 @@ function drawCorner(g, i, w, h) {
       g.font = '700 92px Fredoka, sans-serif'; g.fillText('DZIEKANAT', 0, 0);
       g.fillStyle = '#7A849C'; g.font = '600 40px Fredoka, sans-serif'; g.fillText('POLE 11', 0, 85);
     });
-  } else if (i === 20) {
+  } else if (i === 2 * SIDE) {
     g.fillStyle = '#FFF4D2'; g.fillRect(0, 0, w, h);
     rotatedText(g, w, h, () => {
       for (let k = 0; k < 3; k++) {   // stos monet
@@ -867,7 +875,7 @@ function drawCorner(g, i, w, h) {
   }
 }
 function tileTexture(i) {
-  const side = Math.floor(i / 10), corner = i % 10 === 0, floor = FLOORS[side];
+  const side = Math.floor(i / SIDE), corner = i % SIDE === 0, floor = FLOORS[side];
   const field = FIELDS[i];
   const [c, g] = makeCanvas(corner ? 640 : 384, 640);
   const w = c.width, h = c.height;
@@ -896,13 +904,14 @@ function tileTexture(i) {
         g.restore();
       }
       g.fillStyle = NAVY; g.font = '700 66px Fredoka, sans-serif'; g.fillText('CZESNE', w / 2, h * 0.45);
-      g.fillStyle = '#B4533F'; g.font = '600 27px Fredoka, sans-serif'; g.fillText('PŁACISZ DO PULI', w / 2, h * 0.54);
+      g.fillStyle = '#B4533F'; g.font = '600 27px Fredoka, sans-serif'; g.fillText('ZAPŁAĆ DO PULI', w / 2, h * 0.54);
     } else if (type === 'special') {
       const grad = g.createLinearGradient(0, 0, 0, h);
       grad.addColorStop(0, '#4A3380'); grad.addColorStop(1, '#1E2A47');
       g.fillStyle = grad; g.fillRect(0, 0, w, h);
       g.strokeStyle = GOLD; g.lineWidth = 6; g.strokeRect(16, 16, w - 32, h - 32);
       if (field.icon === 'server') drawServerRack(g, w / 2, h * 0.2);
+      else if (field.icon === 'vase') drawVase(g, w / 2, h * 0.2);
       else drawChandelier(g, w / 2, h * 0.2);
       g.fillStyle = '#FFFFFF'; drawLines(g, field.name.toUpperCase(), w / 2, h * 0.47, w - 60, 58);
       g.fillStyle = GOLD; g.font = '600 24px Fredoka, sans-serif'; g.fillText(`POLE SPECJALNE · ${field.no}/4`, w / 2, h * 0.6);
@@ -1469,7 +1478,7 @@ function updateLimits() {
   controls.maxDistance = view === 'board' ? boardDist() * 1.6 : showDist() * 1.8;
 }
 const HINTS = {
-  board: '40 pól · 4 piętra · przeciągnij, aby obracać · kliknij pole lub stos kart',
+  board: '32 pola · 4 piętra · przeciągnij, aby obracać · kliknij pole lub stos kart',
   models: 'Pionki i budynki · przeciągnij, aby obejrzeć z każdej strony',
   cards: 'Karty „Przekup dziekanat” · kliknij kartę, aby ją odwrócić',
 };
@@ -1514,13 +1523,13 @@ function showCard(badge, badgeBg, badgeInk, title, sub) {
 function selectCell(i) {
   if (i === null) { highlight(null); $('fieldCard').hidden = true; return; }
   highlight(tileTops[i]);
-  const floor = FLOORS[Math.floor(i / 10)];
+  const floor = FLOORS[Math.floor(i / SIDE)];
   const field = FIELDS[i];
   let title, sub;
   if (CORNER_INFO[i]) [title, sub] = CORNER_INFO[i];
   else if (field) { title = `Pole ${i + 1} · ${field.name}`; sub = `${field.part} · ${FIELD_DESC[field.type]}`; }
   else { title = `Pole ${i + 1}`; sub = `${floor.label} · funkcję pola dopiszemy, gdy je rozpiszesz`; }
-  showCard(i + 1, i % 10 === 0 ? '#E6EAF2' : floor.color, '#1e2a47', title, sub);
+  showCard(i + 1, i % SIDE === 0 ? '#E6EAF2' : floor.color, '#1e2a47', title, sub);
 }
 function selectDeck(face) {
   const deck = face.userData.deck;

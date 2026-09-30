@@ -39,7 +39,9 @@ Plansza będzie mniejsza. Pierwsza ściana:
 | 8 | Sala 13 | sala do kupienia |
 | 9 | Dziekanat | narożnik |
 
-Do potwierdzenia: czy każda ściana ma 7 pól między narożnikami (razem 32 pola) i co z Salą balową i Kuchnią.
+Każda ściana ma 7 pól między narożnikami, razem **32 pola**. Narożniki: START (1), Dziekanat (9), Stypendium rektorskie (17), Udaj się do dziekanatu (25). Pola 10–16, 18–24 i 26–32 czekają na rozpisanie.
+
+Do ustalenia: co z Salą balową i Kuchnią.
 
 ## Wygląd planszy
 
@@ -89,7 +91,7 @@ Do potwierdzenia: czy każda ściana ma 7 pól między narożnikami (razem 32 po
 ## Otwarte sprawy
 
 - Wybór jednej z 5 wersji wyglądu planszy.
-- Liczba pól na ścianie (7 między narożnikami = 32 pola?) i pozostałe ściany planszy.
+- Pozostałe ściany planszy (pola 10–16, 18–24, 26–32).
 - Sala balowa i Kuchnia: czy zostają i gdzie.
 - Zasady gry od nowa: pytania, kupowanie pól, dziekanat, karty, pola specjalne, 2 na 2, boty.
 - Logo i kolory uczelni.
