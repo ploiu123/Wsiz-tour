@@ -331,7 +331,7 @@
   </div>
 
   <div class="hud hud-bottom" id="modelsHud" hidden>
-    <p class="caption panel"><b>Wszystkie modele są zbudowane kodem z prostych brył, bez gotowych plików 3D.</b> Kolor laptopa i komputera to kolor właściciela pola. Pionki możesz podmienić na swoje pomysły.</p>
+    <p class="caption panel"><b>Wszystkie modele są zbudowane kodem z prostych brył, bez gotowych plików 3D.</b> Budynki od poziomu 1 do 5: telefon, laptop, komputer, szafa rack i serwerownia jako hotel. Ich kolor to kolor właściciela pola. Pionki możesz podmienić na swoje pomysły.</p>
   </div>
 
   <div class="toast panel" id="toast" hidden role="status"></div>
@@ -1194,7 +1194,7 @@ function makeMug(color) {
 }
 
 // ---------------------------------------------------------------------------
-// Modele: budynki (laptopy 1–4, komputer = hotel)
+// Modele: budynki (1 telefon, 2 laptop, 3 komputer, 4 szafa rack, 5 serwerownia = hotel)
 // ---------------------------------------------------------------------------
 let keyboardTex;
 function getKeyboardTex() {
@@ -1244,9 +1244,8 @@ function screenTexture(color) {
   return t;
 }
 const screenMat = color => new THREE.MeshBasicMaterial({ map: screenTexture(color), toneMapped: false });
-const LAPTOP_SCALE = [0.72, 0.86, 1.0, 1.14];
 
-function makeLaptop(color, level) {
+function makeLaptop(color) {
   const g = new THREE.Group();
   const base = mesh(new RoundedBoxGeometry(0.62, 0.03, 0.42, 2, 0.012), aluMat); base.position.y = 0.015;
   const keys = mesh(new THREE.PlaneGeometry(0.54, 0.19), new THREE.MeshStandardMaterial({ map: getKeyboardTex(), roughness: 0.7 }), false);
@@ -1260,17 +1259,99 @@ function makeLaptop(color, level) {
   lid.position.set(0, 0.008, 0.205);
   const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.56, 0.34), screenMat(color));
   screen.rotation.x = Math.PI / 2; screen.position.set(0, -0.0008, 0.21);
-  const logoMat = level >= 3
-    ? new THREE.MeshBasicMaterial({ color: '#ffffff', toneMapped: false })
-    : mat(mix(color, '#ffffff', 0.55), { roughness: 0.3 });
-  const logo = mesh(new THREE.CircleGeometry(0.045, 32), logoMat, false);
+  const logo = mesh(new THREE.CircleGeometry(0.045, 32), mat(mix(color, '#ffffff', 0.55), { roughness: 0.3 }), false);
   logo.rotation.x = -Math.PI / 2; logo.position.set(0, 0.0168, 0.21);
   hinge.add(lid, screen, logo);
   hinge.rotation.x = -1.83;
   g.add(base, keys, pad, hinge);
-  g.scale.setScalar(LAPTOP_SCALE[level - 1]);
   return g;
 }
+
+function makePhone(color) {
+  const g = new THREE.Group();
+  const stand = mesh(new RoundedBoxGeometry(0.24, 0.02, 0.2, 2, 0.008), aluMat); stand.position.y = 0.01;
+  const lip = mesh(new THREE.BoxGeometry(0.24, 0.035, 0.02), aluMat); lip.position.set(0, 0.035, 0.07);
+  const tilt = new THREE.Group();
+  tilt.position.set(0, 0.02, 0.05);
+  tilt.rotation.x = -0.32;
+  const shell = mat(color, { roughness: 0.35, metalness: 0.2 });
+  const body = mesh(new RoundedBoxGeometry(0.2, 0.4, 0.024, 3, 0.01), [shell, shell, shell, shell, bezelMat, shell]);
+  body.position.y = 0.2;
+  const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.18, 0.37), screenMat(color));
+  screen.position.set(0, 0.2, 0.0125);
+  const cam = mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.01, 20), bezelMat);
+  cam.rotation.x = Math.PI / 2; cam.position.set(-0.055, 0.34, -0.015);
+  tilt.add(body, screen, cam);
+  const brace = mesh(new THREE.BoxGeometry(0.06, 0.2, 0.02), aluMat);
+  brace.position.set(0, 0.1, -0.05); brace.rotation.x = 0.45;
+  g.add(stand, lip, tilt, brace);
+  return g;
+}
+
+// Szafa rack: kilka serwerów z diodami w kolorze właściciela
+function makeRack(color) {
+  const g = new THREE.Group();
+  const frameMat = mat('#1C2130', { roughness: 0.5, metalness: 0.3 });
+  const W = 0.4, H = 0.86, Dp = 0.42;
+  const frame = mesh(new THREE.BoxGeometry(W, H, Dp), frameMat); frame.position.y = H / 2 + 0.03;
+  const top = mesh(new THREE.BoxGeometry(W + 0.01, 0.03, Dp + 0.01), mat(color, { roughness: 0.4 })); top.position.y = H + 0.045;
+  g.add(frame, top);
+  for (const [fx, fz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {   // nóżki
+    const f = mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.03, 12), aluMat);
+    f.position.set(fx * (W / 2 - 0.03), 0.015, fz * (Dp / 2 - 0.03));
+    g.add(f);
+  }
+  const unitMat = mat('#2E3547', { roughness: 0.45, metalness: 0.2 });
+  const ledMat = new THREE.MeshBasicMaterial({ color, toneMapped: false });
+  const greenMat = new THREE.MeshBasicMaterial({ color: '#7CF29A', toneMapped: false });
+  for (let k = 0; k < 8; k++) {
+    const y = 0.1 + k * 0.1;
+    const unit = mesh(new THREE.BoxGeometry(W - 0.05, 0.075, 0.02), unitMat, false);
+    unit.position.set(0, y, Dp / 2 + 0.005);
+    const led = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 0.012), ledMat);
+    led.position.set(-0.06, y, Dp / 2 + 0.016);
+    const dot = new THREE.Mesh(new THREE.CircleGeometry(0.008, 12), k % 3 ? greenMat : ledMat);
+    dot.position.set(0.13, y, Dp / 2 + 0.016);
+    g.add(unit, led, dot);
+  }
+  const glass = new THREE.Mesh(new THREE.PlaneGeometry(W - 0.02, H - 0.04),
+    new THREE.MeshStandardMaterial({ color: '#9FB6D8', transparent: true, opacity: 0.12, roughness: 0.05, metalness: 0.4, depthWrite: false }));
+  glass.position.set(0, H / 2 + 0.03, Dp / 2 + 0.03);
+  g.add(glass);
+  return g;
+}
+
+// Serwerownia (hotel): pomieszczenie z trzema szafami rack i klimatyzacją
+function makeServerRoom(color) {
+  const g = new THREE.Group();
+  const floorMat = mat('#C9D0DC', { roughness: 0.7 });
+  const wallMat = mat('#EEF1F6', { roughness: 0.8 });
+  const floor = mesh(new THREE.BoxGeometry(1.3, 0.05, 0.95), floorMat); floor.position.y = 0.025;
+  const back = mesh(new THREE.BoxGeometry(1.3, 0.62, 0.05), wallMat); back.position.set(0, 0.36, -0.45);
+  const side = mesh(new THREE.BoxGeometry(0.05, 0.62, 0.95), wallMat); side.position.set(-0.625, 0.36, 0);
+  const band = mesh(new THREE.BoxGeometry(1.32, 0.05, 0.06), mat(color, { roughness: 0.4 })); band.position.set(0, 0.695, -0.45);
+  const band2 = mesh(new THREE.BoxGeometry(0.06, 0.05, 0.97), mat(color, { roughness: 0.4 })); band2.position.set(-0.625, 0.695, 0);
+  g.add(floor, back, side, band, band2);
+  for (let k = 0; k < 3; k++) {
+    const r = makeRack(color);
+    r.scale.setScalar(0.62);
+    r.position.set(-0.3 + k * 0.33, 0.05, -0.18);
+    g.add(r);
+  }
+  const tray = mesh(new THREE.BoxGeometry(1.0, 0.03, 0.08), aluMat); tray.position.set(0.03, 0.66, -0.18);
+  const ac = mesh(new RoundedBoxGeometry(0.3, 0.12, 0.08, 2, 0.02), mat('#FFFFFF', { roughness: 0.5 })); ac.position.set(0.35, 0.55, -0.4);
+  const vent = mesh(new THREE.BoxGeometry(0.24, 0.015, 0.01), bezelMat); vent.position.set(0.35, 0.51, -0.355);
+  g.add(tray, ac, vent);
+  return g;
+}
+
+const BUILDINGS = [
+  { name: 'Telefon', make: makePhone, scale: 2.4 },
+  { name: 'Laptop', make: makeLaptop, scale: 1.9 },
+  { name: 'Komputer', make: makeComputer, scale: 1.6 },
+  { name: 'Szafa rack', make: makeRack, scale: 1.45 },
+  { name: 'Serwerownia', make: makeServerRoom, scale: 1.4 },
+];
 
 function makeComputer(color) {
   const g = new THREE.Group();
@@ -1437,8 +1518,7 @@ function addShowItem(obj, x, z, scale, title, sub) {
 }
 PLAYERS.forEach((p, i) => addShowItem(p.make(p.color), -3.3 + i * 2.2, -2.3, 2.2, p.pawn, 'pionek'));
 const demoColor = PLAYERS[1].color;
-[1, 2, 3, 4].forEach((lv, i) => addShowItem(makeLaptop(demoColor, lv), -4.4 + i * 2.2, 2.0, 1.9, `Laptop ${lv}`, `budynek · poziom ${lv}`));
-addShowItem(makeComputer(demoColor), 4.4, 2.0, 1.9, 'Komputer', 'hotel · poziom 5');
+BUILDINGS.forEach((b, i) => addShowItem(b.make(demoColor), -4.4 + i * 2.2, 2.0, b.scale, b.name, i === 4 ? 'hotel · poziom 5' : `budynek · poziom ${i + 1}`));
 
 // ---------------------------------------------------------------------------
 // Kamera i widoki

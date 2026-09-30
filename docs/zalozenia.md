@@ -68,9 +68,17 @@ Do ustalenia: co z Salą balową i Kuchnią.
 
 ## Budynki
 
-- Laptopy na poziomach 1–4, coraz większe, a jako hotel komputer stacjonarny.
-- Liczba poziomów: 4 albo 5, **do ustalenia**.
-- Obudowa laptopa i komputera ma kolor właściciela pola.
+5 poziomów:
+
+| Poziom | Budynek |
+|---|---|
+| 1 | telefon |
+| 2 | laptop |
+| 3 | komputer stacjonarny |
+| 4 | szafa rack z serwerami |
+| 5 (hotel) | serwerownia: pomieszczenie z trzema szafami rack |
+
+- Budynki mają elementy w kolorze właściciela pola (obudowa, diody, paski).
 
 ## Pionki
 
