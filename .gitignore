@@ -1,0 +1,14 @@
+# macOS
+.DS_Store
+
+# Node.js (przyda się, gdy przejdziemy na Node)
+node_modules/
+dist/
+
+# Hasła i klucze nigdy nie trafiają do repozytorium
+.env
+.env.*
+
+# Lokalne ustawienia edytora i asystenta
+.vscode/
+.claude/settings.local.json

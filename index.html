@@ -1,0 +1,1677 @@
+<meta charset="utf-8">
+<title>Plansza uczelniana 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Fredoka:wght@500;600;700&display=swap">
+<style>
+  :root {
+    --sky-top: #d5e0ef;
+    --sky-bottom: #f3f6fb;
+    --ink: #17213a;
+    --ink-soft: #5a6580;
+    --panel: rgba(255, 255, 255, .86);
+    --panel-hover: rgba(255, 255, 255, .97);
+    --panel-line: rgba(23, 33, 58, .10);
+    --chip: rgba(23, 33, 58, .06);
+    --btn: #1e2a47;
+    --btn-ink: #ffffff;
+    --btn-hover: #2c3c64;
+    --focus: #2f7ff0;
+    --shadow: 0 8px 28px rgba(23, 33, 58, .12);
+    --display: "Fredoka", "Trebuchet MS", system-ui, sans-serif;
+    --body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --sky-top: #090e19;
+      --sky-bottom: #1a2640;
+      --ink: #e9eef7;
+      --ink-soft: #9ba7bf;
+      --panel: rgba(18, 25, 42, .86);
+      --panel-hover: rgba(28, 37, 60, .95);
+      --panel-line: rgba(255, 255, 255, .09);
+      --chip: rgba(255, 255, 255, .07);
+      --btn: #f2c14e;
+      --btn-ink: #17213a;
+      --btn-hover: #f6d27a;
+      --shadow: 0 8px 28px rgba(0, 0, 0, .4);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --sky-top: #090e19;
+    --sky-bottom: #1a2640;
+    --ink: #e9eef7;
+    --ink-soft: #9ba7bf;
+    --panel: rgba(18, 25, 42, .86);
+    --panel-hover: rgba(28, 37, 60, .95);
+    --panel-line: rgba(255, 255, 255, .09);
+    --chip: rgba(255, 255, 255, .07);
+    --btn: #f2c14e;
+    --btn-ink: #17213a;
+    --btn-hover: #f6d27a;
+    --shadow: 0 8px 28px rgba(0, 0, 0, .4);
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bottom) 100%);
+    color: var(--ink);
+    font: 14px/1.4 var(--body);
+    -webkit-font-smoothing: antialiased;
+  }
+  #stage { position: relative; height: 100%; overflow: hidden; }
+  .gl { position: absolute; inset: 0; display: block; touch-action: none; outline: none; }
+  .labels { position: absolute; inset: 0; pointer-events: none; }
+  .label3d {
+    pointer-events: none;
+    display: flex; flex-direction: column; align-items: center; gap: 1px;
+    padding: 6px 12px; border-radius: 12px;
+    background: var(--panel); border: 1px solid var(--panel-line); box-shadow: var(--shadow);
+    white-space: nowrap;
+  }
+  .label3d b { font: 600 14px/1.2 var(--display); color: var(--ink); }
+  .label3d small { font-size: 11.5px; color: var(--ink-soft); }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--panel-line);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+  .hud {
+    position: absolute; left: 16px; right: 16px;
+    display: flex; gap: 10px; justify-content: space-between;
+    pointer-events: none;
+  }
+  .hud > * { pointer-events: auto; }
+  .hud, .field-card { z-index: 2; }
+
+  .cards-view { position: absolute; inset: 0; z-index: 1; overflow-y: auto; padding: 100px 16px 40px; }
+  .cards-head { max-width: 1040px; margin: 0 auto 22px; }
+  .cards-head h2 { margin: 0; font: 600 26px/1.15 var(--display); text-wrap: balance; }
+  .cards-head p { margin: 6px 0 0; max-width: 640px; color: var(--ink-soft); font-size: 14.5px; }
+  .cards-grid { max-width: 1040px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px; }
+  .card-slot { display: flex; flex-direction: column; gap: 10px; }
+  .flip { all: unset; box-sizing: border-box; display: block; width: 100%; aspect-ratio: 630 / 880; cursor: pointer; perspective: 1400px; border-radius: 5.7% / 4.1%; }
+  .flip:focus-visible { outline: 3px solid var(--focus); outline-offset: 5px; }
+  .flip-inner { position: relative; display: block; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform .6s cubic-bezier(.2, .7, .2, 1); }
+  .flip:hover .flip-inner { transform: translateY(-6px); }
+  .flip.flipped .flip-inner { transform: rotateY(180deg); }
+  .flip.flipped:hover .flip-inner { transform: rotateY(180deg) translateY(-6px); }
+  .face { position: absolute; inset: 0; display: block; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 5.7% / 4.1%; box-shadow: 0 14px 30px rgba(10, 20, 40, .28); overflow: hidden; }
+  .face svg { display: block; width: 100%; height: 100%; }
+  .face.back { transform: rotateY(180deg); }
+  .card-cap { margin: 0; text-align: center; font-size: 13px; color: var(--ink-soft); }
+  .card-cap b { color: var(--ink); font-weight: 600; }
+  .svg-display { font-family: var(--display); font-weight: 700; }
+  .svg-body { font-family: var(--body); }
+  @media (max-width: 860px) { .cards-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; } }
+  .hud-top { top: 16px; align-items: flex-start; }
+  .hud-bottom { bottom: 16px; align-items: flex-end; flex-wrap: wrap; }
+
+  .brand { padding: 10px 14px; max-width: min(440px, 100%); }
+  .brand h1 { margin: 0; font: 600 19px/1.15 var(--display); letter-spacing: .005em; text-wrap: balance; }
+  .brand p { margin: 3px 0 0; font-size: 12.5px; color: var(--ink-soft); }
+
+  .seg { display: flex; padding: 4px; gap: 2px; border-radius: 13px; }
+  .seg button {
+    font: 600 13.5px var(--body); color: var(--ink);
+    background: transparent; border: 0; border-radius: 9px;
+    padding: 8px 14px; cursor: pointer;
+  }
+  .seg button[aria-pressed="true"] { background: var(--btn); color: var(--btn-ink); }
+
+  .players { display: flex; gap: 4px; padding: 6px; }
+  .player {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 12px 5px 5px; border-radius: 11px;
+    border: 2px solid transparent;
+    transition: background .2s, border-color .2s;
+  }
+  .player.active { background: var(--chip); border-color: var(--c); }
+  .dot { width: 26px; height: 26px; border-radius: 50%; background: var(--c); box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .18); flex: none; }
+  .player b { display: block; font-weight: 600; font-size: 13px; line-height: 1.15; }
+  .player span { font-size: 11.5px; color: var(--ink-soft); }
+
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
+  .btn {
+    font: 600 14px var(--body);
+    border: 0; border-radius: 12px; padding: 11px 16px; cursor: pointer;
+    background: var(--btn); color: var(--btn-ink); box-shadow: var(--shadow);
+    transition: background .15s, transform .1s, opacity .15s;
+  }
+  .btn:hover { background: var(--btn-hover); }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled { opacity: .55; cursor: default; }
+  .btn.ghost {
+    background: var(--panel); color: var(--ink); border: 1px solid var(--panel-line);
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn.ghost:hover { background: var(--panel-hover); }
+  .tick { width: 14px; height: 14px; border-radius: 4px; border: 2px solid currentColor; display: inline-block; flex: none; }
+  .btn[aria-pressed="true"] .tick { background: currentColor; box-shadow: inset 0 0 0 2px var(--panel); }
+  .btn.roll { font-size: 15px; padding: 13px 20px; }
+  .readout {
+    font: 600 15px var(--display); font-variant-numeric: tabular-nums;
+    padding: 11px 14px; min-width: 116px; text-align: center; border-radius: 12px;
+  }
+  .caption { margin: 0; padding: 12px 16px; max-width: 580px; font-size: 13.5px; color: var(--ink-soft); }
+  .caption b { color: var(--ink); font-weight: 600; }
+
+  .field-card {
+    position: absolute; top: 90px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 10px 10px 12px; width: min(430px, calc(100% - 32px));
+  }
+  .fc-num {
+    flex: none; width: 46px; height: 46px; border-radius: 12px;
+    display: grid; place-items: center;
+    font: 700 20px var(--display); color: #1e2a47; background: var(--fc);
+  }
+  .fc-text { flex: 1; min-width: 0; }
+  .fc-text b { display: block; font: 600 15px/1.25 var(--display); }
+  .fc-text span { font-size: 12.5px; color: var(--ink-soft); }
+  .fc-close {
+    flex: none; width: 34px; height: 34px; border-radius: 10px; border: 0;
+    background: var(--chip); color: var(--ink); font-size: 18px; line-height: 1; cursor: pointer;
+  }
+  button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+  .loader {
+    position: absolute; inset: 0; display: grid; place-items: center;
+    font: 600 16px var(--display); color: var(--ink-soft); pointer-events: none; text-align: center; padding-inline: 16px;
+  }
+
+  @media (max-width: 720px) {
+    .brand { padding: 8px 12px; }
+    .brand h1 { font-size: 16px; }
+    .brand p { display: none; }
+    .seg button { padding: 7px 11px; font-size: 13px; }
+    .field-card { top: 70px; }
+    .players { width: 100%; display: grid; grid-template-columns: repeat(4, 1fr); }
+    .player { flex-direction: column; gap: 3px; padding: 6px 2px; text-align: center; }
+    .player span { display: none; }
+    .player b { font-size: 12px; }
+    .actions { width: 100%; }
+    .actions .btn, .readout { flex: 1 1 auto; padding: 10px 10px; font-size: 13px; }
+    .btn.roll { font-size: 14px; padding: 12px 14px; }
+    .readout { min-width: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+  }
+}
+</script>
+
+<div id="stage">
+  <div class="loader" id="loader">Ładowanie planszy…</div>
+
+  <div class="hud hud-top">
+    <div class="brand panel">
+      <h1>WSiZ Tour</h1>
+      <p id="hint">40 pól · 4 piętra · przeciągnij, aby obracać · kliknij pole lub stos kart</p>
+    </div>
+    <div class="seg panel" role="group" aria-label="Widok">
+      <button id="viewBoard" type="button" aria-pressed="true">Plansza</button>
+      <button id="viewModels" type="button" aria-pressed="false">Modele</button>
+      <button id="viewCards" type="button" aria-pressed="false">Karty</button>
+    </div>
+  </div>
+
+  <div class="field-card panel" id="fieldCard" hidden aria-live="polite">
+    <div class="fc-num" id="fcNum">1</div>
+    <div class="fc-text"><b id="fcTitle">Pole 1</b><span id="fcSub"></span></div>
+    <button class="fc-close" id="fcClose" type="button" aria-label="Zamknij">×</button>
+  </div>
+
+  <div class="hud hud-bottom" id="boardHud">
+    <div class="players panel" id="players" aria-label="Gracze"></div>
+    <div class="actions">
+      <button class="btn ghost" id="btnTop" type="button">Widok z góry</button>
+      <button class="btn ghost" id="btnReset" type="button">Reset widoku</button>
+      <button class="btn ghost" id="btnBuildings" type="button" aria-pressed="true"><span class="tick" aria-hidden="true"></span>Budynki</button>
+      <div class="readout panel" id="readout" aria-live="polite">Rzut: –</div>
+      <button class="btn roll" id="btnRoll" type="button">Rzuć kostkami</button>
+    </div>
+  </div>
+
+  <div class="hud hud-bottom" id="modelsHud" hidden>
+    <p class="caption panel"><b>Wszystkie modele są zbudowane kodem z prostych brył, bez gotowych plików 3D.</b> Kolor laptopa i komputera to kolor właściciela pola. Pionki możesz podmienić na swoje pomysły.</p>
+  </div>
+
+  <section class="cards-view" id="cardsView" hidden aria-label="Karty">
+    <div class="cards-head">
+      <h2>Przekup dziekanat</h2>
+      <p>4 karty ze stosu ułatwień. Każda pozwala od razu wyjść z dziekanatu, a gracz może mieć najwyżej 4. Kliknij kartę, żeby zobaczyć jej tył.</p>
+    </div>
+    <div class="cards-grid" id="cardsGrid"></div>
+  </section>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $ = id => document.getElementById(id);
+
+// ---------------------------------------------------------------------------
+// Układ planszy
+// ---------------------------------------------------------------------------
+const N = 9;                  // zwykłe pola między narożnikami
+const TOTAL = 4 * (N + 1);    // 40 pól
+const W = 1.2;                // szerokość zwykłego pola
+const D = 2.0;                // głębokość pola = bok narożnika
+const S = 2 * D + N * W;      // bok planszy
+const H = S / 2;
+const TILE_H = 0.12;
+const NAVY = '#1E2A47';
+const GOLD = '#E0B04A';
+
+// Ściana 1 = piwnica i parter, 2 = 1. piętro, 3 = 2. piętro, 4 = 3. piętro
+const FLOORS = [
+  { name: 'PIWNICA · PARTER', label: 'Piwnica / parter', color: '#93A1BC' },
+  { name: '1. PIĘTRO', label: '1. piętro', color: '#58BFAE' },
+  { name: '2. PIĘTRO', label: '2. piętro', color: '#F2A65A' },
+  { name: '3. PIĘTRO', label: '3. piętro', color: '#9B84E0' },
+];
+const CORNER_INFO = {
+  0: ['Pole 1 · START', 'Narożnik startowy'],
+  10: ['Pole 11 · Dziekanat', 'Stajesz tu: pytanie, zła odpowiedź = 1 kolejka postoju'],
+  20: ['Pole 21 · Stypendium rektorskie', 'Zabierasz całą pulę pieniędzy ze środka planszy'],
+  30: ['Pole 31 · Udaj się do dziekanatu', 'Idziesz do dziekanatu na 2 kolejki, bez pytania'],
+};
+// Pola ustalone do tej pory (klucz = numer pola - 1)
+const FIELDS = {
+  1: { type: 'room', name: 'Sala 04', part: 'Piwnica' },
+  2: { type: 'room', name: 'Sala 05', part: 'Piwnica' },
+  3: { type: 'room', name: 'Pracownia ceramiki', part: 'Piwnica' },
+  4: { type: 'tax', name: 'Czesne', part: 'Piwnica' },
+  5: { type: 'special', name: 'Sala balowa', part: 'Parter', icon: 'chandelier', no: 1 },
+  6: { type: 'chance', name: 'Szansa', part: 'Parter' },
+  7: { type: 'room', name: 'Sala 12', part: 'Parter' },
+  8: { type: 'room', name: 'Sala 13', part: 'Parter' },
+  9: { type: 'earn', name: 'Kuchnia', part: 'Parter' },
+  11: { type: 'room', name: 'Sala 21', part: '1. piętro' },
+  12: { type: 'room', name: 'Sala 22', part: '1. piętro' },
+  13: { type: 'room', name: 'Sala 23', part: '1. piętro' },
+  14: { type: 'chance', name: 'Szansa', part: '1. piętro' },
+  15: { type: 'special', name: 'Serwerownia komputerowa', part: '1. piętro', icon: 'server', no: 2 },
+  16: { type: 'station', name: 'Parking', part: '1. piętro', no: 1 },
+  17: { type: 'exam', name: 'Niezdany egzamin', part: '1. piętro' },
+  18: { type: 'room', name: 'Biblioteka', part: '1. piętro' },
+  19: { type: 'room', name: 'Toaleta', part: '1. piętro' },
+};
+const FIELD_DESC = {
+  room: 'sala do kupienia (pytanie przy zakupie)',
+  tax: 'płacisz czesne, pieniądze trafiają do puli na środku',
+  special: 'jedno z 4 pól specjalnych, mechanikę rozpiszesz później',
+  chance: 'pytanie: dobrze = karta ułatwienia, źle = karta utrudnienia',
+  todo: 'pole zostawione na później',
+  earn: 'pole zarobkowe, zasady rozpiszesz później',
+  exam: 'pytanie, zasady do potwierdzenia',
+  station: 'stacja z bonusami (jedna z 2), zasady rozpiszesz później',
+};
+
+const PLAYERS = [
+  { name: 'Gracz 1', pawn: 'Sztandar', color: '#E5484D', make: c => makeBanner(c) },
+  { name: 'Gracz 2', pawn: 'Biret', color: '#2F7FF0', make: c => makeCap(c) },
+  { name: 'Gracz 3', pawn: 'Książki', color: '#1FA463', make: c => makeBooks(c) },
+  { name: 'Gracz 4', pawn: 'Kubek kawy', color: '#F2B72E', make: c => makeMug(c) },
+];
+
+// Przykładowe budynki tylko do podglądu (poziom 1–4 = laptopy, 5 = komputer)
+const DEMO_BUILDINGS = [
+  { cell: 1, owner: 0, level: 1 }, { cell: 3, owner: 0, level: 2 }, { cell: 7, owner: 1, level: 3 },
+  { cell: 8, owner: 1, level: 4 }, { cell: 12, owner: 2, level: 5 }, { cell: 13, owner: 3, level: 2 },
+  { cell: 11, owner: 3, level: 4 }, { cell: 23, owner: 0, level: 5 }, { cell: 26, owner: 2, level: 1 },
+  { cell: 28, owner: 2, level: 3 }, { cell: 32, owner: 3, level: 5 }, { cell: 34, owner: 1, level: 2 },
+  { cell: 37, owner: 0, level: 3 },
+];
+
+// Stosy kart na środku: ułatwienia przy narożniku START, utrudnienia naprzeciwko (od strony dziekanatu)
+const INNER = S - 2 * D - 0.12;   // bok środka planszy
+const CARD_W = 1.7, CARD_L = 2.4;
+const DECKS = [
+  { title: 'UŁATWIENIA', name: 'Ułatwienia', color: '#2E9E8A', icon: '+', x: 3.15, z: 3.15, rotY: Math.PI / 4 },
+  { title: 'UTRUDNIENIA', name: 'Utrudnienia', color: '#D6534F', icon: '!', x: -3.15, z: -3.15, rotY: Math.PI * 5 / 4 },
+];
+
+// Pozycja i obrót pola; start w prawym dolnym rogu, ruch zgodnie z zegarem.
+function cellPose(i) {
+  const side = Math.floor(i / 10), k = i % 10;
+  const rotY = -side * Math.PI / 2;
+  const u = k === 0 ? H - D / 2 : H - D - (k - 0.5) * W;
+  const v = H - D / 2;
+  const c = Math.cos(rotY), s = Math.sin(rotY);
+  return { x: u * c + v * s, z: -u * s + v * c, rotY, side, corner: k === 0 };
+}
+
+// ---------------------------------------------------------------------------
+// Renderer, scena, kamera
+// ---------------------------------------------------------------------------
+const stage = $('stage');
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+} catch (err) {
+  $('loader').textContent = 'Ta przeglądarka nie obsługuje WebGL, więc plansza 3D się nie wyświetli.';
+  throw err;
+}
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(0x000000, 0);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.NeutralToneMapping;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.domElement.className = 'gl';
+renderer.domElement.setAttribute('aria-label', 'Plansza 3D');
+stage.prepend(renderer.domElement);
+
+const labelRenderer = new CSS2DRenderer();
+labelRenderer.domElement.className = 'labels';
+labelRenderer.domElement.hidden = true;
+renderer.domElement.after(labelRenderer.domElement);
+
+try {
+  await Promise.race([
+    Promise.all([
+      document.fonts.load('700 120px Fredoka'),
+      document.fonts.load('600 30px Fredoka'),
+      document.fonts.load('600 48px Figtree'),
+    ]),
+    new Promise(r => setTimeout(r, 3000)),
+  ]);
+} catch (e) { /* zostaje czcionka zapasowa */ }
+
+const scene = new THREE.Scene();
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.55;
+
+const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 200);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.enablePan = false;
+controls.minPolarAngle = 0;
+controls.maxPolarAngle = 1.2;   // można obracać na boki i patrzeć z góry, ale nie od spodu
+controls.minDistance = 5;
+
+scene.add(new THREE.HemisphereLight(0xffffff, 0xb9c3d6, 0.75));
+const sun = new THREE.DirectionalLight(0xffffff, 2.1);
+sun.position.set(8, 18, 10);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -12, right: 12, top: 12, bottom: -12, near: 1, far: 50 });
+sun.shadow.bias = -0.0004;
+sun.shadow.normalBias = 0.02;
+scene.add(sun);
+
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(120, 120), new THREE.ShadowMaterial({ opacity: 0.16 }));
+ground.rotation.x = -Math.PI / 2;
+ground.position.y = -0.52;
+ground.receiveShadow = true;
+scene.add(ground);
+
+// ---------------------------------------------------------------------------
+// Pomocnicze
+// ---------------------------------------------------------------------------
+const maxAniso = renderer.capabilities.getMaxAnisotropy();
+function mat(color, o = {}) { return new THREE.MeshStandardMaterial({ color, roughness: 0.55, metalness: 0, ...o }); }
+function mesh(geo, material, cast = true, receive = false) {
+  const m = new THREE.Mesh(geo, material);
+  m.castShadow = cast; m.receiveShadow = receive;
+  return m;
+}
+function makeCanvas(w, h) {
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  return [c, c.getContext('2d')];
+}
+function tex(c) {
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = maxAniso;
+  return t;
+}
+function mix(hex, other, a) { return '#' + new THREE.Color(hex).lerp(new THREE.Color(other), a).getHexString(); }
+const easeInOut = t => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+function angleDelta(a, b) {
+  let d = (b - a) % (Math.PI * 2);
+  if (d > Math.PI) d -= Math.PI * 2;
+  if (d < -Math.PI) d += Math.PI * 2;
+  return d;
+}
+
+const tweens = [];
+function tween(dur, update) {
+  return new Promise(resolve => tweens.push({ start: performance.now(), dur, update, resolve }));
+}
+function runTweens(now) {
+  for (let i = tweens.length - 1; i >= 0; i--) {
+    const tw = tweens[i];
+    const p = Math.min(1, (now - tw.start) / tw.dur);
+    tw.update(p);
+    if (p >= 1) { tweens.splice(i, 1); tw.resolve(); }
+  }
+}
+
+// Wspólne materiały
+const goldMat = mat(GOLD, { metalness: 0.7, roughness: 0.3 });
+const aluMat = mat('#C9CFDA', { metalness: 0.55, roughness: 0.35 });
+const bezelMat = mat('#161A24', { roughness: 0.4 });
+const flags = [];
+const steams = [];
+
+// ---------------------------------------------------------------------------
+// Tekstury pól
+// ---------------------------------------------------------------------------
+function rotatedText(g, w, h, fn) {
+  g.save(); g.translate(w / 2, h / 2); g.rotate(-Math.PI / 4); fn(); g.restore();
+}
+// Tekst zawijany do 2 linii; czcionka maleje, aż się zmieści
+function drawLines(g, text, x, y, maxW, size, weight = 700) {
+  let lines;
+  for (;;) {
+    g.font = `${weight} ${size}px Fredoka, sans-serif`;
+    lines = [];
+    let line = '';
+    for (const word of text.split(' ')) {
+      const t = line ? `${line} ${word}` : word;
+      if (line && g.measureText(t).width > maxW) { lines.push(line); line = word; } else line = t;
+    }
+    lines.push(line);
+    const widest = Math.max(...lines.map(l => g.measureText(l).width));
+    if ((lines.length <= 2 && widest <= maxW) || size <= 26) break;
+    size -= 4;
+  }
+  const lh = size * 1.02;
+  lines.forEach((l, k) => g.fillText(l, x, y + (k - (lines.length - 1) / 2) * lh));
+}
+function drawChandelier(g, x, y) {
+  g.save(); g.translate(x, y);
+  g.strokeStyle = GOLD; g.fillStyle = GOLD; g.lineWidth = 7; g.lineCap = 'round';
+  g.beginPath(); g.moveTo(0, -78); g.lineTo(0, 30); g.stroke();
+  g.beginPath(); g.moveTo(-90, 0); g.quadraticCurveTo(0, 70, 90, 0); g.stroke();
+  g.beginPath(); g.arc(0, 40, 13, 0, Math.PI * 2); g.fill();
+  for (const [cx, cy] of [[-90, 0], [-45, 26], [45, 26], [90, 0]]) {
+    g.fillStyle = '#FFFFFF'; g.fillRect(cx - 6, cy - 32, 12, 30);
+    g.fillStyle = '#FFD166'; g.beginPath(); g.ellipse(cx, cy - 44, 8, 12, 0, 0, Math.PI * 2); g.fill();
+  }
+  g.restore();
+}
+function drawServerRack(g, x, y) {
+  g.save(); g.translate(x, y);
+  g.fillStyle = 'rgba(255,255,255,.08)'; g.strokeStyle = GOLD; g.lineWidth = 6;
+  g.beginPath(); g.roundRect(-70, -80, 140, 160, 10); g.fill(); g.stroke();
+  for (let k = 0; k < 4; k++) {
+    const yy = -64 + k * 38;
+    g.fillStyle = '#2A2F45'; g.beginPath(); g.roundRect(-56, yy, 112, 28, 5); g.fill();
+    g.fillStyle = k % 2 ? '#7FD1FF' : '#9FE0A8'; g.beginPath(); g.arc(-40, yy + 14, 5, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#FFD166'; g.beginPath(); g.arc(-26, yy + 14, 5, 0, Math.PI * 2); g.fill();
+    g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 3;
+    for (let n = 0; n < 4; n++) { g.beginPath(); g.moveTo(-6 + n * 14, yy + 7); g.lineTo(-6 + n * 14, yy + 21); g.stroke(); }
+  }
+  g.restore();
+}
+function drawPot(g, x, y) {
+  g.save(); g.translate(x, y);
+  g.strokeStyle = 'rgba(224,123,57,.5)'; g.lineWidth = 6; g.lineCap = 'round';
+  for (const sx of [-26, 0, 26]) {   // para
+    g.beginPath(); g.moveTo(sx, -44); g.bezierCurveTo(sx - 12, -60, sx + 12, -72, sx, -90); g.stroke();
+  }
+  g.fillStyle = '#E07B39';
+  g.beginPath(); g.roundRect(-70, -22, 140, 84, [8, 8, 26, 26]); g.fill();
+  g.fillStyle = '#C4652A';
+  g.beginPath(); g.roundRect(-80, -34, 160, 16, 8); g.fill();
+  g.beginPath(); g.roundRect(-14, -46, 28, 14, 6); g.fill();
+  g.beginPath(); g.roundRect(-96, -6, 28, 14, 6); g.fill();
+  g.beginPath(); g.roundRect(68, -6, 28, 14, 6); g.fill();
+  g.restore();
+}
+function drawExamSheet(g, x, y) {
+  g.save(); g.translate(x, y); g.rotate(-0.06);
+  g.fillStyle = '#FFFFFF'; g.strokeStyle = '#C9D0DC'; g.lineWidth = 4;
+  g.beginPath(); g.roundRect(-62, -82, 124, 164, 8); g.fill(); g.stroke();
+  g.strokeStyle = '#D5DBE6'; g.lineWidth = 5;
+  for (let k = 0; k < 5; k++) { g.beginPath(); g.moveTo(-44, -54 + k * 22); g.lineTo(k === 4 ? 0 : 44, -54 + k * 22); g.stroke(); }
+  g.strokeStyle = '#D6534F'; g.lineWidth = 7; g.beginPath(); g.arc(26, 46, 30, 0, Math.PI * 2); g.stroke();
+  g.fillStyle = '#D6534F'; g.font = '700 50px Fredoka, sans-serif'; g.fillText('2', 26, 49);   // ocena 2 = niezdany
+  g.restore();
+}
+function drawCorner(g, i, w, h) {
+  if (i === 0) {
+    const grad = g.createLinearGradient(0, 0, w, h);
+    grad.addColorStop(0, '#27385F'); grad.addColorStop(1, '#161F38');
+    g.fillStyle = grad; g.fillRect(0, 0, w, h);
+    // strzałka w kierunku ruchu
+    g.fillStyle = GOLD;
+    g.beginPath();
+    g.moveTo(80, h - 110); g.lineTo(170, h - 165); g.lineTo(170, h - 132);
+    g.lineTo(w - 80, h - 132); g.lineTo(w - 80, h - 88); g.lineTo(170, h - 88);
+    g.lineTo(170, h - 55); g.closePath(); g.fill();
+    rotatedText(g, w, h, () => {
+      g.fillStyle = GOLD; g.font = '700 128px Fredoka, sans-serif'; g.fillText('START', 0, -20);
+      g.fillStyle = 'rgba(255,255,255,.75)'; g.font = '600 40px Fredoka, sans-serif'; g.fillText('POLE 1', 0, 70);
+    });
+  } else if (i === 10) {
+    g.fillStyle = '#FFF4E2'; g.fillRect(0, 0, w, h);
+    rotatedText(g, w, h, () => {
+      g.strokeStyle = NAVY; g.lineWidth = 10;
+      g.beginPath(); g.arc(0, -135, 62, 0, Math.PI * 2); g.stroke();
+      g.fillStyle = NAVY; g.font = '700 70px Fredoka, sans-serif'; g.fillText('D', 0, -130);
+      g.font = '700 92px Fredoka, sans-serif'; g.fillText('DZIEKANAT', 0, 0);
+      g.fillStyle = '#7A849C'; g.font = '600 40px Fredoka, sans-serif'; g.fillText('POLE 11', 0, 85);
+    });
+  } else if (i === 20) {
+    g.fillStyle = '#FFF4D2'; g.fillRect(0, 0, w, h);
+    rotatedText(g, w, h, () => {
+      for (let k = 0; k < 3; k++) {   // stos monet
+        const y = -120 - k * 28;
+        g.fillStyle = '#B98A2A'; g.beginPath(); g.ellipse(0, y + 10, 74, 26, 0, 0, Math.PI * 2); g.fill();
+        g.fillStyle = GOLD; g.beginPath(); g.ellipse(0, y, 74, 26, 0, 0, Math.PI * 2); g.fill();
+      }
+      g.fillStyle = NAVY; g.font = '700 80px Fredoka, sans-serif';
+      g.fillText('STYPENDIUM', 0, 5); g.fillText('REKTORSKIE', 0, 85);
+      g.fillStyle = '#8A7440'; g.font = '600 38px Fredoka, sans-serif'; g.fillText('POLE 21', 0, 160);
+    });
+  } else {
+    g.fillStyle = '#FDE9E7'; g.fillRect(0, 0, w, h);
+    rotatedText(g, w, h, () => {
+      g.fillStyle = '#D6534F'; g.beginPath(); g.arc(0, -150, 62, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#FFFFFF';
+      g.beginPath();
+      g.moveTo(-32, -162); g.lineTo(4, -162); g.lineTo(4, -186); g.lineTo(40, -150);
+      g.lineTo(4, -114); g.lineTo(4, -138); g.lineTo(-32, -138); g.closePath(); g.fill();
+      g.fillStyle = NAVY; g.font = '700 58px Fredoka, sans-serif'; g.fillText('UDAJ SIĘ DO', 0, -35);
+      g.font = '700 88px Fredoka, sans-serif'; g.fillText('DZIEKANATU', 0, 45);
+      g.fillStyle = '#A0706C'; g.font = '600 38px Fredoka, sans-serif'; g.fillText('POLE 31', 0, 125);
+    });
+  }
+}
+function tileTexture(i) {
+  const side = Math.floor(i / 10), corner = i % 10 === 0, floor = FLOORS[side];
+  const field = FIELDS[i];
+  const [c, g] = makeCanvas(corner ? 640 : 384, 640);
+  const w = c.width, h = c.height;
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillStyle = '#FBFCFE'; g.fillRect(0, 0, w, h);
+  if (corner) {
+    drawCorner(g, i, w, h);
+  } else {
+    const type = field ? field.type : 'blank';
+    let numColor = NAVY, floorColor = '#7A849C';
+    if (type === 'room' || type === 'blank') {
+      g.fillStyle = mix(floor.color, '#ffffff', 0.7); g.fillRect(0, 0, w, h * 0.34);   // działka na budynki
+      g.fillStyle = floor.color; g.fillRect(0, 0, w, 46);
+      if (field) { g.fillStyle = NAVY; drawLines(g, field.name.toUpperCase(), w / 2, h * 0.44, w - 44, 54); }
+    } else if (type === 'tax') {
+      g.fillStyle = '#FFF7E6'; g.fillRect(0, 0, w, h);
+      g.fillStyle = floor.color; g.fillRect(0, 0, w, 20);
+      for (let k = 0; k < 2; k++) {   // banknoty
+        g.save();
+        g.translate(w / 2 + (k ? 14 : -10), h * 0.22 + (k ? 10 : -6));
+        g.rotate(k ? 0.12 : -0.1);
+        g.fillStyle = k ? '#4FA36B' : '#3E8A58'; g.beginPath(); g.roundRect(-92, -48, 184, 96, 10); g.fill();
+        g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 4; g.beginPath(); g.roundRect(-80, -36, 160, 72, 6); g.stroke();
+        g.fillStyle = 'rgba(255,255,255,.8)'; g.beginPath(); g.arc(0, 0, 22, 0, Math.PI * 2); g.fill();
+        g.restore();
+      }
+      g.fillStyle = NAVY; g.font = '700 66px Fredoka, sans-serif'; g.fillText('CZESNE', w / 2, h * 0.45);
+      g.fillStyle = '#B4533F'; g.font = '600 27px Fredoka, sans-serif'; g.fillText('PŁACISZ DO PULI', w / 2, h * 0.54);
+    } else if (type === 'special') {
+      const grad = g.createLinearGradient(0, 0, 0, h);
+      grad.addColorStop(0, '#4A3380'); grad.addColorStop(1, '#1E2A47');
+      g.fillStyle = grad; g.fillRect(0, 0, w, h);
+      g.strokeStyle = GOLD; g.lineWidth = 6; g.strokeRect(16, 16, w - 32, h - 32);
+      if (field.icon === 'server') drawServerRack(g, w / 2, h * 0.2);
+      else drawChandelier(g, w / 2, h * 0.2);
+      g.fillStyle = '#FFFFFF'; drawLines(g, field.name.toUpperCase(), w / 2, h * 0.47, w - 60, 58);
+      g.fillStyle = GOLD; g.font = '600 24px Fredoka, sans-serif'; g.fillText(`POLE SPECJALNE · ${field.no}/4`, w / 2, h * 0.6);
+      numColor = GOLD; floorColor = 'rgba(255,255,255,.72)';
+    } else if (type === 'chance') {
+      g.fillStyle = floor.color; g.fillRect(0, 0, w, 20);
+      const cy = h * 0.24;
+      g.fillStyle = '#2E9E8A'; g.beginPath(); g.arc(w / 2, cy, 80, Math.PI / 2, Math.PI * 1.5); g.fill();
+      g.fillStyle = '#D6534F'; g.beginPath(); g.arc(w / 2, cy, 80, -Math.PI / 2, Math.PI / 2); g.fill();
+      g.fillStyle = '#FFFFFF'; g.font = '700 116px Fredoka, sans-serif'; g.fillText('?', w / 2, cy + 6);
+      g.fillStyle = NAVY; g.font = '700 62px Fredoka, sans-serif'; g.fillText('SZANSA', w / 2, h * 0.45);
+      g.font = '600 24px Fredoka, sans-serif';
+      g.fillStyle = '#2E9E8A'; g.fillText('DOBRZE: UŁATWIENIE', w / 2, h * 0.535);
+      g.fillStyle = '#D6534F'; g.fillText('ŹLE: UTRUDNIENIE', w / 2, h * 0.58);
+    } else if (type === 'earn') {
+      g.fillStyle = '#FFF3E6'; g.fillRect(0, 0, w, h);
+      g.fillStyle = floor.color; g.fillRect(0, 0, w, 20);
+      drawPot(g, w / 2, h * 0.25);
+      g.fillStyle = NAVY; drawLines(g, field.name.toUpperCase(), w / 2, h * 0.45, w - 44, 60);
+      g.fillStyle = '#C4652A'; g.font = '600 26px Fredoka, sans-serif'; g.fillText('POLE ZAROBKOWE', w / 2, h * 0.545);
+    } else if (type === 'station') {
+      g.fillStyle = '#EEF4FB'; g.fillRect(0, 0, w, h);
+      g.fillStyle = floor.color; g.fillRect(0, 0, w, 20);
+      const cy = h * 0.24;   // znak parkingu
+      g.fillStyle = '#FFFFFF'; g.beginPath(); g.roundRect(w / 2 - 86, cy - 86, 172, 172, 22); g.fill();
+      g.fillStyle = '#1F5FBF'; g.beginPath(); g.roundRect(w / 2 - 76, cy - 76, 152, 152, 16); g.fill();
+      g.fillStyle = '#FFFFFF'; g.font = '700 130px Fredoka, sans-serif'; g.fillText('P', w / 2, cy + 6);
+      g.fillStyle = NAVY; drawLines(g, field.name.toUpperCase(), w / 2, h * 0.45, w - 44, 60);
+      g.fillStyle = '#1F5FBF'; g.font = '600 26px Fredoka, sans-serif'; g.fillText(`STACJA · ${field.no}/2`, w / 2, h * 0.54);
+      g.font = '600 22px Fredoka, sans-serif'; g.fillText('Z BONUSAMI', w / 2, h * 0.585);
+    } else if (type === 'exam') {
+      g.fillStyle = '#FBF1F0'; g.fillRect(0, 0, w, h);
+      g.fillStyle = floor.color; g.fillRect(0, 0, w, 20);
+      drawExamSheet(g, w / 2, h * 0.21);
+      g.fillStyle = NAVY; drawLines(g, field.name.toUpperCase(), w / 2, h * 0.47, w - 44, 50);
+      g.fillStyle = '#B4533F'; g.font = '600 26px Fredoka, sans-serif'; g.fillText('PYTANIE', w / 2, h * 0.59);
+    } else if (type === 'todo') {
+      g.fillStyle = '#F2F4F8'; g.fillRect(0, 0, w, h);
+      g.setLineDash([18, 12]); g.strokeStyle = '#B7BFCE'; g.lineWidth = 5; g.strokeRect(22, 22, w - 44, h - 44); g.setLineDash([]);
+      g.fillStyle = '#9AA3B5'; g.font = '700 110px Fredoka, sans-serif'; g.fillText('?', w / 2, h * 0.27);
+      g.font = '700 38px Fredoka, sans-serif'; g.fillText('DO USTALENIA', w / 2, h * 0.45);
+      numColor = '#8A93A8';
+    }
+    g.fillStyle = numColor;
+    g.font = `700 ${field ? 72 : 150}px Fredoka, sans-serif`;
+    g.fillText(String(i + 1), w / 2, field ? h * 0.8 : h * 0.745);
+    g.fillStyle = floorColor; g.font = '600 29px Fredoka, sans-serif';
+    g.fillText(field ? field.part.toUpperCase() : floor.name, w / 2, h * 0.925);
+  }
+  g.strokeStyle = 'rgba(30,42,71,.14)'; g.lineWidth = 6; g.strokeRect(3, 3, w - 6, h - 6);
+  return tex(c);
+}
+function centerTexture() {
+  const s = 2048;
+  const [c, g] = makeCanvas(s, s);
+  g.fillStyle = '#EEF2F8'; g.fillRect(0, 0, s, s);
+  // siatka jak na planie budynku
+  for (let x = 0; x <= s; x += 64) {
+    const major = x % 256 === 0;
+    g.strokeStyle = major ? 'rgba(30,42,71,.085)' : 'rgba(30,42,71,.04)';
+    g.lineWidth = major ? 3 : 2;
+    g.beginPath(); g.moveTo(x, 0); g.lineTo(x, s); g.moveTo(0, x); g.lineTo(s, x); g.stroke();
+  }
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  // nazwy pięter przy każdej ścianie, czytane od strony tej ściany
+  const edges = [[s / 2, s - 150, 0], [150, s / 2, Math.PI / 2], [s / 2, 150, Math.PI], [s - 150, s / 2, -Math.PI / 2]];
+  FLOORS.forEach((f, idx) => {
+    const [x, y, r] = edges[idx];
+    g.save(); g.translate(x, y); g.rotate(r);
+    g.font = '700 80px Fredoka, sans-serif';
+    const tw = g.measureText(f.name).width;
+    g.fillStyle = f.color;
+    g.beginPath(); g.roundRect(-tw / 2 - 52, -64, tw + 104, 128, 64); g.fill();
+    g.fillStyle = NAVY; g.fillText(f.name, 0, 4);
+    g.restore();
+  });
+  // logo na samym środku
+  g.fillStyle = 'rgba(255,255,255,.7)';
+  g.beginPath(); g.arc(s / 2, s / 2, 445, 0, Math.PI * 2); g.fill();
+  g.setLineDash([36, 26]); g.strokeStyle = 'rgba(30,42,71,.32)'; g.lineWidth = 12;
+  g.stroke(); g.setLineDash([]);
+  g.fillStyle = 'rgba(30,42,71,.5)'; g.font = '700 124px Fredoka, sans-serif';
+  g.fillText('LOGO', s / 2, s / 2 - 68); g.fillText('UCZELNI', s / 2, s / 2 + 76);
+  // miejsca na stosy kart (widoczne też na wydruku planszy)
+  const px = s / INNER;
+  for (const deck of DECKS) {
+    g.save();
+    g.translate(s / 2 + deck.x * px, s / 2 + deck.z * px);
+    g.rotate(-deck.rotY);
+    const w = (CARD_W + 0.16) * px, l = (CARD_L + 0.16) * px;
+    g.fillStyle = mix(deck.color, '#ffffff', 0.82);
+    g.beginPath(); g.roundRect(-w / 2, -l / 2, w, l, 28); g.fill();
+    g.setLineDash([26, 18]); g.strokeStyle = deck.color; g.lineWidth = 8; g.stroke(); g.setLineDash([]);
+    g.fillStyle = deck.color; g.font = '700 64px Fredoka, sans-serif';
+    g.fillText(deck.title, 0, l / 2 + 62);
+    g.restore();
+  }
+  return tex(c);
+}
+function dieTexture(n) {
+  const [c, g] = makeCanvas(256, 256);
+  g.fillStyle = '#FFFFFF'; g.fillRect(0, 0, 256, 256);
+  const P = {
+    1: [[.5, .5]], 2: [[.27, .27], [.73, .73]], 3: [[.27, .27], [.5, .5], [.73, .73]],
+    4: [[.27, .27], [.73, .27], [.27, .73], [.73, .73]],
+    5: [[.27, .27], [.73, .27], [.5, .5], [.27, .73], [.73, .73]],
+    6: [[.27, .25], [.73, .25], [.27, .5], [.73, .5], [.27, .75], [.73, .75]],
+  };
+  g.fillStyle = n === 1 ? '#E5484D' : NAVY;
+  for (const [x, y] of P[n]) { g.beginPath(); g.arc(x * 256, y * 256, n === 1 ? 30 : 22, 0, Math.PI * 2); g.fill(); }
+  return tex(c);
+}
+
+// ---------------------------------------------------------------------------
+// Modele: pionki
+// ---------------------------------------------------------------------------
+function pawnBase(color) {
+  const g = new THREE.Group();
+  const base = mesh(new THREE.CylinderGeometry(0.2, 0.22, 0.07, 40), mat(color, { roughness: 0.45 }));
+  base.position.y = 0.035;
+  const rim = mesh(new THREE.TorusGeometry(0.2, 0.012, 8, 40), goldMat);
+  rim.rotation.x = Math.PI / 2; rim.position.y = 0.07;
+  g.add(base, rim);
+  return g;
+}
+
+function bannerTexture(color) {
+  const [c, g] = makeCanvas(256, 240);
+  g.fillStyle = color; g.fillRect(0, 0, 256, 240);
+  g.strokeStyle = GOLD; g.lineWidth = 9; g.strokeRect(14, 12, 228, 196);
+  g.fillStyle = GOLD;
+  for (let x = 0; x < 256; x += 16) { g.beginPath(); g.moveTo(x, 216); g.lineTo(x + 8, 240); g.lineTo(x + 16, 216); g.fill(); }
+  g.strokeStyle = '#FFFFFF'; g.lineWidth = 7;
+  g.beginPath(); g.arc(128, 110, 60, 0, Math.PI * 2); g.stroke();
+  g.fillStyle = '#FFFFFF';
+  for (const dir of [-1, 1]) {   // otwarta księga
+    g.beginPath();
+    g.moveTo(128, 98);
+    g.quadraticCurveTo(128 + dir * 20, 86, 128 + dir * 42, 90);
+    g.lineTo(128 + dir * 42, 134);
+    g.quadraticCurveTo(128 + dir * 20, 130, 128, 142);
+    g.closePath(); g.fill();
+  }
+  return tex(c);
+}
+function makeBanner(color) {
+  const g = new THREE.Group();
+  g.add(pawnBase(color));
+  const px = -0.1;
+  const foot = mesh(new THREE.CylinderGeometry(0.045, 0.055, 0.05, 20), goldMat); foot.position.set(px, 0.095, 0);
+  const pole = mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.86, 12), goldMat); pole.position.set(px, 0.5, 0);
+  const knob = mesh(new THREE.SphereGeometry(0.034, 16, 12), goldMat); knob.position.set(px, 0.955, 0);
+  const tip = mesh(new THREE.ConeGeometry(0.022, 0.08, 12), goldMat); tip.position.set(px, 1.02, 0);
+  const geo = new THREE.PlaneGeometry(0.36, 0.34, 18, 6);
+  geo.translate(0.18, 0, 0);
+  const flag = mesh(geo, new THREE.MeshStandardMaterial({ map: bannerTexture(color), side: THREE.DoubleSide, roughness: 0.75 }));
+  flag.position.set(px + 0.014, 0.73, 0);
+  flags.push({ geo, base: Float32Array.from(geo.attributes.position.array), width: 0.36 });
+  g.add(foot, pole, knob, tip, flag);
+  return g;
+}
+
+function makeCap(color) {
+  const g = new THREE.Group();
+  g.add(pawnBase(color));
+  const body = mat(color, { roughness: 0.4 });
+  const pts = [[0, 0.07], [0.15, 0.07], [0.15, 0.09], [0.11, 0.12], [0.075, 0.2], [0.062, 0.29], [0.07, 0.33], [0.12, 0.35], [0.12, 0.37], [0, 0.37]]
+    .map(([x, y]) => new THREE.Vector2(x, y));
+  const torso = mesh(new THREE.LatheGeometry(pts, 40), body);
+  const head = mesh(new THREE.SphereGeometry(0.105, 28, 20), body); head.position.y = 0.46;
+  const dark = mat('#1B2233', { roughness: 0.6 });
+  const skull = mesh(new THREE.CylinderGeometry(0.098, 0.1, 0.07, 28), dark); skull.position.y = 0.535;
+  const board = mesh(new THREE.BoxGeometry(0.32, 0.022, 0.32), dark); board.position.y = 0.58; board.rotation.y = Math.PI / 4;
+  const button = mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.014, 16), goldMat); button.position.y = 0.598;
+  const len = 0.16 * Math.SQRT2;
+  const cord = mesh(new THREE.CylinderGeometry(0.006, 0.006, len, 8), goldMat); cord.rotation.z = Math.PI / 2; cord.position.set(len / 2, 0.596, 0);
+  const hang = mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.12, 8), goldMat); hang.position.set(len, 0.535, 0);
+  const tassel = mesh(new THREE.ConeGeometry(0.026, 0.07, 12), goldMat); tassel.position.set(len, 0.47, 0);
+  g.add(torso, head, skull, board, button, cord, hang, tassel);
+  return g;
+}
+
+function makeBooks(color) {
+  const g = new THREE.Group();
+  g.add(pawnBase(color));
+  const pages = mat('#F5EFDF', { roughness: 0.9 });
+  const specs = [[0.34, 0.075, 0.25, 0.12, -0.15], [0.3, 0.08, 0.23, -0.2, 0], [0.32, 0.07, 0.24, 0.28, 0.3], [0.27, 0.075, 0.2, -0.06, -0.35]];
+  let y = 0.07;
+  for (const [w, h, d, r, shade] of specs) {
+    const book = new THREE.Group();
+    const cover = mat(mix(color, shade < 0 ? '#000000' : '#ffffff', Math.abs(shade)), { roughness: 0.5 });
+    const t = 0.012;
+    const top = mesh(new RoundedBoxGeometry(w, t, d, 1, 0.004), cover); top.position.y = h / 2 - t / 2;
+    const bottom = top.clone(); bottom.position.y = -h / 2 + t / 2;
+    const spine = mesh(new RoundedBoxGeometry(t * 1.4, h, d, 1, 0.005), cover); spine.position.x = -w / 2 + t * 0.7;
+    const block = mesh(new THREE.BoxGeometry(w - 0.02, h - 2 * t, d - 0.016), pages); block.position.x = 0.002;
+    book.add(top, bottom, spine, block);
+    book.position.y = y + h / 2; book.rotation.y = r;
+    y += h;
+    g.add(book);
+  }
+  const scroll = mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.24, 20), pages);
+  scroll.rotation.set(0, 0.5, Math.PI / 2, 'YXZ');
+  scroll.position.y = y + 0.03;
+  const ribbon = mesh(new THREE.CylinderGeometry(0.033, 0.033, 0.03, 20), goldMat);
+  scroll.add(ribbon);
+  g.add(scroll);
+  return g;
+}
+
+function makeMug(color) {
+  const g = new THREE.Group();
+  g.add(pawnBase(color));
+  const m = mat(color, { roughness: 0.35, side: THREE.DoubleSide });
+  const pts = [[0, 0.075], [0.118, 0.075], [0.13, 0.085], [0.135, 0.1], [0.14, 0.36], [0.126, 0.36], [0.12, 0.1], [0, 0.1]]
+    .map(([x, y]) => new THREE.Vector2(x, y));
+  const cup = mesh(new THREE.LatheGeometry(pts, 48), m);
+  const band = mesh(new THREE.CylinderGeometry(0.1405, 0.14, 0.045, 48, 1, true), mat('#FFFFFF', { roughness: 0.4 }));
+  band.position.y = 0.26;
+  const coffee = mesh(new THREE.CircleGeometry(0.122, 40), mat('#4E321E', { roughness: 0.25 }), false);
+  coffee.rotation.x = -Math.PI / 2; coffee.position.y = 0.33;
+  const handle = mesh(new THREE.TorusGeometry(0.075, 0.02, 12, 28, Math.PI), m);
+  handle.rotation.z = -Math.PI / 2; handle.position.set(0.135, 0.22, 0);
+  g.add(cup, band, coffee, handle);
+  for (let s = 0; s < 2; s++) {   // para
+    const pts3 = [];
+    for (let j = 0; j <= 8; j++) {
+      const t = j / 8;
+      pts3.push(new THREE.Vector3((s ? 0.04 : -0.04) + Math.sin(t * Math.PI * 2 + s * 2) * 0.025, 0.37 + t * 0.24, 0));
+    }
+    const steam = new THREE.Mesh(
+      new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts3), 24, 0.011, 8, false),
+      new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.45, depthWrite: false }),
+    );
+    steam.userData.phase = s * 1.7;
+    steams.push(steam);
+    g.add(steam);
+  }
+  return g;
+}
+
+// ---------------------------------------------------------------------------
+// Modele: budynki (laptopy 1–4, komputer = hotel)
+// ---------------------------------------------------------------------------
+let keyboardTex;
+function getKeyboardTex() {
+  if (keyboardTex) return keyboardTex;
+  const [c, g] = makeCanvas(540, 190);
+  g.fillStyle = '#1D212B'; g.fillRect(0, 0, 540, 190);
+  g.fillStyle = '#3A4152';
+  const cols = 14, rows = 5, pad = 6;
+  const kw = (540 - pad * (cols + 1)) / cols, kh = (190 - pad * (rows + 1)) / rows;
+  for (let r = 0; r < rows; r++) {
+    for (let k = 0; k < cols; k++) {
+      if (r === rows - 1 && k > 3 && k < 10) continue;
+      g.beginPath(); g.roundRect(pad + k * (kw + pad), pad + r * (kh + pad), kw, kh, 5); g.fill();
+    }
+  }
+  g.beginPath(); g.roundRect(pad + 4 * (kw + pad), pad + (rows - 1) * (kh + pad), 6 * kw + 5 * pad, kh, 5); g.fill();
+  return (keyboardTex = tex(c));
+}
+const screenCache = new Map();
+function screenTexture(color) {
+  if (screenCache.has(color)) return screenCache.get(color);
+  const [c, g] = makeCanvas(512, 320);
+  const grad = g.createLinearGradient(0, 0, 0, 320);
+  grad.addColorStop(0, '#15233F'); grad.addColorStop(1, '#0B1324');
+  g.fillStyle = grad; g.fillRect(0, 0, 512, 320);
+  g.fillStyle = color; g.fillRect(0, 0, 512, 26);
+  g.fillStyle = 'rgba(255,255,255,.07)'; g.fillRect(0, 26, 112, 294);
+  let seed = parseInt(color.slice(1), 16) || 1;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const palette = [color, '#7FD1FF', '#F7C873', '#9FE0A8', '#E6EAF2'];
+  g.globalAlpha = 0.28; g.fillStyle = '#FFFFFF';
+  for (let y = 48; y < 300; y += 24) g.fillRect(16, y, 50 + rnd() * 30, 8);
+  g.globalAlpha = 0.92;
+  for (let y = 46; y < 300; y += 22) {
+    let x = 132 + Math.floor(rnd() * 3) * 18;
+    const n = 1 + Math.floor(rnd() * 3);
+    for (let k = 0; k < n && x < 470; k++) {
+      const w = Math.min(30 + rnd() * 110, 492 - x);
+      g.fillStyle = palette[Math.floor(rnd() * palette.length)];
+      g.fillRect(x, y, w, 9);
+      x += w + 12;
+    }
+  }
+  g.globalAlpha = 1;
+  const t = tex(c);
+  screenCache.set(color, t);
+  return t;
+}
+const screenMat = color => new THREE.MeshBasicMaterial({ map: screenTexture(color), toneMapped: false });
+const LAPTOP_SCALE = [0.72, 0.86, 1.0, 1.14];
+
+function makeLaptop(color, level) {
+  const g = new THREE.Group();
+  const base = mesh(new RoundedBoxGeometry(0.62, 0.03, 0.42, 2, 0.012), aluMat); base.position.y = 0.015;
+  const keys = mesh(new THREE.PlaneGeometry(0.54, 0.19), new THREE.MeshStandardMaterial({ map: getKeyboardTex(), roughness: 0.7 }), false);
+  keys.rotation.x = -Math.PI / 2; keys.position.set(0, 0.0305, -0.06);
+  const pad = mesh(new THREE.PlaneGeometry(0.17, 0.09), mat('#B5BCC9', { roughness: 0.3, metalness: 0.4 }), false);
+  pad.rotation.x = -Math.PI / 2; pad.position.set(0, 0.0305, 0.125);
+  const hinge = new THREE.Group();
+  hinge.position.set(0, 0.03, -0.2);
+  const shell = mat(color, { roughness: 0.4, metalness: 0.2 });
+  const lid = mesh(new RoundedBoxGeometry(0.62, 0.016, 0.41, 2, 0.006), [aluMat, aluMat, shell, bezelMat, aluMat, aluMat]);
+  lid.position.set(0, 0.008, 0.205);
+  const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.56, 0.34), screenMat(color));
+  screen.rotation.x = Math.PI / 2; screen.position.set(0, -0.0008, 0.21);
+  const logoMat = level >= 3
+    ? new THREE.MeshBasicMaterial({ color: '#ffffff', toneMapped: false })
+    : mat(mix(color, '#ffffff', 0.55), { roughness: 0.3 });
+  const logo = mesh(new THREE.CircleGeometry(0.045, 32), logoMat, false);
+  logo.rotation.x = -Math.PI / 2; logo.position.set(0, 0.0168, 0.21);
+  hinge.add(lid, screen, logo);
+  hinge.rotation.x = -1.83;
+  g.add(base, keys, pad, hinge);
+  g.scale.setScalar(LAPTOP_SCALE[level - 1]);
+  return g;
+}
+
+function makeComputer(color) {
+  const g = new THREE.Group();
+  const mx = -0.12;
+  const monitor = mesh(new RoundedBoxGeometry(0.8, 0.5, 0.04, 2, 0.015), bezelMat); monitor.position.set(mx, 0.49, -0.1);
+  const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.74, 0.44), screenMat(color)); screen.position.set(mx, 0.49, -0.079);
+  const neck = mesh(new THREE.BoxGeometry(0.06, 0.24, 0.035), aluMat); neck.position.set(mx, 0.15, -0.135);
+  const foot = mesh(new RoundedBoxGeometry(0.3, 0.02, 0.18, 2, 0.008), aluMat); foot.position.set(mx, 0.01, -0.12);
+  const tower = mesh(new RoundedBoxGeometry(0.2, 0.5, 0.42, 2, 0.02), mat('#262B38', { roughness: 0.45 })); tower.position.set(0.46, 0.25, -0.08);
+  const led = new THREE.Mesh(new THREE.PlaneGeometry(0.022, 0.38), new THREE.MeshBasicMaterial({ color, toneMapped: false }));
+  led.position.set(0.41, 0.27, 0.131);
+  const power = new THREE.Mesh(new THREE.CircleGeometry(0.014, 20), new THREE.MeshBasicMaterial({ color: '#ffffff', toneMapped: false }));
+  power.position.set(0.5, 0.44, 0.131);
+  const glass = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.38), new THREE.MeshBasicMaterial({ color: mix(color, '#000000', 0.4), toneMapped: false }));
+  glass.rotation.y = Math.PI / 2; glass.position.set(0.561, 0.26, -0.08);
+  const kbd = mesh(new RoundedBoxGeometry(0.52, 0.024, 0.15, 2, 0.008), mat('#E4E8EF')); kbd.position.set(mx, 0.012, 0.2);
+  const keys = mesh(new THREE.PlaneGeometry(0.48, 0.12), new THREE.MeshStandardMaterial({ map: getKeyboardTex(), roughness: 0.7 }), false);
+  keys.rotation.x = -Math.PI / 2; keys.position.set(mx, 0.0245, 0.2);
+  const mouse = mesh(new THREE.SphereGeometry(0.04, 16, 12), mat('#E4E8EF')); mouse.scale.set(1, 0.5, 1.5); mouse.position.set(0.3, 0.018, 0.22);
+  g.add(monitor, screen, neck, foot, tower, led, power, glass, kbd, keys, mouse);
+  return g;
+}
+
+// ---------------------------------------------------------------------------
+// Plansza
+// ---------------------------------------------------------------------------
+const board = new THREE.Group();
+scene.add(board);
+
+const base = mesh(new RoundedBoxGeometry(S + 0.8, 0.5, S + 0.8, 4, 0.2), mat(NAVY, { roughness: 0.6 }), true, true);
+base.position.y = -0.25;
+const trim = mesh(new RoundedBoxGeometry(S + 0.3, 0.02, S + 0.3, 2, 0.008), goldMat, false, true);
+board.add(base, trim);
+
+const tileBodyMat = mat('#DCE2EC', { roughness: 0.7 });
+const tileGeo = new RoundedBoxGeometry(W - 0.06, TILE_H, D - 0.06, 2, 0.025);
+const cornerGeo = new RoundedBoxGeometry(D - 0.06, TILE_H, D - 0.06, 2, 0.025);
+const tileTops = [];
+const cellGroups = [];
+for (let i = 0; i < TOTAL; i++) {
+  const p = cellPose(i);
+  const cg = new THREE.Group();
+  cg.position.set(p.x, 0, p.z);
+  cg.rotation.y = p.rotY;
+  board.add(cg);
+  cellGroups.push(cg);
+  const w = p.corner ? D : W;
+  const body = mesh(p.corner ? cornerGeo : tileGeo, tileBodyMat, false, true);
+  body.position.y = TILE_H / 2;
+  const top = mesh(new THREE.PlaneGeometry(w - 0.1, D - 0.1), new THREE.MeshStandardMaterial({ map: tileTexture(i), roughness: 0.8 }), false, true);
+  top.rotation.x = -Math.PI / 2;
+  top.position.y = TILE_H + 0.002;
+  top.userData.cell = i;
+  cg.add(body, top);
+  tileTops.push(top);
+}
+
+const center = mesh(new THREE.PlaneGeometry(INNER, INNER), new THREE.MeshStandardMaterial({ map: centerTexture(), roughness: 0.85 }), false, true);
+center.rotation.x = -Math.PI / 2;
+center.position.y = 0.016;
+board.add(center);
+
+function cardBackTexture(deck) {
+  const [c, g] = makeCanvas(512, 724);
+  const grad = g.createLinearGradient(0, 0, 0, 724);
+  grad.addColorStop(0, mix(deck.color, '#ffffff', 0.12));
+  grad.addColorStop(1, mix(deck.color, '#000000', 0.18));
+  g.fillStyle = grad; g.fillRect(0, 0, 512, 724);
+  g.strokeStyle = 'rgba(255,255,255,.08)'; g.lineWidth = 18;
+  for (let x = -724; x < 512; x += 56) { g.beginPath(); g.moveTo(x, 724); g.lineTo(x + 724, 0); g.stroke(); }
+  g.strokeStyle = '#FFFFFF'; g.lineWidth = 8;
+  g.beginPath(); g.roundRect(26, 26, 460, 672, 30); g.stroke();
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillStyle = '#FFFFFF'; g.beginPath(); g.arc(256, 300, 118, 0, Math.PI * 2); g.fill();
+  g.fillStyle = deck.color; g.font = '700 190px Fredoka, sans-serif'; g.fillText(deck.icon, 256, 312);
+  g.fillStyle = '#FFFFFF'; g.font = '700 60px Fredoka, sans-serif'; g.fillText(deck.title, 256, 520);
+  g.globalAlpha = 0.75; g.font = '600 30px Figtree, sans-serif'; g.fillText('KARTA', 256, 585); g.globalAlpha = 1;
+  return tex(c);
+}
+const deckFaces = [];
+const cardEdgeMats = [mat('#F7F8FB', { roughness: 0.7 }), mat('#E7EAF0', { roughness: 0.7 })];
+const cardGeo = new THREE.BoxGeometry(CARD_W, 0.014, CARD_L);
+let deckSeed = 7;
+const deckRnd = () => ((deckSeed = (deckSeed * 16807) % 2147483647) / 2147483647) - 0.5;
+for (const deck of DECKS) {
+  const pile = new THREE.Group();
+  pile.position.set(deck.x, 0.016, deck.z);
+  pile.rotation.y = deck.rotY;
+  let top;
+  for (let k = 0; k < 12; k++) {
+    top = mesh(cardGeo, cardEdgeMats[k % 2], true, true);
+    top.position.set(deckRnd() * 0.05, 0.007 + k * 0.014, deckRnd() * 0.05);
+    top.rotation.y = deckRnd() * 0.06;
+    pile.add(top);
+  }
+  const face = mesh(new THREE.PlaneGeometry(CARD_W - 0.03, CARD_L - 0.03), new THREE.MeshStandardMaterial({ map: cardBackTexture(deck), roughness: 0.5 }), false, true);
+  face.rotation.x = -Math.PI / 2;
+  face.position.y = 0.0075;
+  face.userData.deck = deck;
+  top.add(face);
+  deckFaces.push(face);
+  board.add(pile);
+}
+
+const buildingObjs = [];
+for (const b of DEMO_BUILDINGS) {
+  const color = PLAYERS[b.owner].color;
+  const obj = b.level === 5 ? makeComputer(color) : makeLaptop(color, b.level);
+  if (b.level === 5) obj.scale.setScalar(0.8);
+  obj.position.set(0, TILE_H, b.level === 5 ? -0.55 : -0.6);
+  cellGroups[b.cell].add(obj);
+  buildingObjs.push(obj);
+}
+
+// Pionki
+const pawns = PLAYERS.map((p, idx) => {
+  const obj = p.make(p.color);
+  board.add(obj);
+  return { obj, pos: 0, idx };
+});
+function slotWorld(cell, slot, count) {
+  const p = cellPose(cell);
+  let ox = 0, oz = p.corner ? 0.25 : 0.26;
+  if (count > 1) {
+    const offs = p.corner
+      ? [[-0.42, -0.1], [0.42, -0.1], [-0.42, 0.55], [0.42, 0.55]]
+      : [[-0.27, 0.02], [0.27, 0.02], [-0.27, 0.48], [0.27, 0.48]];
+    [ox, oz] = offs[slot];
+  }
+  const c = Math.cos(p.rotY), s = Math.sin(p.rotY);
+  return new THREE.Vector3(p.x + ox * c + oz * s, TILE_H, p.z - ox * s + oz * c);
+}
+function layoutCell(cell, animate = true) {
+  const occ = pawns.filter(pw => pw.pos === cell);
+  const rotY = cellPose(cell).rotY;
+  occ.forEach((pw, k) => {
+    const target = slotWorld(cell, k, occ.length);
+    const sc = occ.length > 1 ? 0.82 : 1;
+    if (!animate) {
+      pw.obj.position.copy(target); pw.obj.scale.setScalar(sc); pw.obj.rotation.y = rotY;
+      return;
+    }
+    const from = pw.obj.position.clone(), s0 = pw.obj.scale.x;
+    tween(220, t => {
+      const e = easeInOut(t);
+      pw.obj.position.lerpVectors(from, target, e);
+      pw.obj.scale.setScalar(s0 + (sc - s0) * e);
+    });
+  });
+}
+layoutCell(0, false);
+
+async function movePawn(pw, steps) {
+  const startCell = pw.pos;
+  for (let s = 0; s < steps; s++) {
+    const next = (pw.pos + 1) % TOTAL;
+    const from = pw.obj.position.clone();
+    const to = slotWorld(next, 0, 1);
+    const r0 = pw.obj.rotation.y;
+    const r1 = r0 + angleDelta(r0, cellPose(next).rotY);
+    const s0 = pw.obj.scale.x;
+    pw.pos = next;
+    await tween(reduceMotion ? 90 : 230, t => {
+      pw.obj.position.lerpVectors(from, to, t);
+      pw.obj.position.y = TILE_H + Math.sin(Math.PI * t) * 0.45;
+      pw.obj.rotation.y = r0 + (r1 - r0) * t;
+      pw.obj.scale.setScalar(s0 + (1 - s0) * t);
+    });
+    if (s === 0) layoutCell(startCell);
+  }
+  layoutCell(pw.pos);
+}
+
+// Kostki
+const diceMats = [3, 4, 1, 6, 2, 5].map(n => new THREE.MeshStandardMaterial({ map: dieTexture(n), roughness: 0.35 }));
+const dieGeo = new RoundedBoxGeometry(0.6, 0.6, 0.6, 4, 0.09);
+const DIE_REST = [new THREE.Vector3(-2.95, 0.316, 2.45), new THREE.Vector3(-2.05, 0.316, 2.9)];
+const FACE_EULER = { 1: [0, 0, 0], 2: [-Math.PI / 2, 0, 0], 3: [0, 0, Math.PI / 2], 4: [0, 0, -Math.PI / 2], 5: [Math.PI / 2, 0, 0], 6: [Math.PI, 0, 0] };
+const Y_AXIS = new THREE.Vector3(0, 1, 0);
+function faceQuat(v, yaw) {
+  const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(...FACE_EULER[v]));
+  return new THREE.Quaternion().setFromAxisAngle(Y_AXIS, yaw).multiply(q);
+}
+const dice = [0, 1].map(i => {
+  const d = mesh(dieGeo, diceMats);
+  d.position.copy(DIE_REST[i]);
+  d.quaternion.copy(faceQuat(i ? 3 : 5, i ? -0.25 : 0.2));
+  board.add(d);
+  return d;
+});
+async function throwDie(d, value, i) {
+  const target = faceQuat(value, (Math.random() - 0.5) * 0.7);
+  const rest = DIE_REST[i].clone().add(new THREE.Vector3((Math.random() - 0.5) * 0.2, 0, (Math.random() - 0.5) * 0.2));
+  const start = new THREE.Vector3(0.2 + i * 0.5, rest.y + 2.5, -0.3 + i * 0.3);
+  const axis = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
+  const spin = 5 * Math.PI + Math.random() * 2 * Math.PI;
+  const qStart = target.clone().multiply(new THREE.Quaternion().setFromAxisAngle(axis, spin));
+  const p0 = d.position.clone(), q0 = d.quaternion.clone();
+  await tween(reduceMotion ? 60 : 220, t => {
+    const e = easeInOut(t);
+    d.position.lerpVectors(p0, start, e);
+    d.quaternion.slerpQuaternions(q0, qStart, e);
+  });
+  const spinQ = new THREE.Quaternion();
+  await tween(reduceMotion ? 300 : 1100 + i * 120, t => {
+    const e = 1 - Math.pow(1 - t, 3);
+    d.position.x = start.x + (rest.x - start.x) * e;
+    d.position.z = start.z + (rest.z - start.z) * e;
+    d.position.y = rest.y + 2.5 * Math.pow(1 - t, 2) * Math.abs(Math.cos(t * Math.PI * 2.5));
+    spinQ.setFromAxisAngle(axis, spin * Math.pow(1 - t, 2));
+    d.quaternion.copy(target).multiply(spinQ);
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Widok „Modele”
+// ---------------------------------------------------------------------------
+const show = new THREE.Group();
+show.visible = false;
+scene.add(show);
+const stageDisc = mesh(new THREE.CylinderGeometry(6.9, 7.2, 0.4, 96), mat(NAVY, { roughness: 0.6 }), true, true);
+stageDisc.position.y = -0.2;
+const stageTop = mesh(new THREE.CylinderGeometry(6.75, 6.75, 0.02, 96), mat('#E8EDF5', { roughness: 0.8 }), false, true);
+stageTop.position.y = 0.01;
+show.add(stageDisc, stageTop);
+const turntables = [];
+function addShowItem(obj, x, z, scale, title, sub) {
+  const holder = new THREE.Group();
+  holder.position.set(x, 0, z);
+  const ped = mesh(new THREE.CylinderGeometry(0.95, 1.0, 0.1, 64), mat('#FFFFFF', { roughness: 0.6 }), false, true);
+  ped.position.y = 0.07;
+  obj.scale.multiplyScalar(scale);
+  obj.position.y = 0.12;
+  holder.add(ped, obj);
+  turntables.push(obj);
+  const el = document.createElement('div');
+  el.className = 'label3d';
+  el.innerHTML = `<b>${title}</b><small>${sub}</small>`;
+  const label = new CSS2DObject(el);
+  label.position.set(0, -0.05, 1.15);
+  holder.add(label);
+  show.add(holder);
+}
+PLAYERS.forEach((p, i) => addShowItem(p.make(p.color), -3.3 + i * 2.2, -2.3, 2.2, p.pawn, `pionek · ${p.name}`));
+const demoColor = PLAYERS[1].color;
+[1, 2, 3, 4].forEach((lv, i) => addShowItem(makeLaptop(demoColor, lv), -4.4 + i * 2.2, 2.0, 1.9, `Laptop ${lv}`, `budynek · poziom ${lv}`));
+addShowItem(makeComputer(demoColor), 4.4, 2.0, 1.9, 'Komputer', 'hotel · poziom 5');
+
+// ---------------------------------------------------------------------------
+// Kamera i widoki
+// ---------------------------------------------------------------------------
+let view = 'board';
+const DIR_BOARD = new THREE.Vector3(1, 1.3, 1).normalize();
+const DIR_SHOW = new THREE.Vector3(0, 0.55, 1).normalize();
+function fitDistance(size) {
+  const vf = THREE.MathUtils.degToRad(camera.fov);
+  const hf = 2 * Math.atan(Math.tan(vf / 2) * camera.aspect);
+  return size / Math.tan(Math.min(vf, hf) / 2);
+}
+const boardDist = () => fitDistance(S * 0.7);
+const showDist = () => fitDistance(5.9);
+function presetBoard() { return [DIR_BOARD.clone().multiplyScalar(boardDist()), new THREE.Vector3(0, 0, 0)]; }
+function presetTop() { return [new THREE.Vector3(0, boardDist() * 1.02, 0.001), new THREE.Vector3(0, 0, 0)]; }
+function presetShow() {
+  const t = new THREE.Vector3(0, 0.8, 0);
+  return [t.clone().add(DIR_SHOW.clone().multiplyScalar(showDist())), t];
+}
+function flyTo([pos, target], dur = 700) {
+  const p0 = camera.position.clone(), t0 = controls.target.clone();
+  controls.enabled = false;
+  return tween(reduceMotion ? 1 : dur, t => {
+    const e = easeInOut(t);
+    camera.position.lerpVectors(p0, pos, e);
+    controls.target.lerpVectors(t0, target, e);
+    if (t >= 1) controls.enabled = true;
+  });
+}
+function jumpTo([pos, target]) {
+  camera.position.copy(pos);
+  controls.target.copy(target);
+  controls.update();
+}
+function updateLimits() {
+  controls.maxDistance = view === 'board' ? boardDist() * 1.6 : showDist() * 1.8;
+}
+const HINTS = {
+  board: '40 pól · 4 piętra · przeciągnij, aby obracać · kliknij pole lub stos kart',
+  models: 'Pionki i budynki · przeciągnij, aby obejrzeć z każdej strony',
+  cards: 'Karty „Przekup dziekanat” · kliknij kartę, aby ją odwrócić',
+};
+function setView(v) {
+  if (v === view) return;
+  view = v;
+  board.visible = v === 'board';
+  show.visible = v === 'models';
+  $('boardHud').hidden = v !== 'board';
+  $('modelsHud').hidden = v !== 'models';
+  $('cardsView').hidden = v !== 'cards';
+  labelRenderer.domElement.hidden = v !== 'models';
+  for (const [id, name] of [['viewBoard', 'board'], ['viewModels', 'models'], ['viewCards', 'cards']]) {
+    $(id).setAttribute('aria-pressed', String(v === name));
+  }
+  $('hint').textContent = HINTS[v];
+  selectCell(null);
+  updateLimits();
+  if (v === 'board') jumpTo(presetBoard());
+  if (v === 'models') jumpTo(presetShow());
+  controls.enabled = v !== 'cards';
+}
+
+// ---------------------------------------------------------------------------
+// Interfejs
+// ---------------------------------------------------------------------------
+const playersEl = $('players');
+PLAYERS.forEach(p => {
+  const el = document.createElement('div');
+  el.className = 'player';
+  el.style.setProperty('--c', p.color);
+  el.innerHTML = `<i class="dot" aria-hidden="true"></i><div><b>${p.name}</b><span>${p.pawn}</span></div>`;
+  playersEl.append(el);
+});
+let active = 0;
+function updatePlayers() {
+  [...playersEl.children].forEach((el, i) => {
+    el.classList.toggle('active', i === active);
+    el.setAttribute('aria-current', i === active ? 'true' : 'false');
+  });
+}
+updatePlayers();
+
+let highlighted = null;
+function highlight(m) {
+  if (highlighted) { highlighted.material.emissive.set(0x000000); highlighted.material.emissiveIntensity = 0; }
+  highlighted = m;
+  if (m) { m.material.emissive.set('#FFD166'); m.material.emissiveIntensity = 0.28; }
+}
+function showCard(badge, badgeBg, badgeInk, title, sub) {
+  $('fcNum').textContent = badge;
+  $('fcNum').style.setProperty('--fc', badgeBg);
+  $('fcNum').style.color = badgeInk;
+  $('fcTitle').textContent = title;
+  $('fcSub').textContent = sub;
+  $('fieldCard').hidden = false;
+}
+function selectCell(i) {
+  if (i === null) { highlight(null); $('fieldCard').hidden = true; return; }
+  highlight(tileTops[i]);
+  const floor = FLOORS[Math.floor(i / 10)];
+  const field = FIELDS[i];
+  let title, sub;
+  if (CORNER_INFO[i]) [title, sub] = CORNER_INFO[i];
+  else if (field) { title = `Pole ${i + 1} · ${field.name}`; sub = `${field.part} · ${FIELD_DESC[field.type]}`; }
+  else { title = `Pole ${i + 1}`; sub = `${floor.label} · funkcję pola dopiszemy, gdy je rozpiszesz`; }
+  showCard(i + 1, i % 10 === 0 ? '#E6EAF2' : floor.color, '#1e2a47', title, sub);
+}
+function selectDeck(face) {
+  const deck = face.userData.deck;
+  highlight(face);
+  showCard(deck.icon, deck.color, '#ffffff', `Stos kart: ${deck.name}`, 'Treść kart i ich działanie dopiszemy, gdy je rozpiszesz');
+}
+$('fcClose').addEventListener('click', () => selectCell(null));
+
+let busy = false;
+const rollBtn = $('btnRoll');
+async function roll() {
+  if (busy) return;
+  busy = true;
+  rollBtn.disabled = true;
+  selectCell(null);
+  const a = 1 + Math.floor(Math.random() * 6);
+  const b = 1 + Math.floor(Math.random() * 6);
+  $('readout').textContent = 'Rzut…';
+  await Promise.all(dice.map((d, i) => throwDie(d, i ? b : a, i)));
+  $('readout').textContent = `${a} + ${b} = ${a + b}`;
+  await movePawn(pawns[active], a + b);
+  active = (active + 1) % PLAYERS.length;
+  updatePlayers();
+  busy = false;
+  rollBtn.disabled = false;
+}
+rollBtn.addEventListener('click', roll);
+$('btnTop').addEventListener('click', () => flyTo(presetTop()));
+$('btnReset').addEventListener('click', () => flyTo(presetBoard()));
+$('btnBuildings').addEventListener('click', e => {
+  const on = e.currentTarget.getAttribute('aria-pressed') !== 'true';
+  e.currentTarget.setAttribute('aria-pressed', String(on));
+  buildingObjs.forEach(o => { o.visible = on; });
+});
+$('viewBoard').addEventListener('click', () => setView('board'));
+$('viewModels').addEventListener('click', () => setView('models'));
+$('viewCards').addEventListener('click', () => setView('cards'));
+
+
+// ---------------------------------------------------------------------------
+// Karty „Przekup dziekanat” (ilustracje wektorowe rysowane w kodzie)
+// ---------------------------------------------------------------------------
+const face = (x, y, s = 1, ink = '#3B2A20') => `
+  <g transform="translate(${x} ${y}) scale(${s})">
+    <circle cx="-26" cy="0" r="9" fill="${ink}"/><circle cx="26" cy="0" r="9" fill="${ink}"/>
+    <circle cx="-23" cy="-3" r="3" fill="#fff"/><circle cx="29" cy="-3" r="3" fill="#fff"/>
+    <path d="M-10 12 Q0 22 10 12" fill="none" stroke="${ink}" stroke-width="4" stroke-linecap="round"/>
+    <ellipse cx="-46" cy="16" rx="12" ry="7" fill="#F4A6A0" opacity=".8"/><ellipse cx="46" cy="16" rx="12" ry="7" fill="#F4A6A0" opacity=".8"/>
+  </g>`;
+const sparkle = (x, y, r, fill) =>
+  `<path d="M${x} ${y - r} Q${x} ${y} ${x + r} ${y} Q${x} ${y} ${x} ${y + r} Q${x} ${y} ${x - r} ${y} Q${x} ${y} ${x} ${y - r} Z" fill="${fill}"/>`;
+const heart = (x, y, s, fill) =>
+  `<path transform="translate(${x} ${y}) scale(${s})" d="M0 10 C-18 -2 -12 -16 0 -6 C12 -16 18 -2 0 10 Z" fill="${fill}"/>`;
+const bean = (x, y, rot, s = 1) =>
+  `<g transform="translate(${x} ${y}) rotate(${rot}) scale(${s})"><ellipse rx="18" ry="12" fill="#6B3F22"/><path d="M-14 0 C-5 -6 5 6 14 0" fill="none" stroke="#3B2415" stroke-width="3" stroke-linecap="round"/></g>`;
+const ring = (cx, cy, n, r, pr, fill) => Array.from({ length: n }, (_, k) => {
+  const a = (k / n) * Math.PI * 2 - Math.PI / 2;
+  return `<circle cx="${(cx + Math.cos(a) * r).toFixed(1)}" cy="${(cy + Math.sin(a) * r).toFixed(1)}" r="${pr}" fill="${fill}"/>`;
+}).join('');
+function smoothClosed(pts) {
+  const mid = (p, q) => [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
+  const n = pts.length;
+  const [sx, sy] = mid(pts[0], pts[1]);
+  let d = `M${sx.toFixed(1)} ${sy.toFixed(1)}`;
+  for (let k = 1; k <= n; k++) {
+    const pt = pts[k % n], m = mid(pt, pts[(k + 1) % n]);
+    d += ` Q${pt[0].toFixed(1)} ${pt[1].toFixed(1)} ${m[0].toFixed(1)} ${m[1].toFixed(1)}`;
+  }
+  return d + ' Z';
+}
+
+function artCoffee(id) {
+  const cup = 'M205 330 L425 330 C425 425 405 495 340 498 L290 498 C225 495 205 425 205 330 Z';
+  return `
+    <ellipse cx="315" cy="532" rx="178" ry="20" fill="#000" opacity=".07"/>
+    <g fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round">
+      <path d="M270 292 C245 262 295 248 270 214"/><path d="M315 284 C290 250 340 236 315 196"/><path d="M360 292 C335 262 385 248 360 214"/>
+    </g>
+    <ellipse cx="315" cy="506" rx="172" ry="36" fill="#fff" stroke="#E6D5C3" stroke-width="4"/>
+    <ellipse cx="315" cy="500" rx="112" ry="20" fill="#F1E2D2"/>
+    <path d="M418 368 C488 352 492 452 404 452" fill="none" stroke="#E6D5C3" stroke-width="30" stroke-linecap="round"/>
+    <path d="M418 368 C488 352 492 452 404 452" fill="none" stroke="#fff" stroke-width="18" stroke-linecap="round"/>
+    <clipPath id="${id}-cup"><path d="${cup}"/></clipPath>
+    <path d="${cup}" fill="#fff" stroke="#E6D5C3" stroke-width="4"/>
+    <g clip-path="url(#${id}-cup)">
+      <rect x="200" y="452" width="230" height="20" fill="#E8B07A"/>
+      <rect x="200" y="330" width="46" height="170" fill="#000" opacity=".035"/>
+    </g>
+    <ellipse cx="315" cy="330" rx="110" ry="24" fill="#7A4A2A"/>
+    <ellipse cx="315" cy="331" rx="96" ry="18" fill="#B97A4E"/>
+    <path d="M315 344 C290 333 294 318 307 322 C311 323 314 327 315 330 C316 327 319 323 323 322 C336 318 340 333 315 344 Z" fill="#F7E6D3"/>
+    <ellipse cx="315" cy="330" rx="110" ry="24" fill="none" stroke="#E6D5C3" stroke-width="4"/>
+    ${face(315, 402)}
+    ${bean(138, 478, -30)}${bean(494, 490, 25)}${bean(476, 236, 60, 0.8)}${bean(156, 250, -60, 0.7)}
+    ${sparkle(118, 366, 16, '#E8B07A')}${sparkle(512, 360, 12, '#E8B07A')}${sparkle(214, 196, 10, '#fff')}${sparkle(420, 190, 13, '#fff')}`;
+}
+
+function artFlowers() {
+  const daisy = (cx, cy) => Array.from({ length: 10 }, (_, k) =>
+    `<ellipse cx="${cx}" cy="${cy - 26}" rx="10" ry="22" fill="#fff" stroke="#F2C6D6" stroke-width="2" transform="rotate(${k * 36} ${cx} ${cy})"/>`).join('');
+  return `
+    <ellipse cx="315" cy="566" rx="120" ry="16" fill="#000" opacity=".07"/>
+    <g transform="translate(0 -40) translate(315 300) scale(1.12) translate(-315 -300)">
+    <g stroke="#3F9E5A" stroke-width="8" stroke-linecap="round" fill="none">
+      <path d="M315 470 L315 300"/><path d="M300 470 C280 400 240 370 215 330"/><path d="M330 470 C350 400 390 370 420 330"/>
+      <path d="M308 470 C300 380 275 300 262 250"/><path d="M322 470 C330 380 360 300 372 246"/>
+    </g>
+    <path d="M300 425 C248 405 222 362 228 328 C272 344 296 382 300 425 Z" fill="#4CB36A"/>
+    <path d="M330 425 C382 405 408 362 402 328 C358 344 334 382 330 425 Z" fill="#4CB36A"/>
+    ${ring(262, 246, 5, 13, 11, '#8FB8F7')}<circle cx="262" cy="246" r="8" fill="#FFD166"/>
+    ${ring(372, 242, 5, 13, 11, '#8FB8F7')}<circle cx="372" cy="242" r="8" fill="#FFD166"/>
+    <path d="M182 332 C176 292 192 270 198 260 L211 286 L224 256 L237 286 L250 260 C256 270 264 300 252 332 C242 352 192 352 182 332 Z" fill="#FF7A8A"/>
+    <path d="M211 286 L224 256 L237 286 C232 300 216 300 211 286 Z" fill="#FF9AA6"/>
+    ${daisy(424, 322)}<circle cx="424" cy="322" r="20" fill="#FFD166"/>
+    ${ring(315, 292, 6, 46, 40, '#F7A8C4')}
+    ${ring(315, 292, 6, 40, 26, '#FBC4D8')}
+    <circle cx="315" cy="292" r="44" fill="#FFD166"/>
+    ${face(315, 294, 0.78, '#5A3A1A')}
+    </g>
+    <path d="M182 352 L448 352 L353 564 L277 564 Z" fill="#fff" stroke="#F2C6D6" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M182 352 L298 352 L292 564 L277 564 Z" fill="#FDEFF4"/>
+    <g transform="translate(315 470)">
+      <path d="M-6 6 L-32 64 L-15 57 L-4 74 Z" fill="#B83465"/>
+      <path d="M6 6 L32 64 L15 57 L4 74 Z" fill="#B83465"/>
+      <path d="M0 0 C-30 -42 -84 -22 -62 12 C-50 28 -20 16 0 0 Z" fill="#D6457A"/>
+      <path d="M0 0 C30 -42 84 -22 62 12 C50 28 20 16 0 0 Z" fill="#D6457A"/>
+      <circle r="15" fill="#E86A99"/>
+    </g>
+    ${heart(138, 246, 1.5, '#F7A8C4')}${heart(500, 430, 1.2, '#F7A8C4')}${heart(118, 470, 0.9, '#fff')}
+    ${sparkle(488, 214, 14, '#fff')}${sparkle(160, 400, 11, '#fff')}`;
+}
+
+function artSweets(id, card) {
+  const wob = [4, -4, 6, -2, 18, 0, -4, 20, 2, -3, 6, -4, 5, -2, 4, -5, 6, -3, 5, -2];
+  const icing = smoothClosed(wob.map((w, k) => {
+    const a = (k / wob.length) * Math.PI * 2;
+    return [Math.cos(a) * (100 + w), Math.sin(a) * (100 + w)];
+  }));
+  const sprinkles = [[-62, -38, 20, '#FFD166'], [-22, -78, -35, '#7FD1FF'], [28, -72, 50, '#9FE0A8'], [70, -40, -15, '#fff'],
+    [-84, 6, 70, '#7FD1FF'], [84, 12, 30, '#FFD166'], [-58, -72, -50, '#fff'], [62, -76, 10, '#9FE0A8'], [0, -90, 80, '#fff'],
+    [-40, -50, 40, '#F76C8A'], [45, -45, -60, '#7FD1FF'], [-78, 42, -20, '#9FE0A8'], [78, 46, 60, '#fff']]
+    .map(([x, y, r, c]) => `<rect x="-9" y="-3.5" width="18" height="7" rx="3.5" fill="${c}" transform="translate(${x} ${y}) rotate(${r})"/>`).join('');
+  return `
+    <ellipse cx="315" cy="566" rx="200" ry="18" fill="#000" opacity=".07"/>
+    <g transform="translate(160 346)">
+      <path d="M-62 20 L62 20 L48 124 L-48 124 Z" fill="#7FC8F8"/>
+      <g stroke="#5AAEE6" stroke-width="6"><path d="M-36 20 L-28 124"/><path d="M-12 20 L-9 124"/><path d="M12 20 L9 124"/><path d="M36 20 L28 124"/></g>
+      <ellipse cx="0" cy="12" rx="72" ry="30" fill="#FFF3F8"/>
+      <ellipse cx="0" cy="-16" rx="56" ry="26" fill="#FFD9EA"/>
+      <ellipse cx="0" cy="-40" rx="36" ry="20" fill="#FFF3F8"/>
+      <path d="M6 -80 C10 -96 20 -100 28 -102" stroke="#3F9E5A" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <circle cx="4" cy="-66" r="16" fill="#E5484D"/><circle cx="-1" cy="-71" r="4.5" fill="#fff" opacity=".7"/>
+    </g>
+    <g transform="translate(474 300) rotate(-22)">
+      <path d="M-48 0 L-88 -32 L-80 0 L-88 32 Z" fill="#F7C948"/>
+      <path d="M48 0 L88 -32 L80 0 L88 32 Z" fill="#F7C948"/>
+      <clipPath id="${id}-candy"><ellipse rx="54" ry="38"/></clipPath>
+      <ellipse rx="54" ry="38" fill="#F7C948"/>
+      <g clip-path="url(#${id}-candy)" stroke="#F08A4B" stroke-width="12"><path d="M-80 -50 L-50 50"/><path d="M-40 -50 L-10 50"/><path d="M0 -50 L30 50"/><path d="M40 -50 L70 50"/></g>
+      <ellipse cx="-18" cy="-16" rx="14" ry="7" fill="#fff" opacity=".55"/>
+    </g>
+    <g transform="translate(315 432)">
+      <circle r="126" fill="#E3A868"/>
+      <path d="M-100 40 C-60 110 60 110 100 40" fill="none" stroke="#C9874A" stroke-width="5" opacity=".5"/>
+      <path d="${icing}" fill="#FF8FB1"/>
+      <path d="${icing}" fill="none" stroke="#F27399" stroke-width="3"/>
+      <ellipse cx="-40" cy="-62" rx="30" ry="12" fill="#fff" opacity=".35" transform="rotate(-25 -40 -62)"/>
+      <circle r="36" fill="${card.light}"/>
+      <circle r="36" fill="none" stroke="#C9874A" stroke-width="6"/>
+      ${sprinkles}
+      ${face(0, 68, 0.9, '#5A2A1A')}
+    </g>
+    ${sparkle(110, 470, 14, '#fff')}${sparkle(520, 460, 16, '#F7C948')}${sparkle(300, 196, 12, '#fff')}${heart(512, 196, 1.1, '#FF8FB1')}`;
+}
+
+function artPet() {
+  const tail = 'M410 520 C500 520 520 430 470 400';
+  return `
+    <ellipse cx="315" cy="570" rx="176" ry="18" fill="#000" opacity=".07"/>
+    <path d="${tail}" fill="none" stroke="#E08A3C" stroke-width="36" stroke-linecap="round"/>
+    <path d="${tail}" fill="none" stroke="#F4A259" stroke-width="24" stroke-linecap="round"/>
+    <ellipse cx="315" cy="482" rx="128" ry="86" fill="#F4A259"/>
+    <ellipse cx="315" cy="500" rx="70" ry="58" fill="#FFE3C2"/>
+    <ellipse cx="265" cy="554" rx="36" ry="20" fill="#F4A259"/><ellipse cx="365" cy="554" rx="36" ry="20" fill="#F4A259"/>
+    <g stroke="#D9823A" stroke-width="3" stroke-linecap="round"><path d="M256 548 L256 562"/><path d="M272 548 L272 562"/><path d="M356 548 L356 562"/><path d="M372 548 L372 562"/></g>
+    <path d="M198 300 C196 250 205 205 222 180 C250 200 272 222 285 245 Z" fill="#F4A259"/>
+    <path d="M432 300 C434 250 425 205 408 180 C380 200 358 222 345 245 Z" fill="#F4A259"/>
+    <path d="M214 285 C214 250 220 222 228 206 C245 220 258 236 266 250 Z" fill="#F7A8B8"/>
+    <path d="M416 285 C416 250 410 222 402 206 C385 220 372 236 364 250 Z" fill="#F7A8B8"/>
+    <ellipse cx="315" cy="332" rx="138" ry="112" fill="#F4A259"/>
+    <g fill="#D9823A">
+      <path d="M300 222 C302 240 306 252 315 258 C324 252 328 240 330 222 C322 226 308 226 300 222 Z"/>
+      <path d="M262 230 C268 244 276 252 284 256 C282 244 278 236 270 228 Z"/>
+      <path d="M368 230 C362 244 354 252 346 256 C348 244 352 236 360 228 Z"/>
+    </g>
+    <ellipse cx="288" cy="374" rx="36" ry="27" fill="#FFF3E6"/><ellipse cx="342" cy="374" rx="36" ry="27" fill="#FFF3E6"/>
+    <path d="M305 352 L325 352 L315 364 Z" fill="#F07C8E" stroke="#F07C8E" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M315 364 L315 374 M315 374 C308 384 298 384 294 376 M315 374 C322 384 332 384 336 376" fill="none" stroke="#5A3A22" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="262" cy="324" r="24" fill="#2B2B3A"/><circle cx="368" cy="324" r="24" fill="#2B2B3A"/>
+    <circle cx="270" cy="315" r="9" fill="#fff"/><circle cx="376" cy="315" r="9" fill="#fff"/>
+    <circle cx="255" cy="333" r="4" fill="#fff"/><circle cx="361" cy="333" r="4" fill="#fff"/>
+    <ellipse cx="224" cy="370" rx="18" ry="10" fill="#F4A6A0" opacity=".85"/><ellipse cx="406" cy="370" rx="18" ry="10" fill="#F4A6A0" opacity=".85"/>
+    <g stroke="#5A3A22" stroke-width="3" stroke-linecap="round" opacity=".6"><path d="M250 374 L196 364"/><path d="M250 384 L198 392"/><path d="M380 374 L434 364"/><path d="M380 384 L432 392"/></g>
+    <path d="M226 424 Q315 464 404 424" fill="none" stroke="#E5484D" stroke-width="14" stroke-linecap="round"/>
+    ${heart(315, 462, 1.9, '#FFD166')}
+    ${heart(136, 250, 1.5, '#8FB8F7')}${heart(502, 226, 1.1, '#8FB8F7')}${heart(120, 460, 0.9, '#fff')}
+    ${sparkle(150, 480, 13, '#fff')}${sparkle(498, 476, 12, '#fff')}${sparkle(488, 330, 9, '#8FB8F7')}`;
+}
+
+const BRIBE_CARDS = [
+  { name: 'Kawusia', color: '#8B5E3C', dark: '#5C3A22', light: '#F6E7D8', flavor: ['Dziekanat nigdy nie odmawia', 'dobrej kawy.'], art: artCoffee },
+  { name: 'Kwiatuszki', color: '#D6457A', dark: '#9E2553', light: '#FCE4EC', flavor: ['Bukiet na biurko i sprawa', 'załatwiona od ręki.'], art: artFlowers },
+  { name: 'Słodkości', color: '#F08A4B', dark: '#B4531C', light: '#FFEBDD', flavor: ['Pudełko pączków', 'otwiera każde drzwi.'], art: artSweets },
+  { name: 'Zwierzaczek', color: '#3E8EDE', dark: '#1F5FA8', light: '#E3F0FC', flavor: ['Nikt nie oprze się', 'takiemu słodziakowi.'], art: artPet },
+];
+
+function bribeCardSVG(card, i) {
+  const id = `bc${i}`;
+  const art = 'x="40" y="136" width="550" height="470" rx="28"';
+  return `<svg viewBox="0 0 630 880" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Karta ${card.name}">
+  <defs>
+    <clipPath id="${id}-clip"><rect width="630" height="880" rx="36"/></clipPath>
+    <clipPath id="${id}-art"><rect ${art}/></clipPath>
+    <pattern id="${id}-dots" width="36" height="36" patternUnits="userSpaceOnUse"><circle cx="18" cy="18" r="3" fill="${card.color}" opacity=".13"/></pattern>
+    <radialGradient id="${id}-glow" cx="50%" cy="46%" r="58%"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <g clip-path="url(#${id}-clip)">
+    <rect width="630" height="880" fill="#FFFDF9"/>
+    <rect width="630" height="112" fill="${card.color}"/>
+    <circle cx="72" cy="56" r="30" fill="#fff"/>
+    <text x="72" y="58" class="svg-display" font-size="46" fill="#2E9E8A" text-anchor="middle" dominant-baseline="central">+</text>
+    <text x="330" y="58" class="svg-display" font-size="34" fill="#fff" text-anchor="middle" dominant-baseline="central" letter-spacing="1">PRZEKUP DZIEKANAT</text>
+    <text x="574" y="58" class="svg-body" font-size="26" font-weight="700" fill="#fff" fill-opacity=".85" text-anchor="middle" dominant-baseline="central">${i + 1}/4</text>
+    <rect ${art} fill="${card.light}"/>
+    <rect ${art} fill="url(#${id}-dots)"/>
+    <rect ${art} fill="url(#${id}-glow)"/>
+    <g clip-path="url(#${id}-art)">${card.art(id, card)}</g>
+    <text x="315" y="662" class="svg-display" font-size="62" fill="${card.dark}" text-anchor="middle" dominant-baseline="central">${card.name}</text>
+    <text x="315" y="714" class="svg-body" font-size="24" font-style="italic" fill="#6B7280" text-anchor="middle" dominant-baseline="central">${card.flavor[0]}</text>
+    <text x="315" y="744" class="svg-body" font-size="24" font-style="italic" fill="#6B7280" text-anchor="middle" dominant-baseline="central">${card.flavor[1]}</text>
+    <rect x="40" y="776" width="550" height="78" rx="18" fill="${card.light}" stroke="${card.color}" stroke-width="3"/>
+    <text x="315" y="804" class="svg-body" font-size="23" font-weight="700" fill="#1E2A47" text-anchor="middle" dominant-baseline="central">Wychodzisz z dziekanatu od razu</text>
+    <text x="315" y="832" class="svg-body" font-size="21" fill="#55607A" text-anchor="middle" dominant-baseline="central">bez pytania, rzutu i płacenia</text>
+    <rect width="630" height="880" rx="36" fill="none" stroke="${card.color}" stroke-width="12"/>
+  </g>
+</svg>`;
+}
+
+function easeBackSVG(i) {
+  const id = `back${i}`;
+  return `<svg viewBox="0 0 630 880" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tył karty ułatwienia">
+  <defs>
+    <clipPath id="${id}-clip"><rect width="630" height="880" rx="36"/></clipPath>
+    <linearGradient id="${id}-grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3FB39D"/><stop offset="1" stop-color="#23796A"/></linearGradient>
+    <pattern id="${id}-stripes" width="56" height="56" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="18" height="56" fill="#fff" opacity=".07"/></pattern>
+  </defs>
+  <g clip-path="url(#${id}-clip)">
+    <rect width="630" height="880" fill="url(#${id}-grad)"/>
+    <rect width="630" height="880" fill="url(#${id}-stripes)"/>
+    <rect x="32" y="32" width="566" height="816" rx="28" fill="none" stroke="#fff" stroke-width="8"/>
+    <circle cx="315" cy="370" r="130" fill="#fff"/>
+    <text x="315" y="378" class="svg-display" font-size="210" fill="#2E9E8A" text-anchor="middle" dominant-baseline="central">+</text>
+    <text x="315" y="600" class="svg-display" font-size="64" fill="#fff" text-anchor="middle" dominant-baseline="central">UŁATWIENIA</text>
+    <text x="315" y="664" class="svg-body" font-size="28" font-weight="600" fill="#fff" fill-opacity=".75" text-anchor="middle" dominant-baseline="central" letter-spacing="4">KARTA</text>
+  </g>
+</svg>`;
+}
+
+BRIBE_CARDS.forEach((card, i) => {
+  const slot = document.createElement('div');
+  slot.className = 'card-slot';
+  slot.innerHTML = `
+    <button class="flip" type="button" aria-pressed="false" aria-label="Karta ${card.name}, kliknij, aby odwrócić">
+      <span class="flip-inner"><span class="face front">${bribeCardSVG(card, i)}</span><span class="face back">${easeBackSVG(i)}</span></span>
+    </button>
+    <p class="card-cap"><b>${card.name}</b> · karta ${i + 1} z 4</p>`;
+  const btn = slot.querySelector('.flip');
+  btn.addEventListener('click', () => {
+    const on = !btn.classList.contains('flipped');
+    btn.classList.toggle('flipped', on);
+    btn.setAttribute('aria-pressed', String(on));
+  });
+  $('cardsGrid').append(slot);
+});
+
+// Klikanie pól
+const ray = new THREE.Raycaster();
+const ndc = new THREE.Vector2();
+let downAt = null;
+function pick(e) {
+  const r = renderer.domElement.getBoundingClientRect();
+  ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  const hit = ray.intersectObjects([...tileTops, ...deckFaces], false)[0];
+  return hit ? hit.object : null;
+}
+renderer.domElement.addEventListener('pointerdown', e => { downAt = [e.clientX, e.clientY]; });
+renderer.domElement.addEventListener('pointerup', e => {
+  if (!downAt || view !== 'board') return;
+  const dx = e.clientX - downAt[0], dy = e.clientY - downAt[1];
+  downAt = null;
+  if (dx * dx + dy * dy > 36) return;
+  const hit = pick(e);
+  if (hit && hit.userData.deck) selectDeck(hit);
+  else selectCell(hit ? hit.userData.cell : null);
+});
+renderer.domElement.addEventListener('pointermove', e => {
+  if (e.pointerType !== 'mouse' || e.buttons || view !== 'board') return;
+  renderer.domElement.style.cursor = pick(e) !== null ? 'pointer' : 'grab';
+});
+
+// ---------------------------------------------------------------------------
+// Pętla
+// ---------------------------------------------------------------------------
+function resize() {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  if (!w || !h) return;
+  renderer.setSize(w, h);
+  labelRenderer.setSize(w, h);
+  camera.aspect = w / h;
+  // przesuwa obraz lekko w górę, żeby dolny panel nie zasłaniał pola START
+  camera.setViewOffset(w, h, 0, Math.round(Math.min(h * 0.08, 64)), w, h);
+  camera.updateProjectionMatrix();
+  updateLimits();
+}
+resize();
+new ResizeObserver(resize).observe(stage);
+jumpTo(presetBoard());
+
+const clock = new THREE.Clock();
+function frame() {
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const t = clock.elapsedTime;
+  runTweens(performance.now());
+  if (!reduceMotion) {
+    for (const f of flags) {
+      const pos = f.geo.attributes.position;
+      for (let j = 0; j < pos.count; j++) {
+        const x = f.base[j * 3], y = f.base[j * 3 + 1];
+        pos.setZ(j, 0.035 * (x / f.width) * Math.sin(x * 14 - t * 3.2 + y * 3));
+      }
+      pos.needsUpdate = true;
+      f.geo.computeVertexNormals();
+    }
+    for (const s of steams) {
+      s.material.opacity = 0.28 + 0.2 * Math.sin(t * 2 + s.userData.phase);
+      s.position.y = 0.02 * Math.sin(t * 1.5 + s.userData.phase);
+    }
+    if (view === 'models') turntables.forEach(o => { o.rotation.y += dt * 0.45; });
+  }
+  controls.update();
+  renderer.render(scene, camera);
+  if (view === 'models') labelRenderer.render(scene, camera);
+  requestAnimationFrame(frame);
+}
+frame();
+$('loader').hidden = true;
+</script>
