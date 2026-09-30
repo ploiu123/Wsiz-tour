@@ -50,6 +50,7 @@ Ten plik zbiera wszystko, co ustaliliśmy o grze. Aktualizujemy go przy każdej 
 
 - 40 pól. START jest w prawym dolnym rogu, ruch idzie zgodnie z ruchem wskazówek zegara.
 - Plansza jest płaska i ma się dać wydrukować jako gra planszowa.
+- Plansza i pola mają proste, pionowe ściany i ostre rogi, bez zaokrągleń.
 - Boki planszy to piętra budynku:
   - 1. ścianka: piwnica (pola 2–5) i parter (pola 6–10),
   - 2. ścianka: 1. piętro,
