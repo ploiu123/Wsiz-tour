@@ -63,6 +63,7 @@ Do ustalenia: co z Salą balową i Kuchnią.
 - **Ustawienia:** wygląd planszy (5 wersji), dźwięk, obracanie planszy w tle menu.
 - **Zasady:** instrukcja gry, uzupełnimy po rozpisaniu zasad.
 - Przyciski „Obejrzyj planszę” i „Wyloguj”. Na planszy przycisk „Menu” wraca do panelu.
+- **Na razie wyłączone:** gra startuje od razu na planszy. Kod menu zostaje, włącza się go w `index.html` zmianą `MENU_ON` na `true`.
 - Ustawienia i profil zapisują się w przeglądarce gracza.
 
 ## Budynki

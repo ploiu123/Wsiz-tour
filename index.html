@@ -2076,5 +2076,8 @@ function frame() {
 }
 frame();
 $('loader').hidden = true;
-openMenu();
+// Menu (logowanie i panel) jest na razie wyłączone. Żeby je włączyć, zmień na true.
+const MENU_ON = false;
+$('btnMenu').hidden = !MENU_ON;
+if (MENU_ON) openMenu();
 </script>
