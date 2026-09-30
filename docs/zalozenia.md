@@ -51,6 +51,8 @@ Ten plik zbiera wszystko, co ustaliliśmy o grze. Aktualizujemy go przy każdej 
 - 40 pól. START jest w prawym dolnym rogu, ruch idzie zgodnie z ruchem wskazówek zegara.
 - Plansza jest płaska i ma się dać wydrukować jako gra planszowa.
 - Plansza i pola mają proste, pionowe ściany i ostre rogi, bez zaokrągleń.
+- Wygląd ma być dopracowany i nowoczesny, w stylu Business Tour, a nie jak tania animacja 3D. W grze jest przełącznik 5 wersji wyglądu (Trawnik, Kampus, Drewniany stół, Nocny, Pastelowy). Po wyborze zostaje jedna.
+- Środek planszy i kolory planszy będą w kolorach uczelni, z logo na środku (**później**, po otrzymaniu logo i kolorów).
 - Boki planszy to piętra budynku:
   - 1. ścianka: piwnica (pola 2–5) i parter (pola 6–10),
   - 2. ścianka: 1. piętro,
