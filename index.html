@@ -179,6 +179,13 @@
     background: radial-gradient(ellipse 80% 75% at 50% 45%, transparent 45%, rgba(4, 7, 14, var(--v, 0)) 100%);
   }
 
+  .build { display: flex; align-items: center; gap: 10px; padding: 8px 10px 8px 14px; flex-wrap: wrap; }
+  .build-text { display: grid; gap: 1px; }
+  .build-text b { font: 600 14px/1.2 var(--display); }
+  .build-text span { font-size: 11.5px; color: var(--ink-soft); }
+  .build .btn { padding: 10px 14px; }
+  @media (max-width: 720px) { .build { width: 100%; } .build-text span { display: none; } }
+
   /* Menu: logowanie i panel gracza */
   body.menu-open .hud, body.menu-open .field-card { display: none !important; }
   .menu {
@@ -260,7 +267,7 @@
   .steps li { margin: 3px 0; }
   .toggle-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 0; font-size: 14px; }
   .toast {
-    position: absolute; left: 50%; top: 90px; transform: translateX(-50%); z-index: 2;
+    position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%); z-index: 2;
     padding: 12px 16px; max-width: min(460px, calc(100% - 32px)); font-size: 13.5px;
   }
   @media (max-width: 900px) {
@@ -323,6 +330,12 @@
   </div>
 
   <div class="hud hud-bottom" id="boardHud">
+    <div class="build panel" id="buildPanel" aria-label="Pokaz budowania">
+      <div class="build-text"><b>Pokaz budowania</b><span>Kliknij salę, wybierz gracza i buduj</span></div>
+      <div class="row" id="buildColors" role="group" aria-label="Gracz"></div>
+      <button class="btn" id="btnBuild" type="button">Buduj</button>
+      <button class="btn ghost" id="btnDemolish" type="button">Zburz</button>
+    </div>
     <div class="actions">
       <button class="btn" id="btnMenu" type="button">Menu</button>
       <button class="btn ghost" id="btnTop" type="button">Widok z góry</button>
@@ -331,7 +344,7 @@
   </div>
 
   <div class="hud hud-bottom" id="modelsHud" hidden>
-    <p class="caption panel"><b>Wszystkie modele są zbudowane kodem z prostych brył, bez gotowych plików 3D.</b> Budynki od poziomu 1 do 5: telefon, laptop, komputer, szafa rack i serwerownia jako hotel. Ich kolor to kolor właściciela pola. Pionki możesz podmienić na swoje pomysły.</p>
+    <p class="caption panel"><b>Wszystkie modele są zbudowane kodem z prostych brył, bez gotowych plików 3D.</b> Budynki od poziomu 1 do 5: telefon, laptop, komputer, szafa rack i serwerownia jako hotel. Są w całości w kolorze gracza, który ma pole. Pionki możesz podmienić na swoje pomysły.</p>
   </div>
 
   <div class="toast panel" id="toast" hidden role="status"></div>
@@ -508,12 +521,16 @@ const CORNER_INFO = {
   16: ['Pole 17 · Stypendium rektorskie', 'Narożnik, zasady do ustalenia'],
   24: ['Pole 25 · Udaj się do dziekanatu', 'Narożnik, zasady do ustalenia'],
 };
+// Grupy kolorów: kto ma wszystkie sale z grupy, ma monopol. 4 monopole = wygrana.
+const GROUPS = {
+  1: { name: 'Grupa 1', color: '#9A5B3A' },
+};
 // Pola ustalone do tej pory (klucz = numer pola - 1)
 const FIELDS = {
-  1: { type: 'room', name: 'Sala 04', part: 'Piwnica' },
-  2: { type: 'room', name: 'Sala 05', part: 'Piwnica' },
-  3: { type: 'special', name: 'Pracownia ceramiki', part: 'Piwnica', icon: 'vase', no: 1 },
-  4: { type: 'tax', name: 'Czesne', part: 'Piwnica' },
+  1: { type: 'room', name: 'Sala 04', part: 'Piwnica', group: 1 },
+  2: { type: 'room', name: 'Sala 05', part: 'Piwnica', group: 1 },
+  3: { type: 'tax', name: 'Czesne', part: 'Piwnica' },
+  4: { type: 'special', name: 'Pracownia ceramiki', part: 'Piwnica', icon: 'vase', no: 1 },
   5: { type: 'chance', name: 'Szansa', part: 'Parter' },
   6: { type: 'room', name: 'Sala 12', part: 'Parter' },
   7: { type: 'room', name: 'Sala 13', part: 'Parter' },
@@ -887,9 +904,12 @@ function tileTexture(i) {
     const type = field ? field.type : 'blank';
     let numColor = NAVY, floorColor = '#7A849C';
     if (type === 'room' || type === 'blank') {
-      if (LOOK.roomFill) { g.fillStyle = mix(floor.color, '#ffffff', 1 - LOOK.roomFill * 0.35); g.fillRect(0, 0, w, h); }
-      g.fillStyle = mix(floor.color, '#ffffff', 0.7); g.fillRect(0, 0, w, h * 0.34);   // działka na budynki
-      g.fillStyle = floor.color; g.fillRect(0, 0, w, 64);
+      const grp = field && GROUPS[field.group];
+      const band = grp ? grp.color : floor.color;   // pas w kolorze grupy, bez grupy w kolorze piętra
+      if (LOOK.roomFill) { g.fillStyle = mix(band, '#ffffff', 1 - LOOK.roomFill * 0.35); g.fillRect(0, 0, w, h); }
+      g.fillStyle = mix(band, '#ffffff', 0.72); g.fillRect(0, 0, w, h * 0.34);   // działka na budynki
+      g.fillStyle = band; g.fillRect(0, 0, w, grp ? 92 : 64);
+      if (grp) { g.fillStyle = '#FFFFFF'; g.font = '700 30px Fredoka, sans-serif'; g.fillText(grp.name.toUpperCase(), w / 2, 48); }
       if (field) { g.fillStyle = NAVY; drawLines(g, field.name.toUpperCase(), w / 2, h * 0.44, w - 44, 54); }
     } else if (type === 'tax') {
       g.fillStyle = '#FFF7E6'; g.fillRect(0, 0, w, h);
@@ -1245,21 +1265,56 @@ function screenTexture(color) {
 }
 const screenMat = color => new THREE.MeshBasicMaterial({ map: screenTexture(color), toneMapped: false });
 
-function makeLaptop(color) {
+// Budynki są w całości w kolorze gracza: kolor główny, ciemniejszy i jaśniejszy odcień
+const palCache = new Map();
+function pal(color) {
+  if (!palCache.has(color)) {
+    palCache.set(color, {
+      main: mat(color, { roughness: 0.4, metalness: 0.1 }),
+      dark: mat(mix(color, '#000000', 0.45), { roughness: 0.5 }),
+      light: mat(mix(color, '#ffffff', 0.5), { roughness: 0.45 }),
+      glow: new THREE.MeshBasicMaterial({ color: mix(color, '#ffffff', 0.35), toneMapped: false }),
+    });
+  }
+  return palCache.get(color);
+}
+
+function makePhone(color) {
+  const p = pal(color);
   const g = new THREE.Group();
-  const base = mesh(new RoundedBoxGeometry(0.62, 0.03, 0.42, 2, 0.012), aluMat); base.position.y = 0.015;
+  const stand = mesh(new RoundedBoxGeometry(0.24, 0.02, 0.2, 2, 0.008), p.light); stand.position.y = 0.01;
+  const lip = mesh(new THREE.BoxGeometry(0.24, 0.035, 0.02), p.light); lip.position.set(0, 0.035, 0.07);
+  const tilt = new THREE.Group();
+  tilt.position.set(0, 0.02, 0.05);
+  tilt.rotation.x = -0.32;
+  const body = mesh(new RoundedBoxGeometry(0.2, 0.4, 0.024, 3, 0.01), [p.main, p.main, p.main, p.main, p.dark, p.main]);
+  body.position.y = 0.2;
+  const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.18, 0.37), screenMat(color));
+  screen.position.set(0, 0.2, 0.0125);
+  const cam = mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.01, 20), p.dark);
+  cam.rotation.x = Math.PI / 2; cam.position.set(-0.055, 0.34, -0.015);
+  tilt.add(body, screen, cam);
+  const brace = mesh(new THREE.BoxGeometry(0.06, 0.2, 0.02), p.light);
+  brace.position.set(0, 0.1, -0.05); brace.rotation.x = 0.45;
+  g.add(stand, lip, tilt, brace);
+  return g;
+}
+
+function makeLaptop(color) {
+  const p = pal(color);
+  const g = new THREE.Group();
+  const base = mesh(new RoundedBoxGeometry(0.62, 0.03, 0.42, 2, 0.012), p.main); base.position.y = 0.015;
   const keys = mesh(new THREE.PlaneGeometry(0.54, 0.19), new THREE.MeshStandardMaterial({ map: getKeyboardTex(), roughness: 0.7 }), false);
   keys.rotation.x = -Math.PI / 2; keys.position.set(0, 0.0305, -0.06);
-  const pad = mesh(new THREE.PlaneGeometry(0.17, 0.09), mat('#B5BCC9', { roughness: 0.3, metalness: 0.4 }), false);
+  const pad = mesh(new THREE.PlaneGeometry(0.17, 0.09), p.light, false);
   pad.rotation.x = -Math.PI / 2; pad.position.set(0, 0.0305, 0.125);
   const hinge = new THREE.Group();
   hinge.position.set(0, 0.03, -0.2);
-  const shell = mat(color, { roughness: 0.4, metalness: 0.2 });
-  const lid = mesh(new RoundedBoxGeometry(0.62, 0.016, 0.41, 2, 0.006), [aluMat, aluMat, shell, bezelMat, aluMat, aluMat]);
+  const lid = mesh(new RoundedBoxGeometry(0.62, 0.016, 0.41, 2, 0.006), [p.main, p.main, p.main, p.dark, p.main, p.main]);
   lid.position.set(0, 0.008, 0.205);
   const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.56, 0.34), screenMat(color));
   screen.rotation.x = Math.PI / 2; screen.position.set(0, -0.0008, 0.21);
-  const logo = mesh(new THREE.CircleGeometry(0.045, 32), mat(mix(color, '#ffffff', 0.55), { roughness: 0.3 }), false);
+  const logo = mesh(new THREE.CircleGeometry(0.045, 32), p.glow, false);
   logo.rotation.x = -Math.PI / 2; logo.position.set(0, 0.0168, 0.21);
   hinge.add(lid, screen, logo);
   hinge.rotation.x = -1.83;
@@ -1267,70 +1322,70 @@ function makeLaptop(color) {
   return g;
 }
 
-function makePhone(color) {
+function makeComputer(color) {
+  const p = pal(color);
   const g = new THREE.Group();
-  const stand = mesh(new RoundedBoxGeometry(0.24, 0.02, 0.2, 2, 0.008), aluMat); stand.position.y = 0.01;
-  const lip = mesh(new THREE.BoxGeometry(0.24, 0.035, 0.02), aluMat); lip.position.set(0, 0.035, 0.07);
-  const tilt = new THREE.Group();
-  tilt.position.set(0, 0.02, 0.05);
-  tilt.rotation.x = -0.32;
-  const shell = mat(color, { roughness: 0.35, metalness: 0.2 });
-  const body = mesh(new RoundedBoxGeometry(0.2, 0.4, 0.024, 3, 0.01), [shell, shell, shell, shell, bezelMat, shell]);
-  body.position.y = 0.2;
-  const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.18, 0.37), screenMat(color));
-  screen.position.set(0, 0.2, 0.0125);
-  const cam = mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.01, 20), bezelMat);
-  cam.rotation.x = Math.PI / 2; cam.position.set(-0.055, 0.34, -0.015);
-  tilt.add(body, screen, cam);
-  const brace = mesh(new THREE.BoxGeometry(0.06, 0.2, 0.02), aluMat);
-  brace.position.set(0, 0.1, -0.05); brace.rotation.x = 0.45;
-  g.add(stand, lip, tilt, brace);
+  const mx = -0.12;
+  const monitor = mesh(new RoundedBoxGeometry(0.8, 0.5, 0.04, 2, 0.015), p.main); monitor.position.set(mx, 0.49, -0.1);
+  const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.74, 0.44), screenMat(color)); screen.position.set(mx, 0.49, -0.079);
+  const neck = mesh(new THREE.BoxGeometry(0.06, 0.24, 0.035), p.dark); neck.position.set(mx, 0.15, -0.135);
+  const foot = mesh(new RoundedBoxGeometry(0.3, 0.02, 0.18, 2, 0.008), p.dark); foot.position.set(mx, 0.01, -0.12);
+  const tower = mesh(new RoundedBoxGeometry(0.2, 0.5, 0.42, 2, 0.02), p.main); tower.position.set(0.46, 0.25, -0.08);
+  const led = new THREE.Mesh(new THREE.PlaneGeometry(0.022, 0.38), p.glow);
+  led.position.set(0.41, 0.27, 0.131);
+  const power = new THREE.Mesh(new THREE.CircleGeometry(0.014, 20), new THREE.MeshBasicMaterial({ color: '#ffffff', toneMapped: false }));
+  power.position.set(0.5, 0.44, 0.131);
+  const glass = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.38), p.dark);
+  glass.rotation.y = Math.PI / 2; glass.position.set(0.561, 0.26, -0.08);
+  const kbd = mesh(new RoundedBoxGeometry(0.52, 0.024, 0.15, 2, 0.008), p.light); kbd.position.set(mx, 0.012, 0.2);
+  const keys = mesh(new THREE.PlaneGeometry(0.48, 0.12), new THREE.MeshStandardMaterial({ map: getKeyboardTex(), roughness: 0.7 }), false);
+  keys.rotation.x = -Math.PI / 2; keys.position.set(mx, 0.0245, 0.2);
+  const mouse = mesh(new THREE.SphereGeometry(0.04, 16, 12), p.light); mouse.scale.set(1, 0.5, 1.5); mouse.position.set(0.3, 0.018, 0.22);
+  g.add(monitor, screen, neck, foot, tower, led, power, glass, kbd, keys, mouse);
   return g;
 }
 
-// Szafa rack: kilka serwerów z diodami w kolorze właściciela
+// Szafa rack: obudowa w kolorze gracza, serwery z diodami
 function makeRack(color) {
+  const p = pal(color);
   const g = new THREE.Group();
-  const frameMat = mat('#1C2130', { roughness: 0.5, metalness: 0.3 });
   const W = 0.4, H = 0.86, Dp = 0.42;
-  const frame = mesh(new THREE.BoxGeometry(W, H, Dp), frameMat); frame.position.y = H / 2 + 0.03;
-  const top = mesh(new THREE.BoxGeometry(W + 0.01, 0.03, Dp + 0.01), mat(color, { roughness: 0.4 })); top.position.y = H + 0.045;
+  const frame = mesh(new THREE.BoxGeometry(W, H, Dp), p.main); frame.position.y = H / 2 + 0.03;
+  const top = mesh(new THREE.BoxGeometry(W + 0.01, 0.03, Dp + 0.01), p.light); top.position.y = H + 0.045;
   g.add(frame, top);
   for (const [fx, fz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {   // nóżki
-    const f = mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.03, 12), aluMat);
+    const f = mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.03, 12), p.dark);
     f.position.set(fx * (W / 2 - 0.03), 0.015, fz * (Dp / 2 - 0.03));
     g.add(f);
   }
-  const unitMat = mat('#2E3547', { roughness: 0.45, metalness: 0.2 });
-  const ledMat = new THREE.MeshBasicMaterial({ color, toneMapped: false });
   const greenMat = new THREE.MeshBasicMaterial({ color: '#7CF29A', toneMapped: false });
+  const whiteMat = new THREE.MeshBasicMaterial({ color: '#ffffff', toneMapped: false });
   for (let k = 0; k < 8; k++) {
     const y = 0.1 + k * 0.1;
-    const unit = mesh(new THREE.BoxGeometry(W - 0.05, 0.075, 0.02), unitMat, false);
+    const unit = mesh(new THREE.BoxGeometry(W - 0.05, 0.075, 0.02), p.dark, false);
     unit.position.set(0, y, Dp / 2 + 0.005);
-    const led = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 0.012), ledMat);
+    const led = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 0.012), p.glow);
     led.position.set(-0.06, y, Dp / 2 + 0.016);
-    const dot = new THREE.Mesh(new THREE.CircleGeometry(0.008, 12), k % 3 ? greenMat : ledMat);
+    const dot = new THREE.Mesh(new THREE.CircleGeometry(0.008, 12), k % 3 ? greenMat : whiteMat);
     dot.position.set(0.13, y, Dp / 2 + 0.016);
     g.add(unit, led, dot);
   }
   const glass = new THREE.Mesh(new THREE.PlaneGeometry(W - 0.02, H - 0.04),
-    new THREE.MeshStandardMaterial({ color: '#9FB6D8', transparent: true, opacity: 0.12, roughness: 0.05, metalness: 0.4, depthWrite: false }));
+    new THREE.MeshStandardMaterial({ color: '#ffffff', transparent: true, opacity: 0.12, roughness: 0.05, metalness: 0.4, depthWrite: false }));
   glass.position.set(0, H / 2 + 0.03, Dp / 2 + 0.03);
   g.add(glass);
   return g;
 }
 
-// Serwerownia (hotel): pomieszczenie z trzema szafami rack i klimatyzacją
+// Serwerownia (hotel): pomieszczenie w kolorze gracza z trzema szafami rack i klimatyzacją
 function makeServerRoom(color) {
+  const p = pal(color);
   const g = new THREE.Group();
-  const floorMat = mat('#C9D0DC', { roughness: 0.7 });
-  const wallMat = mat('#EEF1F6', { roughness: 0.8 });
-  const floor = mesh(new THREE.BoxGeometry(1.3, 0.05, 0.95), floorMat); floor.position.y = 0.025;
-  const back = mesh(new THREE.BoxGeometry(1.3, 0.62, 0.05), wallMat); back.position.set(0, 0.36, -0.45);
-  const side = mesh(new THREE.BoxGeometry(0.05, 0.62, 0.95), wallMat); side.position.set(-0.625, 0.36, 0);
-  const band = mesh(new THREE.BoxGeometry(1.32, 0.05, 0.06), mat(color, { roughness: 0.4 })); band.position.set(0, 0.695, -0.45);
-  const band2 = mesh(new THREE.BoxGeometry(0.06, 0.05, 0.97), mat(color, { roughness: 0.4 })); band2.position.set(-0.625, 0.695, 0);
+  const floor = mesh(new THREE.BoxGeometry(1.3, 0.05, 0.95), p.light); floor.position.y = 0.025;
+  const back = mesh(new THREE.BoxGeometry(1.3, 0.62, 0.05), p.main); back.position.set(0, 0.36, -0.45);
+  const side = mesh(new THREE.BoxGeometry(0.05, 0.62, 0.95), p.main); side.position.set(-0.625, 0.36, 0);
+  const band = mesh(new THREE.BoxGeometry(1.32, 0.05, 0.06), p.dark); band.position.set(0, 0.695, -0.45);
+  const band2 = mesh(new THREE.BoxGeometry(0.06, 0.05, 0.97), p.dark); band2.position.set(-0.625, 0.695, 0);
   g.add(floor, back, side, band, band2);
   for (let k = 0; k < 3; k++) {
     const r = makeRack(color);
@@ -1338,42 +1393,21 @@ function makeServerRoom(color) {
     r.position.set(-0.3 + k * 0.33, 0.05, -0.18);
     g.add(r);
   }
-  const tray = mesh(new THREE.BoxGeometry(1.0, 0.03, 0.08), aluMat); tray.position.set(0.03, 0.66, -0.18);
-  const ac = mesh(new RoundedBoxGeometry(0.3, 0.12, 0.08, 2, 0.02), mat('#FFFFFF', { roughness: 0.5 })); ac.position.set(0.35, 0.55, -0.4);
-  const vent = mesh(new THREE.BoxGeometry(0.24, 0.015, 0.01), bezelMat); vent.position.set(0.35, 0.51, -0.355);
+  const tray = mesh(new THREE.BoxGeometry(1.0, 0.03, 0.08), p.dark); tray.position.set(0.03, 0.66, -0.18);
+  const ac = mesh(new RoundedBoxGeometry(0.3, 0.12, 0.08, 2, 0.02), p.light); ac.position.set(0.35, 0.55, -0.4);
+  const vent = mesh(new THREE.BoxGeometry(0.24, 0.015, 0.01), p.dark); vent.position.set(0.35, 0.51, -0.355);
   g.add(tray, ac, vent);
   return g;
 }
 
+// scale: w widoku Modele, board: na polu planszy
 const BUILDINGS = [
-  { name: 'Telefon', make: makePhone, scale: 2.4 },
-  { name: 'Laptop', make: makeLaptop, scale: 1.9 },
-  { name: 'Komputer', make: makeComputer, scale: 1.6 },
-  { name: 'Szafa rack', make: makeRack, scale: 1.45 },
-  { name: 'Serwerownia', make: makeServerRoom, scale: 1.4 },
+  { name: 'Telefon', make: makePhone, scale: 2.4, board: 1.5 },
+  { name: 'Laptop', make: makeLaptop, scale: 1.9, board: 1.05 },
+  { name: 'Komputer', make: makeComputer, scale: 1.6, board: 0.85 },
+  { name: 'Szafa rack', make: makeRack, scale: 1.45, board: 0.95 },
+  { name: 'Serwerownia', make: makeServerRoom, scale: 1.4, board: 0.72 },
 ];
-
-function makeComputer(color) {
-  const g = new THREE.Group();
-  const mx = -0.12;
-  const monitor = mesh(new RoundedBoxGeometry(0.8, 0.5, 0.04, 2, 0.015), bezelMat); monitor.position.set(mx, 0.49, -0.1);
-  const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.74, 0.44), screenMat(color)); screen.position.set(mx, 0.49, -0.079);
-  const neck = mesh(new THREE.BoxGeometry(0.06, 0.24, 0.035), aluMat); neck.position.set(mx, 0.15, -0.135);
-  const foot = mesh(new RoundedBoxGeometry(0.3, 0.02, 0.18, 2, 0.008), aluMat); foot.position.set(mx, 0.01, -0.12);
-  const tower = mesh(new RoundedBoxGeometry(0.2, 0.5, 0.42, 2, 0.02), mat('#262B38', { roughness: 0.45 })); tower.position.set(0.46, 0.25, -0.08);
-  const led = new THREE.Mesh(new THREE.PlaneGeometry(0.022, 0.38), new THREE.MeshBasicMaterial({ color, toneMapped: false }));
-  led.position.set(0.41, 0.27, 0.131);
-  const power = new THREE.Mesh(new THREE.CircleGeometry(0.014, 20), new THREE.MeshBasicMaterial({ color: '#ffffff', toneMapped: false }));
-  power.position.set(0.5, 0.44, 0.131);
-  const glass = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.38), new THREE.MeshBasicMaterial({ color: mix(color, '#000000', 0.4), toneMapped: false }));
-  glass.rotation.y = Math.PI / 2; glass.position.set(0.561, 0.26, -0.08);
-  const kbd = mesh(new RoundedBoxGeometry(0.52, 0.024, 0.15, 2, 0.008), mat('#E4E8EF')); kbd.position.set(mx, 0.012, 0.2);
-  const keys = mesh(new THREE.PlaneGeometry(0.48, 0.12), new THREE.MeshStandardMaterial({ map: getKeyboardTex(), roughness: 0.7 }), false);
-  keys.rotation.x = -Math.PI / 2; keys.position.set(mx, 0.0245, 0.2);
-  const mouse = mesh(new THREE.SphereGeometry(0.04, 16, 12), mat('#E4E8EF')); mouse.scale.set(1, 0.5, 1.5); mouse.position.set(0.3, 0.018, 0.22);
-  g.add(monitor, screen, neck, foot, tower, led, power, glass, kbd, keys, mouse);
-  return g;
-}
 
 // ---------------------------------------------------------------------------
 // Plansza
@@ -1600,16 +1634,26 @@ function showCard(badge, badgeBg, badgeInk, title, sub) {
   $('fcSub').textContent = sub;
   $('fieldCard').hidden = false;
 }
+let selectedCell = null;
 function selectCell(i) {
+  selectedCell = i;
+  updateBuildBtn();
   if (i === null) { highlight(null); $('fieldCard').hidden = true; return; }
   highlight(tileTops[i]);
   const floor = FLOORS[Math.floor(i / SIDE)];
   const field = FIELDS[i];
   let title, sub;
   if (CORNER_INFO[i]) [title, sub] = CORNER_INFO[i];
-  else if (field) { title = `Pole ${i + 1} · ${field.name}`; sub = `${field.part} · ${FIELD_DESC[field.type]}`; }
+  else if (field) {
+    title = `Pole ${i + 1} · ${field.name}`;
+    sub = `${field.part} · ${FIELD_DESC[field.type]}`;
+    if (field.group) {
+      const mates = Object.keys(FIELDS).filter(k => FIELDS[k].group === field.group).map(k => +k + 1);
+      sub += ` · ${GROUPS[field.group].name}: pola ${mates.join(' i ')}, razem dają monopol`;
+    }
+  }
   else { title = `Pole ${i + 1}`; sub = `${floor.label} · funkcję pola dopiszemy, gdy je rozpiszesz`; }
-  showCard(i + 1, i % SIDE === 0 ? '#E6EAF2' : floor.color, '#1e2a47', title, sub);
+  showCard(i + 1, i % SIDE === 0 ? '#E6EAF2' : (field && field.group ? GROUPS[field.group].color : floor.color), field && field.group ? '#ffffff' : '#1e2a47', title, sub);
 }
 function selectDeck(face) {
   const deck = face.userData.deck;
@@ -1617,6 +1661,155 @@ function selectDeck(face) {
   showCard(deck.icon, deck.color, '#ffffff', `Stos kart: ${deck.name}`, 'Treść kart i ich działanie dopiszemy, gdy je rozpiszesz');
 }
 $('fcClose').addEventListener('click', () => selectCell(null));
+
+// ---------------------------------------------------------------------------
+// Pokaz budowania: budynek spada na pole, odbija się, a wokół lecą iskry w kolorze gracza
+// ---------------------------------------------------------------------------
+const ROOM_CELLS = Object.keys(FIELDS).map(Number).filter(i => FIELDS[i].type === 'room');
+const BUILD_Z = -0.52;   // pas na budynki na polu
+const built = new Map();   // numer pola -> { level, color, obj }
+let buildColor = PLAYERS[0].color;
+let buildBusy = false;
+const dustGeo = new THREE.SphereGeometry(0.08, 10, 8);
+const sparkGeo = new THREE.BoxGeometry(0.07, 0.07, 0.025);
+const ringGeo = new THREE.RingGeometry(0.42, 0.56, 48);
+
+function showToast(msg) {
+  const el = $('toast');
+  el.textContent = msg; el.hidden = false;
+  clearTimeout(showToast.t);
+  showToast.t = setTimeout(() => { el.hidden = true; }, 3500);
+}
+function disposeTree(obj) {
+  obj.traverse(o => { if (o.geometry && o.geometry !== dustGeo && o.geometry !== sparkGeo && o.geometry !== ringGeo) o.geometry.dispose(); });
+}
+function burst(cg, color) {
+  const group = new THREE.Group();
+  group.position.set(0, TILE_H + 0.02, BUILD_Z);
+  cg.add(group);
+  const dustMat = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.85, depthWrite: false });
+  const sparkMat = new THREE.MeshBasicMaterial({ color: mix(color, '#ffffff', 0.15), transparent: true, depthWrite: false, toneMapped: false });
+  const goldMatB = new THREE.MeshBasicMaterial({ color: GOLD, transparent: true, depthWrite: false, toneMapped: false });
+  const ringMat = new THREE.MeshBasicMaterial({ color, transparent: true, side: THREE.DoubleSide, depthWrite: false, toneMapped: false });
+  const parts = [];
+  for (let k = 0; k < 14; k++) {   // kurz dookoła podstawy
+    const a = (k / 14) * Math.PI * 2;
+    const m = new THREE.Mesh(dustGeo, dustMat);
+    parts.push({ m, v: new THREE.Vector3(Math.cos(a) * 1.1, 0.25, Math.sin(a) * 1.1), g: 0.3, dust: true });
+    group.add(m);
+  }
+  for (let k = 0; k < 22; k++) {   // iskry w kolorze gracza i złote
+    const a = Math.random() * Math.PI * 2, r = 0.4 + Math.random() * 0.8;
+    const m = new THREE.Mesh(sparkGeo, k % 3 ? sparkMat : goldMatB);
+    parts.push({ m, v: new THREE.Vector3(Math.cos(a) * r, 2.2 + Math.random() * 1.6, Math.sin(a) * r), g: 4.2, spin: 6 + Math.random() * 10 });
+    group.add(m);
+  }
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  ring.rotation.x = -Math.PI / 2;
+  group.add(ring);
+  return tween(reduceMotion ? 200 : 950, t => {
+    const tt = t * 0.95;
+    for (const pt of parts) {
+      pt.m.position.set(pt.v.x * tt, Math.max(0, pt.v.y * tt - pt.g * tt * tt), pt.v.z * tt);
+      if (pt.dust) pt.m.scale.setScalar(1 + 2.2 * t);
+      else pt.m.rotation.set(pt.spin * t, pt.spin * t * 0.7, 0);
+    }
+    dustMat.opacity = 0.85 * (1 - t);
+    sparkMat.opacity = goldMatB.opacity = 1 - t * t;
+    ring.scale.setScalar(0.4 + 1.8 * t);
+    ringMat.opacity = 0.9 * (1 - t);
+  }).then(() => {
+    cg.remove(group);
+    for (const m of [dustMat, sparkMat, goldMatB, ringMat]) m.dispose();
+  });
+}
+// Budynek spada z góry, ląduje z wyraźnym odbiciem
+async function dropIn(obj, s, color, cg) {
+  const y0 = TILE_H;
+  obj.scale.setScalar(s);
+  obj.rotation.y = -0.8;
+  await tween(reduceMotion ? 80 : 430, t => {
+    obj.position.y = y0 + 2.6 * (1 - t * t);
+    obj.rotation.y = -0.8 * (1 - t);
+  });
+  obj.position.y = y0;
+  burst(cg, color);
+  await tween(reduceMotion ? 80 : 520, t => {
+    const k = Math.sin(t * Math.PI * 3) * Math.exp(-4.5 * t) * 0.32;
+    obj.scale.set(s * (1 + k * 0.55), s * (1 - k), s * (1 + k * 0.55));
+  });
+  obj.scale.setScalar(s);
+}
+// Stary budynek kurczy się i znika
+async function shrinkOut(obj, cg) {
+  const s0 = obj.scale.x;
+  await tween(reduceMotion ? 60 : 260, t => {
+    obj.scale.setScalar(s0 * (1 - t) * (1 + 0.25 * Math.sin(t * Math.PI)));
+    obj.rotation.y = t * 1.6;
+    obj.position.y = TILE_H + 0.25 * Math.sin(t * Math.PI);
+  });
+  cg.remove(obj);
+  disposeTree(obj);
+}
+function cellTarget(cell) {
+  const p = cellPose(cell);
+  const c = Math.cos(p.rotY), sn = Math.sin(p.rotY);
+  return new THREE.Vector3(p.x + BUILD_Z * sn, 0, p.z + BUILD_Z * c);
+}
+function updateBuildBtn() {
+  const b = $('btnBuild');
+  const cur = selectedCell !== null ? built.get(selectedCell) : null;
+  b.textContent = cur ? (cur.level >= 5 ? 'Poziom max' : 'Ulepsz') : 'Buduj';
+  b.disabled = buildBusy || (cur && cur.level >= 5);
+  $('btnDemolish').disabled = buildBusy || !cur;
+}
+async function buildOnSelected() {
+  if (buildBusy) return;
+  if (selectedCell === null || !ROOM_CELLS.includes(selectedCell)) {
+    selectCell(ROOM_CELLS.includes(selectedCell) ? selectedCell : ROOM_CELLS[0]);
+    if (selectedCell === null) return;
+  }
+  const cell = selectedCell;
+  const cur = built.get(cell);
+  if (cur && cur.level >= 5) return;
+  buildBusy = true; updateBuildBtn();
+  const level = cur ? cur.level + 1 : 1;
+  const color = cur ? cur.color : buildColor;
+  const cg = cellGroups[cell];
+  const target = cellTarget(cell);
+  flyTo([target.clone().add(DIR_BOARD.clone().multiplyScalar(boardDist() * 0.42)), target], 550);
+  if (cur) await shrinkOut(cur.obj, cg);
+  const def = BUILDINGS[level - 1];
+  const obj = def.make(color);
+  obj.position.set(0, TILE_H + 2.6, BUILD_Z);
+  cg.add(obj);
+  built.set(cell, { level, color, obj });
+  showToast(`${FIELDS[cell].name}: poziom ${level} · ${def.name}${level === 5 ? ' (hotel)' : ''}`);
+  await dropIn(obj, def.board, color, cg);
+  buildBusy = false; updateBuildBtn();
+}
+async function demolishSelected() {
+  const cur = selectedCell !== null ? built.get(selectedCell) : null;
+  if (buildBusy || !cur) return;
+  buildBusy = true; updateBuildBtn();
+  built.delete(selectedCell);
+  await shrinkOut(cur.obj, cellGroups[selectedCell]);
+  buildBusy = false; updateBuildBtn();
+}
+PLAYERS.forEach((pl, i) => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'swatch';
+  b.style.setProperty('--c', pl.color);
+  b.setAttribute('aria-label', pl.name);
+  b.setAttribute('aria-pressed', String(i === 0));
+  b.addEventListener('click', () => {
+    buildColor = pl.color;
+    [...$('buildColors').children].forEach((el, k) => el.setAttribute('aria-pressed', String(k === i)));
+  });
+  $('buildColors').append(b);
+});
+$('btnBuild').addEventListener('click', buildOnSelected);
+$('btnDemolish').addEventListener('click', demolishSelected);
 
 // ---------------------------------------------------------------------------
 // Menu: logowanie i panel gracza

@@ -30,10 +30,10 @@ Plansza będzie mniejsza. Pierwsza ściana:
 | Nr | Pole | Działanie |
 |---|---|---|
 | 1 | START | narożnik |
-| 2 | Sala 04 | sala do kupienia |
-| 3 | Sala 05 | sala do kupienia |
-| 4 | Pracownia ceramiki | pole specjalne 1/4 (kto ma wszystkie 4, wygrywa) |
-| 5 | Zapłać czesne | pieniądze idą do puli na środku |
+| 2 | Sala 04 | sala do kupienia, grupa 1 |
+| 3 | Sala 05 | sala do kupienia, grupa 1 |
+| 4 | Zapłać czesne | pieniądze idą do puli na środku |
+| 5 | Pracownia ceramiki | pole specjalne 1/4 |
 | 6 | Szansa | pytanie: dobrze = ułatwienie, źle = utrudnienie |
 | 7 | Sala 12 | sala do kupienia |
 | 8 | Sala 13 | sala do kupienia |
@@ -42,6 +42,13 @@ Plansza będzie mniejsza. Pierwsza ściana:
 Każda ściana ma 7 pól między narożnikami, razem **32 pola**. Narożniki: START (1), Dziekanat (9), Stypendium rektorskie (17), Udaj się do dziekanatu (25). Pola 10–16, 18–24 i 26–32 czekają na rozpisanie.
 
 Do ustalenia: co z Salą balową i Kuchnią.
+
+### Grupy kolorów i monopole
+- Sale z jednej grupy mają wspólny kolor na pasku pola.
+- Kto ma wszystkie sale z grupy, ma **monopol**.
+- **Kto zbierze 4 monopole, wygrywa grę.**
+- Grupa 1: Sala 04 i Sala 05 (pola 2 i 3). Kolejne grupy dopiszemy przy następnych ścianach.
+- Do ustalenia: czy pola specjalne (np. Pracownia ceramiki) też dają wygraną, czy tylko monopole.
 
 ## Wygląd planszy
 
@@ -78,7 +85,9 @@ Do ustalenia: co z Salą balową i Kuchnią.
 | 4 | szafa rack z serwerami |
 | 5 (hotel) | serwerownia: pomieszczenie z trzema szafami rack |
 
-- Budynki mają elementy w kolorze właściciela pola (obudowa, diody, paski).
+- Budynki są **w całości w kolorze gracza**, który ma pole (jaśniejsze i ciemniejsze odcienie tego koloru), żeby od razu było widać, czyje to pole.
+- Budowanie i ulepszanie ma animację: stary budynek kurczy się i znika, nowy spada na pole, odbija się, a dookoła lecą kurz, iskry w kolorze gracza i kolorowy krąg. Kamera przybliża się do pola.
+- Na planszy jest pokaz budowania (na dole po lewej): kliknij salę, wybierz kolor gracza i klikaj „Buduj” albo „Ulepsz”. „Zburz” usuwa budynek.
 
 ## Pionki
 
