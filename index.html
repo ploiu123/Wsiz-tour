@@ -536,7 +536,20 @@ const FIELDS = {
   13: { type: 'room', name: 'Sala 21' },
   14: { type: 'room', name: 'Sala 22' },
   15: { type: 'room', name: 'Sala 23' },
+  17: { type: 'room', name: 'Sala 31' },
+  18: { type: 'station', name: 'Parking duży', no: 2 },
+  19: { type: 'room', name: 'Pokój kwestora' },
+  20: { type: 'special', name: 'Sala senatu', icon: 'senate', no: 3 },
+  21: { type: 'room', name: 'Pokój kanclerza' },
+  22: { type: 'chance', name: 'Szansa' },
+  23: { type: 'room', name: 'Pokój rektora' },
+  25: { type: 'room', name: 'Sala 41' },
+  26: { type: 'chance', name: 'Szansa' },
+  27: { type: 'room', name: 'Sala 42' },
+  28: { type: 'special', name: 'Sala balowa', icon: 'chandelier', no: 4 },
+  29: { type: 'room', name: 'Sala 43' },
   30: { type: 'tax', name: 'Czesne' },
+  31: { type: 'room', name: 'Sala 44' },
 };
 const FIELD_DESC = {
   room: 'sala do kupienia (pytanie przy zakupie)',
@@ -788,6 +801,19 @@ function drawChandelier(g, x, y) {
   }
   g.restore();
 }
+// Sala senatu: fasada z kolumnami
+function drawSenate(g, x, y) {
+  g.save(); g.translate(x, y);
+  g.fillStyle = GOLD;
+  g.beginPath(); g.moveTo(-96, -34); g.lineTo(0, -84); g.lineTo(96, -34); g.closePath(); g.fill();   // tympanon
+  g.fillStyle = '#4A3380'; g.beginPath(); g.arc(0, -50, 12, 0, Math.PI * 2); g.fill();
+  g.fillStyle = GOLD;
+  g.fillRect(-92, -30, 184, 14);
+  for (let k = 0; k < 5; k++) g.fillRect(-80 + k * 36, -12, 16, 72);   // kolumny
+  g.fillRect(-100, 62, 200, 12);
+  g.fillRect(-110, 76, 220, 12);
+  g.restore();
+}
 function drawVase(g, x, y) {
   g.save(); g.translate(x, y);
   g.fillStyle = '#D9895B'; g.strokeStyle = GOLD; g.lineWidth = 6;
@@ -936,6 +962,7 @@ function tileTexture(i) {
       g.strokeStyle = GOLD; g.lineWidth = 6; g.strokeRect(16, 16, w - 32, h - 32);
       if (field.icon === 'server') drawServerRack(g, w / 2, h * 0.2);
       else if (field.icon === 'vase') drawVase(g, w / 2, h * 0.2);
+      else if (field.icon === 'senate') drawSenate(g, w / 2, h * 0.2);
       else drawChandelier(g, w / 2, h * 0.2);
       g.fillStyle = '#FFFFFF'; drawLines(g, field.name.toUpperCase(), w / 2, h * 0.47, w - 60, 58);
       g.fillStyle = GOLD; g.font = '600 24px Fredoka, sans-serif'; g.fillText(`POLE SPECJALNE · ${field.no}/4`, w / 2, h * 0.6);

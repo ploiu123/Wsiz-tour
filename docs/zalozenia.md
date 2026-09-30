@@ -44,15 +44,25 @@ Z gry usunięte są wszystkie dema: rzut kostkami, ruch pionków, przykładowe b
 | 15 | Sala 22 | sala do kupienia |
 | 16 | Sala 23 | sala do kupienia |
 | 17 | Stypendium rektorskie | narożnik |
-| 18–24 | do rozpisania | |
+| 18 | Sala 31 | sala do kupienia |
+| 19 | Parking duży | stacja 2/2 |
+| 20 | Pokój kwestora | sala do kupienia |
+| 21 | Sala senatu | pole specjalne 3/4 (unikatowe, fasada z kolumnami) |
+| 22 | Pokój kanclerza | sala do kupienia |
+| 23 | Szansa | jak pole 6 |
+| 24 | Pokój rektora | sala do kupienia |
 | 25 | Udaj się do dziekanatu | narożnik |
-| 26–30 | do rozpisania | |
+| 26 | Sala 41 | sala do kupienia |
+| 27 | Szansa | jak pole 6 |
+| 28 | Sala 42 | sala do kupienia |
+| 29 | Sala balowa | pole specjalne 4/4 (żyrandol) |
+| 30 | Sala 43 | sala do kupienia |
 | 31 | Czesne | pieniądze idą do puli na środku |
-| 32 | do rozpisania | |
+| 32 | Sala 44 | sala do kupienia |
 
-Każda ściana ma 7 pól między narożnikami, razem **32 pola**. Narożniki: START (1), Dziekanat (9), Stypendium rektorskie (17), Udaj się do dziekanatu (25). Pola 18–24, 26–30 i 32 czekają na rozpisanie.
+Każda ściana ma 7 pól między narożnikami, razem **32 pola**. Narożniki: START (1), Dziekanat (9), Stypendium rektorskie (17), Udaj się do dziekanatu (25). Wszystkie 32 pola są rozpisane.
 
-Do ustalenia: co z Salą balową i Kuchnią.
+Do ustalenia: co z Kuchnią.
 
 ### Grupy kolorów i monopole
 - Sale z jednej grupy mają wspólny kolor na pasku pola.
@@ -125,8 +135,7 @@ Do ustalenia: co z Salą balową i Kuchnią.
 ## Otwarte sprawy
 
 - Wybór jednej z 5 wersji wyglądu planszy.
-- Pozostałe pola: 18–24, 26–30 i 32.
-- Grupy kolorów dla Sal 10–13 i 21–23.
+- Grupy kolorów dla pozostałych sal i pokoi.
 - Sala balowa i Kuchnia: czy zostają i gdzie.
 - Zasady gry od nowa: pytania, kupowanie pól, dziekanat, karty, pola specjalne, 2 na 2, boty.
 - Logo i kolory uczelni.
