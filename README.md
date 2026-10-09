@@ -18,6 +18,7 @@ Potem otwórz w przeglądarce adres http://localhost:8000. Żeby zatrzymać serw
 |---|---|
 | `index.html` | Prototyp: logowanie i panel gracza, plansza 3D, modele pionków i budynków, karty „Przekup dziekanat” |
 | `docs/zalozenia.md` | Wszystkie ustalenia dotyczące gry: zasady, pola, karty, harmonogram |
+| `druk/karty-pytan.html` | Karty z pytaniami do druku (63 × 88 mm) i gotowe pliki PDF obok |
 | `docs/archiwum-zasad.md` | Poprzednia wersja zasad, do wglądu |
 
 ## Technologie i licencje

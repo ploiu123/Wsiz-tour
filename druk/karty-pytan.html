@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Karty z pytaniami do druku</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@500;600;700;800&family=Fredoka:wght@600;700&display=swap">
+<!--
+  Karty z pytaniami w formacie karty do pokera (63 × 88 mm).
+  Na awersie 7 pytań ABCD, na rewersie klucz odpowiedzi.
+
+  Tryby druku (dopisz do adresu):
+    ?tryb=a4         arkusze A4 do drukarki w domu: 9 kart na stronie, linie cięcia,
+                     strona z rewersami ułożona lustrzanie do druku dwustronnego (domyślny)
+    ?tryb=drukarnia  każda strona karty osobno, 69 × 94 mm (z 3 mm spadu na docięcie)
+
+  Nowe karty dopisujesz w tablicy KARTY na dole pliku.
+-->
+<style id="page-size">@page { size: A4; margin: 0; }</style>
+<style>
+  :root {
+    --navy: #1E2A47;
+    --gold: #E0B04A;
+    --ink: #1E2A47;
+    --ink-2: #39445E;
+    --muted: #6B7590;
+    --line: #DCE1EA;
+    --b: 0mm;            /* spad, w trybie drukarni 3 mm */
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    font-family: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--ink);
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ---------- karta ---------- */
+  .card {
+    position: relative;
+    width: calc(63mm + 2 * var(--b));
+    height: calc(88mm + 2 * var(--b));
+    overflow: hidden;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* awers */
+  .f-head { background: var(--navy); color: #fff; padding: calc(3mm + var(--b)) calc(3.4mm + var(--b)) 2.3mm; }
+  .f-row { display: flex; align-items: center; justify-content: space-between; gap: 2mm; }
+  .sem {
+    font: 800 5.4pt/1 "Figtree", sans-serif; letter-spacing: .07em; text-transform: uppercase;
+    background: var(--acc); color: #fff; padding: 1mm 1.9mm; border-radius: 3mm;
+  }
+  .nr { font: 700 10pt/1 "Fredoka", sans-serif; color: var(--gold); white-space: nowrap; }
+  .nr small { font: 700 5.2pt "Figtree", sans-serif; color: rgba(255, 255, 255, .62); letter-spacing: .08em; margin-right: .9mm; vertical-align: .35mm; }
+  .subject { margin-top: 1.7mm; font: 700 7.4pt/1.12 "Fredoka", sans-serif; letter-spacing: .01em; }
+  .lecturer { margin-top: .55mm; font: 600 5.9pt/1.2 "Figtree", sans-serif; color: rgba(255, 255, 255, .8); }
+  .stripe { height: 1.1mm; background: var(--acc); flex: none; }
+  .qs {
+    flex: 1; min-height: 0;
+    display: flex; flex-direction: column; justify-content: space-between;
+    padding: 1.7mm calc(3.2mm + var(--b)) 1.2mm;
+    font-size: var(--fs, 6.3pt);
+  }
+  .q { display: grid; grid-template-columns: 3.4mm 1fr; column-gap: 1.5mm; padding-bottom: .85mm; border-bottom: .2mm solid var(--line); }
+  .q:last-child { border-bottom: 0; padding-bottom: 0; }
+  .qn {
+    width: 3.4mm; height: 3.4mm; border-radius: 50%;
+    background: var(--acc); color: #fff;
+    font: 700 5.6pt/3.4mm "Fredoka", sans-serif; text-align: center;
+  }
+  .qt { font-weight: 700; line-height: 1.17; padding-top: .2mm; }
+  .qa { grid-column: 2; display: flex; flex-wrap: wrap; column-gap: 2.3mm; row-gap: .15mm; margin-top: .4mm; font-size: .92em; font-weight: 500; line-height: 1.16; color: var(--ink-2); }
+  .qa b { color: var(--acc); font-weight: 800; margin-right: .55mm; }
+  .f-foot {
+    display: flex; justify-content: space-between; gap: 2mm;
+    padding: 0 calc(3.2mm + var(--b)) calc(2.2mm + var(--b));
+    font: 600 4.8pt/1 "Figtree", sans-serif; color: var(--muted); letter-spacing: .02em;
+  }
+
+  /* rewers: klucz odpowiedzi */
+  .back {
+    background-color: var(--navy);
+    background-image: repeating-linear-gradient(45deg, rgba(255, 255, 255, .045) 0 1.2mm, transparent 1.2mm 3.4mm);
+    color: #fff;
+  }
+  .back .stripe { height: calc(1.4mm + var(--b)); }
+  .b-head { padding: 3.2mm calc(4mm + var(--b)) 2.4mm; text-align: center; }
+  .b-title { font: 700 10.5pt/1 "Fredoka", sans-serif; letter-spacing: .05em; }
+  .b-sub { margin-top: 1.2mm; font: 600 5.6pt/1.25 "Figtree", sans-serif; color: rgba(255, 255, 255, .72); }
+  .keys {
+    flex: 1; min-height: 0;
+    margin: 0 calc(3.4mm + var(--b));
+    background: #fff; color: var(--ink); border-radius: 2mm;
+    padding: 1.2mm 2.6mm;
+    display: flex; flex-direction: column; justify-content: space-around;
+    font-size: var(--fs, 6.6pt);
+  }
+  .key { display: grid; grid-template-columns: 3.4mm 3.6mm 1fr; align-items: center; column-gap: 1.6mm; padding: .75mm 0; border-bottom: .2mm solid var(--line); }
+  .key:last-child { border-bottom: 0; }
+  .key .letter { font: 700 1.3em/1 "Fredoka", sans-serif; color: var(--acc); text-align: center; }
+  .key .txt { font-weight: 700; line-height: 1.15; }
+  .b-foot {
+    display: flex; justify-content: space-between; align-items: flex-end; gap: 2mm;
+    padding: 2.3mm calc(3.6mm + var(--b)) calc(2.8mm + var(--b));
+    font: 600 5.2pt/1.25 "Figtree", sans-serif; color: rgba(255, 255, 255, .72);
+  }
+  .b-foot .nr { font-size: 9pt; }
+
+  /* ---------- arkusz A4 ---------- */
+  .sheet { position: relative; width: 210mm; height: 297mm; overflow: hidden; break-after: page; background: #fff; }
+  .sheet:last-child { break-after: auto; }
+  .grid { position: absolute; left: 10.5mm; top: 16.5mm; display: grid; grid-template-columns: repeat(3, 63mm); grid-template-rows: repeat(3, 88mm); }
+  .mark { position: absolute; background: #8A93A8; }
+  .sheet-label { position: absolute; left: 10.5mm; bottom: 6mm; font: 600 7pt "Figtree", sans-serif; color: #8A93A8; }
+
+  /* ---------- tryb drukarni ---------- */
+  .cardpage { break-after: page; }
+  .cardpage:last-child { break-after: auto; }
+
+  /* ---------- podgląd na ekranie ---------- */
+  @media screen {
+    body { background: #E7EBF2; padding: 28px 20px 48px; }
+    .print-only { display: none; }
+    .intro { max-width: 900px; margin: 0 auto 26px; }
+    .intro h1 { margin: 0 0 6px; font: 700 26px/1.15 "Fredoka", sans-serif; }
+    .intro p { margin: 4px 0; color: #4A5570; font-size: 14.5px; line-height: 1.5; max-width: 70ch; }
+    .preview { max-width: 900px; margin: 0 auto; display: grid; gap: 28px; }
+    .pair { display: flex; flex-wrap: wrap; gap: 28px; justify-content: center; }
+    .pair figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .pair figcaption { font: 600 13px "Figtree", sans-serif; color: #4A5570; }
+    .zoom { zoom: 2.6; box-shadow: 0 2px 8px rgba(20, 30, 50, .18); border-radius: 1.2mm; overflow: hidden; }
+    .warn { max-width: 900px; margin: 0 auto 18px; padding: 10px 14px; border-radius: 10px; background: #FFF1E6; color: #8A4413; font-size: 14px; }
+  }
+  @media screen and (max-width: 560px) { .zoom { zoom: 1.6; } }
+  @media print {
+    .screen-only { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<section class="intro screen-only">
+  <h1>Karty z pytaniami</h1>
+  <p>Format karty do pokera: 63 × 88 mm. Na awersie jest 7 pytań z odpowiedziami ABCD, nazwa przedmiotu, wykładowca i numer karty. Na rewersie jest klucz odpowiedzi dla osoby, która czyta pytanie.</p>
+  <p>Kolor paska oznacza semestr, więc wydrukowane karty łatwo rozdzielić na kategorie.</p>
+</section>
+<div class="warn screen-only" id="warn" hidden></div>
+<section class="preview screen-only" id="preview"></section>
+<main class="print-only" id="print"></main>
+
+<script>
+// Kolor paska dla każdego semestru (8 = mieszane)
+const SEMESTRY = {
+  1: { nazwa: 'Semestr 1', kolor: '#2F7FF0' },
+  2: { nazwa: 'Semestr 2', kolor: '#1FA463' },
+  3: { nazwa: 'Semestr 3', kolor: '#F08A4B' },
+  4: { nazwa: 'Semestr 4', kolor: '#D6457A' },
+  5: { nazwa: 'Semestr 5', kolor: '#8C6FDB' },
+  6: { nazwa: 'Semestr 6', kolor: '#C99A2E' },
+  7: { nazwa: 'Semestr 7', kolor: '#2E9E8A' },
+  8: { nazwa: 'Mieszane', kolor: '#5B6B8C' },
+};
+
+// Karty. Każda ma dokładnie 7 pytań; „ok” to litera dobrej odpowiedzi.
+// Na awersie mieści się pytanie do ok. 90 znaków i krótkie odpowiedzi (do ok. 15 znaków).
+// Dłuższy tekst też się zmieści, ale czcionka sama się zmniejszy.
+const KARTY = [
+  {
+    nr: 1,
+    semestr: 1,
+    przedmiot: 'Podstawy informatyki',
+    wykladowca: 'dr Jan Kowalski',
+    przyklad: true,
+    pytania: [
+      { q: 'Ile bitów ma jeden bajt?', a: ['4', '8', '16', '32'], ok: 'B' },
+      { q: 'Który system liczbowy zapisuje liczby tylko za pomocą cyfr 0 i 1?', a: ['dziesiętny', 'ósemkowy', 'szesnastkowy', 'dwójkowy'], ok: 'D' },
+      { q: 'Jak nazywa się układ, który wykonuje obliczenia i instrukcje programów?', a: ['procesor', 'zasilacz', 'karta sieciowa', 'dysk'], ok: 'A' },
+      { q: 'Ile wynosi liczba 1010 zapisana dwójkowo w systemie dziesiętnym?', a: ['8', '10', '12', '5'], ok: 'B' },
+      { q: 'Która pamięć traci dane po wyłączeniu zasilania?', a: ['ROM', 'SSD', 'RAM', 'HDD'], ok: 'C' },
+      { q: 'Który język opisuje strukturę stron internetowych?', a: ['HTML', 'SQL', 'C++', 'Python'], ok: 'A' },
+      { q: 'Ile wynosi 2 do potęgi 10?', a: ['1000', '512', '2048', '1024'], ok: 'D' },
+    ],
+  },
+];
+
+const LITERY = ['A', 'B', 'C', 'D'];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const nr3 = n => String(n).padStart(3, '0');
+
+function awers(k) {
+  const sem = SEMESTRY[k.semestr];
+  const pytania = k.pytania.map((p, i) => `
+    <div class="q">
+      <div class="qn">${i + 1}</div>
+      <div class="qt">${esc(p.q)}</div>
+      <div class="qa">${p.a.map((odp, j) => `<span><b>${LITERY[j]}</b>${esc(odp)}</span>`).join('')}</div>
+    </div>`).join('');
+  return `
+    <div class="card front" style="--acc:${sem.kolor}">
+      <div class="f-head">
+        <div class="f-row"><span class="sem">${sem.nazwa}</span><span class="nr"><small>KARTA</small>${nr3(k.nr)}</span></div>
+        <div class="subject">${esc(k.przedmiot)}</div>
+        <div class="lecturer">${esc(k.wykladowca)}</div>
+      </div>
+      <div class="stripe"></div>
+      <div class="qs">${pytania}</div>
+      <div class="f-foot"><span>${k.przyklad ? 'Wzór karty · dane przykładowe' : '7 pytań · wybierz A, B, C albo D'}</span><span>Odpowiedzi na odwrocie</span></div>
+    </div>`;
+}
+
+function rewers(k) {
+  const sem = SEMESTRY[k.semestr];
+  const klucz = k.pytania.map((p, i) => {
+    const j = LITERY.indexOf(p.ok);
+    return `<div class="key"><div class="qn">${i + 1}</div><div class="letter">${p.ok}</div><div class="txt">${esc(p.a[j] ?? '?')}</div></div>`;
+  }).join('');
+  return `
+    <div class="card back" style="--acc:${sem.kolor}">
+      <div class="stripe"></div>
+      <div class="b-head">
+        <div class="b-title">ODPOWIEDZI</div>
+        <div class="b-sub">${esc(k.przedmiot)} · ${sem.nazwa}</div>
+      </div>
+      <div class="keys">${klucz}</div>
+      <div class="b-foot"><span>${esc(k.wykladowca)}</span><span class="nr"><small>KARTA</small>${nr3(k.nr)}</span></div>
+    </div>`;
+}
+
+// Sprawdzenie danych
+const bledy = [];
+KARTY.forEach(k => {
+  if (!SEMESTRY[k.semestr]) bledy.push(`Karta ${nr3(k.nr)}: nieznany semestr ${k.semestr}.`);
+  if (k.pytania.length !== 7) bledy.push(`Karta ${nr3(k.nr)}: ma ${k.pytania.length} pytań zamiast 7.`);
+  k.pytania.forEach((p, i) => {
+    if (p.a.length !== 4) bledy.push(`Karta ${nr3(k.nr)}, pytanie ${i + 1}: potrzebne 4 odpowiedzi.`);
+    if (!LITERY.includes(p.ok)) bledy.push(`Karta ${nr3(k.nr)}, pytanie ${i + 1}: dobra odpowiedź musi być literą A, B, C albo D.`);
+  });
+});
+
+// Podgląd na ekranie
+document.getElementById('preview').innerHTML = KARTY.map(k => `
+  <div class="pair">
+    <figure><div class="zoom">${awers(k)}</div><figcaption>Karta ${nr3(k.nr)}: awers</figcaption></figure>
+    <figure><div class="zoom">${rewers(k)}</div><figcaption>Karta ${nr3(k.nr)}: rewers</figcaption></figure>
+  </div>`).join('');
+
+// Wersja do druku
+const tryb = new URLSearchParams(location.search).get('tryb') === 'drukarnia' ? 'drukarnia' : 'a4';
+const druk = document.getElementById('print');
+if (tryb === 'drukarnia') {
+  document.documentElement.style.setProperty('--b', '3mm');
+  document.getElementById('page-size').textContent = '@page { size: 69mm 94mm; margin: 0; }';
+  druk.innerHTML = KARTY.map(k => `<div class="cardpage">${awers(k)}</div><div class="cardpage">${rewers(k)}</div>`).join('');
+} else {
+  const znaczniki = () => {
+    const xs = [10.5, 73.5, 136.5, 199.5], ys = [16.5, 104.5, 192.5, 280.5];
+    let h = '';
+    for (const x of xs) {
+      h += `<i class="mark" style="left:${x - 0.1}mm;top:9mm;width:.2mm;height:5.5mm"></i>`;
+      h += `<i class="mark" style="left:${x - 0.1}mm;top:282.5mm;width:.2mm;height:5.5mm"></i>`;
+    }
+    for (const y of ys) {
+      h += `<i class="mark" style="top:${y - 0.1}mm;left:3mm;width:5.5mm;height:.2mm"></i>`;
+      h += `<i class="mark" style="top:${y - 0.1}mm;left:201.5mm;width:5.5mm;height:.2mm"></i>`;
+    }
+    return h;
+  };
+  let html = '';
+  for (let s = 0; s < KARTY.length; s += 9) {
+    const partia = KARTY.slice(s, s + 9);
+    const miejsce = (i, lustro) => `grid-row:${Math.floor(i / 3) + 1};grid-column:${lustro ? 3 - (i % 3) : (i % 3) + 1}`;
+    const strona = Math.floor(s / 9) + 1;
+    html += `<section class="sheet"><div class="grid">${partia.map((k, i) => `<div style="${miejsce(i, false)}">${awers(k)}</div>`).join('')}</div>${znaczniki()}<div class="sheet-label">Arkusz ${strona} · awersy · drukuj w skali 100%</div></section>`;
+    html += `<section class="sheet"><div class="grid">${partia.map((k, i) => `<div style="${miejsce(i, true)}">${rewers(k)}</div>`).join('')}</div>${znaczniki()}<div class="sheet-label">Arkusz ${strona} · rewersy · druk dwustronny, obracanie wzdłuż dłuższej krawędzi</div></section>`;
+  }
+  druk.innerHTML = html;
+}
+
+// Jeśli tekst się nie mieści, czcionka maleje (nie mniej niż 4,8 pt)
+function dopasuj() {
+  const male = new Set();
+  document.querySelectorAll('.qs, .keys').forEach(el => {
+    let fs = el.classList.contains('keys') ? 6.6 : 6.3;
+    el.style.setProperty('--fs', fs + 'pt');
+    while (el.scrollHeight > el.clientHeight + 0.5 && fs > 4.8) {
+      fs = Math.round((fs - 0.1) * 10) / 10;
+      el.style.setProperty('--fs', fs + 'pt');
+    }
+    const nr = el.closest('.card')?.querySelector('.nr')?.textContent.replace('KARTA', '').trim();
+    if (fs < 5.6 && nr) male.add(nr);
+  });
+  const uwagi = [...bledy];
+  if (male.size) uwagi.push(`Na kartach ${[...male].join(', ')} tekstu jest dużo i czcionka jest bardzo mała. Skróć pytania albo odpowiedzi.`);
+  const warn = document.getElementById('warn');
+  warn.hidden = !uwagi.length;
+  warn.innerHTML = uwagi.map(esc).join('<br>');
+  document.documentElement.dataset.ready = '1';
+}
+document.fonts.ready.then(dopasuj);
+</script>
+</body>
+</html>

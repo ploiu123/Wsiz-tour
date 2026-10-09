@@ -104,6 +104,18 @@ Do ustalenia: co z Kuchnią.
 - **Na razie wyłączone:** gra startuje od razu na planszy. Kod menu zostaje, włącza się go w `index.html` zmianą `MENU_ON` na `true`.
 - Ustawienia i profil zapisują się w przeglądarce gracza.
 
+## Karty z pytaniami (wersja do druku)
+
+- Format karty do pokera: 63 × 88 mm.
+- **Awers:** semestr (kolorowa plakietka), numer karty, przedmiot, wykładowca i 7 pytań z odpowiedziami ABCD.
+- **Rewers:** klucz odpowiedzi (numer pytania, litera i treść dobrej odpowiedzi) dla osoby, która czyta pytanie.
+- Kolor paska oznacza semestr: 1 niebieski, 2 zielony, 3 pomarańczowy, 4 różowy, 5 fioletowy, 6 złoty, 7 morski, 8 (mieszane) grafitowy.
+- Mieści się pytanie do ok. 90 znaków i odpowiedzi do ok. 15 znaków. Przy dłuższym tekście czcionka sama się zmniejsza, a podgląd ostrzega, gdy robi się za mała.
+- Plik `druk/karty-pytan.html`, karty dopisuje się w tablicy `KARTY`. Gotowe PDF-y:
+  - `druk/karty-pytan-A4.pdf`: do drukarki w domu, 9 kart na arkuszu A4, linie cięcia, rewersy ułożone do druku dwustronnego,
+  - `druk/karty-pytan-drukarnia.pdf`: każda strona karty osobno, 69 × 94 mm z 3 mm spadu.
+- Na razie jest jedna karta wzorcowa z przykładowymi pytaniami.
+
 ## Budynki
 
 5 poziomów:
@@ -159,7 +171,7 @@ Do ustalenia: co z Kuchnią.
 | 3 | Karty: rewersy, awersy, treść | karty „Przekup dziekanat” gotowe |
 | 4 | Pola planszy: nazwy, grupy kolorów, pola specjalne | pola 1–21 i 31 gotowe |
 | 5 | Pieniądze: waluta, banknoty, pula na środku | |
-| 6 | Pytania: szablon dla wykładowców, okno pytania z minutnikiem | |
+| 6 | Pytania: szablon dla wykładowców, okno pytania z minutnikiem | wzór karty z pytaniami do druku gotowy |
 | 7 | Zasady i rozgrywka, tryb 2 na 2, boty | |
 | 8 | Ekrany: menu, ustawienia gry, koniec gry | logowanie jako gość i panel gracza gotowe |
 | 9 | Tryb online | |
