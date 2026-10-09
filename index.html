@@ -96,7 +96,7 @@
   .hud, .field-card { z-index: 2; }
 
   .cards-view { position: absolute; inset: 0; z-index: 1; overflow-y: auto; padding: 100px 16px 40px; }
-  .cards-head { max-width: 1040px; margin: 0 auto 22px; }
+  .cards-head { max-width: 1040px; margin: 0 auto 22px; padding: 14px 18px; background: var(--panel); border: 1px solid var(--panel-line); border-radius: 16px; box-shadow: var(--shadow); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
   .cards-head h2 { margin: 0; font: 600 26px/1.15 var(--display); text-wrap: balance; }
   .cards-head p { margin: 6px 0 0; max-width: 640px; color: var(--ink-soft); font-size: 14.5px; }
   .cards-grid { max-width: 1040px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px; }
@@ -442,7 +442,7 @@
 
     <div class="cards-head cards-head-2">
       <h2>Karty z pytaniami</h2>
-      <p>Wzór karty do druku. Tak będzie wyglądać wydrukowana karta: 7 pytań z odpowiedziami ABCD na awersie, klucz odpowiedzi na rewersie. Kliknij kartę, żeby ją odwrócić.</p>
+      <p>Wzór karty do druku. Jedna karta to jeden prowadzący i jeden numer pytania: pytanie o tym numerze z każdego semestru od 1 do 7. Na odwrocie jest klucz odpowiedzi. Kliknij kartę, żeby ją odwrócić.</p>
     </div>
     <div class="qc-layout">
       <div class="card-slot" id="questionSlot"></div>
@@ -452,7 +452,11 @@
           <p>Karta do pokera, 63 × 88 mm. Mieści się pytanie do ok. 90 znaków i odpowiedzi do ok. 15 znaków. Przy dłuższym tekście czcionka sama się zmniejsza.</p>
         </div>
         <div>
-          <h3>Kolor paska = semestr</h3>
+          <h3>Skąd są pytania</h3>
+          <p>Z bazy: prowadzący, jego przedmioty w semestrach 1–7 i ponumerowane pytania. Karta „Pytanie nr 1” zbiera pytania nr 1 ze wszystkich semestrów, karta „Pytanie nr 2” pytania nr 2 i tak dalej.</p>
+        </div>
+        <div>
+          <h3>Numer w kółku = semestr</h3>
           <ul class="qc-legend" id="qcLegend"></ul>
         </div>
         <div>
@@ -2360,17 +2364,17 @@ BRIBE_CARDS.forEach((card, i) => {
 // Karta z pytaniami: ten sam wygląd i dane co wersja do druku (druk/karty-pytan.js i .css).
 // Karta ma wymiary w milimetrach, więc skalujemy ją do szerokości miejsca w siatce.
 if (window.KartyPytan) {
-  const { KARTY, SEMESTRY, awers, rewers, nr3 } = window.KartyPytan;
+  const { KARTY, SEMESTRY, SEMESTRY_KARTY, awers, rewers, id } = window.KartyPytan;
   const karta = KARTY[0];
   const slot = $('questionSlot');
   slot.innerHTML = `
-    <button class="flip" type="button" aria-pressed="false" aria-label="Karta z pytaniami ${nr3(karta.nr)}, kliknij, aby odwrócić">
+    <button class="flip" type="button" aria-pressed="false" aria-label="Karta z pytaniami: ${id(karta)}, kliknij, aby odwrócić">
       <span class="flip-inner">
         <span class="face front"><span class="qc-fit">${awers(karta)}</span></span>
         <span class="face back"><span class="qc-fit">${rewers(karta)}</span></span>
       </span>
     </button>
-    <p class="card-cap"><b>Karta ${nr3(karta.nr)}</b> · ${karta.przedmiot} · dane przykładowe</p>`;
+    <p class="card-cap"><b>Pytanie nr ${karta.nr}</b> · ${karta.wykladowca}${karta.przyklad ? ' · dane przykładowe' : ''}</p>`;
   const btn = slot.querySelector('.flip');
   btn.addEventListener('click', () => {
     const on = !btn.classList.contains('flipped');
@@ -2384,8 +2388,8 @@ if (window.KartyPytan) {
     }
   });
   slot.querySelectorAll('.qc-fit').forEach(el => skaluj.observe(el));
-  $('qcLegend').innerHTML = Object.values(SEMESTRY)
-    .map(s => `<li><i style="--c:${s.kolor}" aria-hidden="true"></i>${s.nazwa}</li>`).join('');
+  $('qcLegend').innerHTML = SEMESTRY_KARTY
+    .map(n => `<li><i style="--c:${SEMESTRY[n].kolor}" aria-hidden="true"></i>${SEMESTRY[n].nazwa}</li>`).join('');
 }
 
 // Klikanie pól

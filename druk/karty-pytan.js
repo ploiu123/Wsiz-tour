@@ -1,8 +1,13 @@
 // Karty z pytaniami: dane i wspólne funkcje dla wersji do druku (druk/karty-pytan.html)
 // i podglądu w grze (index.html). Wygląd jest w druk/karty-pytan.css.
 // Zwykły skrypt (nie moduł), żeby wersja do druku działała też po dwukliku w pliku.
+//
+// Jak powstają karty:
+//   jedna karta = jeden prowadzący i jeden numer pytania.
+//   Na karcie „Pytanie nr 1” prowadzącego są jego pytania nr 1 z semestrów 1–7,
+//   każde z przedmiotu, który prowadzi w danym semestrze.
 window.KartyPytan = (() => {
-  // Kolor paska dla każdego semestru (8 = mieszane)
+  // Kolor kółka dla każdego semestru (8 = mieszane, używane w grze, nie na karcie)
   const SEMESTRY = {
     1: { nazwa: 'Semestr 1', kolor: '#2F7FF0' },
     2: { nazwa: 'Semestr 2', kolor: '#1FA463' },
@@ -13,88 +18,135 @@ window.KartyPytan = (() => {
     7: { nazwa: 'Semestr 7', kolor: '#2E9E8A' },
     8: { nazwa: 'Mieszane', kolor: '#5B6B8C' },
   };
+  const SEMESTRY_KARTY = [1, 2, 3, 4, 5, 6, 7];
 
-  // Karty. Każda ma dokładnie 7 pytań; „ok” to litera dobrej odpowiedzi.
+  // Baza pytań: prowadzący → przedmioty w semestrach → ponumerowane pytania.
+  // Pytanie nr 1 to pierwsze na liście, nr 2 drugie itd.; „ok” to litera dobrej odpowiedzi.
   // Mieści się pytanie do ok. 90 znaków i odpowiedzi do ok. 15 znaków.
   // Dłuższy tekst też się zmieści, ale czcionka sama się zmniejszy.
-  const KARTY = [
+  const PROWADZACY = [
     {
-      nr: 1,
-      semestr: 1,
-      przedmiot: 'Podstawy informatyki',
-      wykladowca: 'dr Jan Kowalski',
-      przyklad: true,
-      pytania: [
-        { q: 'Ile bitów ma jeden bajt?', a: ['4', '8', '16', '32'], ok: 'B' },
-        { q: 'Który system liczbowy zapisuje liczby tylko za pomocą cyfr 0 i 1?', a: ['dziesiętny', 'ósemkowy', 'szesnastkowy', 'dwójkowy'], ok: 'D' },
-        { q: 'Jak nazywa się układ, który wykonuje obliczenia i instrukcje programów?', a: ['procesor', 'zasilacz', 'karta sieciowa', 'dysk'], ok: 'A' },
-        { q: 'Ile wynosi liczba 1010 zapisana dwójkowo w systemie dziesiętnym?', a: ['8', '10', '12', '5'], ok: 'B' },
-        { q: 'Która pamięć traci dane po wyłączeniu zasilania?', a: ['ROM', 'SSD', 'RAM', 'HDD'], ok: 'C' },
-        { q: 'Który język opisuje strukturę stron internetowych?', a: ['HTML', 'SQL', 'C++', 'Python'], ok: 'A' },
-        { q: 'Ile wynosi 2 do potęgi 10?', a: ['1000', '512', '2048', '1024'], ok: 'D' },
+      imie: 'dr Jan Kowalski',
+      przyklad: true,   // dane przykładowe, do podmiany na pytania od wykładowców
+      przedmioty: [
+        { semestr: 1, nazwa: 'Podstawy informatyki', pytania: [
+          { q: 'Ile bitów ma jeden bajt?', a: ['4', '8', '16', '32'], ok: 'B' },
+        ] },
+        { semestr: 2, nazwa: 'Algorytmy i struktury danych', pytania: [
+          { q: 'Która struktura danych działa według zasady LIFO (ostatni wchodzi, pierwszy wychodzi)?', a: ['kolejka', 'stos', 'lista', 'drzewo'], ok: 'B' },
+        ] },
+        { semestr: 3, nazwa: 'Bazy danych', pytania: [
+          { q: 'Które polecenie SQL pobiera dane z tabeli?', a: ['INSERT', 'UPDATE', 'SELECT', 'DELETE'], ok: 'C' },
+        ] },
+        { semestr: 4, nazwa: 'Sieci komputerowe', pytania: [
+          { q: 'Ile bitów ma adres IPv4?', a: ['32', '64', '128', '16'], ok: 'A' },
+        ] },
+        { semestr: 5, nazwa: 'Programowanie obiektowe', pytania: [
+          { q: 'Jak nazywa się ukrywanie danych obiektu przed dostępem z zewnątrz?', a: ['hermetyzacja', 'dziedziczenie', 'polimorfizm', 'rekurencja'], ok: 'A' },
+        ] },
+        { semestr: 6, nazwa: 'Inżynieria oprogramowania', pytania: [
+          { q: 'Która metodyka dzieli pracę zespołu na krótkie sprinty?', a: ['kaskadowa', 'Scrum', 'spiralna', 'model V'], ok: 'B' },
+        ] },
+        { semestr: 7, nazwa: 'Bezpieczeństwo systemów', pytania: [
+          { q: 'Który protokół szyfruje połączenie ze stroną internetową?', a: ['HTTP', 'FTP', 'HTTPS', 'SMTP'], ok: 'C' },
+        ] },
       ],
     },
   ];
 
   const LITERY = ['A', 'B', 'C', 'D'];
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const nr3 = n => String(n).padStart(3, '0');
+  const PASEK = `background:linear-gradient(90deg,${SEMESTRY_KARTY
+    .map((s, i) => `${SEMESTRY[s].kolor} ${(i * 100 / 7).toFixed(2)}% ${((i + 1) * 100 / 7).toFixed(2)}%`).join(',')})`;
+
+  // Z bazy powstają karty: po jednej na każdy numer pytania każdego prowadzącego.
+  function utworzKarty(prowadzacy = PROWADZACY) {
+    const karty = [];
+    for (const p of prowadzacy) {
+      const ile = Math.max(0, ...p.przedmioty.map(pr => pr.pytania.length));
+      for (let n = 1; n <= ile; n++) {
+        karty.push({
+          nr: n,
+          wykladowca: p.imie,
+          przyklad: !!p.przyklad,
+          wiersze: SEMESTRY_KARTY.map(sem => {
+            const pr = p.przedmioty.find(x => x.semestr === sem);
+            const pyt = pr?.pytania[n - 1];
+            return pyt ? { semestr: sem, przedmiot: pr.nazwa, ...pyt } : { semestr: sem, brak: true };
+          }),
+        });
+      }
+    }
+    return karty;
+  }
+  const KARTY = utworzKarty();
+  const id = k => `${k.wykladowca}, pytanie nr ${k.nr}`;
 
   function awers(k) {
-    const sem = SEMESTRY[k.semestr];
-    const pytania = k.pytania.map((p, i) => `
-      <div class="qc-q">
-        <div class="qc-qn">${i + 1}</div>
-        <div class="qc-qt">${esc(p.q)}</div>
-        <div class="qc-qa">${p.a.map((odp, j) => `<span><b>${LITERY[j]}</b>${esc(odp)}</span>`).join('')}</div>
-      </div>`).join('');
+    const wiersze = k.wiersze.map(w => w.brak
+      ? `<div class="qc-q qc-empty" style="--qc-acc:${SEMESTRY[w.semestr].kolor}">
+          <div class="qc-sem">${w.semestr}</div><div class="qc-qt">Brak pytania w tym semestrze</div>
+        </div>`
+      : `<div class="qc-q" style="--qc-acc:${SEMESTRY[w.semestr].kolor}">
+          <div class="qc-sem">${w.semestr}</div>
+          <div class="qc-qt">${esc(w.q)}</div>
+          <div class="qc-qa">${w.a.map((odp, j) => `<span><b>${LITERY[j]}</b>${esc(odp)}</span>`).join('')}</div>
+        </div>`).join('');
     return `
-      <div class="qc-card qc-front" data-nr="${nr3(k.nr)}" style="--qc-acc:${sem.kolor}">
+      <div class="qc-card qc-front" data-id="${esc(id(k))}">
         <div class="qc-head">
-          <div class="qc-row"><span class="qc-sem">${sem.nazwa}</span><span class="qc-nr"><small>KARTA</small>${nr3(k.nr)}</span></div>
-          <div class="qc-subject">${esc(k.przedmiot)}</div>
-          <div class="qc-lecturer">${esc(k.wykladowca)}</div>
+          <div class="qc-who">
+            <div class="qc-role">Prowadzący</div>
+            <div class="qc-lecturer">${esc(k.wykladowca)}</div>
+            <div class="qc-span">Pytania z semestrów 1–7</div>
+          </div>
+          <div class="qc-num"><small>PYTANIE NR</small><b>${k.nr}</b></div>
         </div>
-        <div class="qc-stripe"></div>
-        <div class="qc-qs">${pytania}</div>
-        <div class="qc-foot"><span>${k.przyklad ? 'Wzór karty · dane przykładowe' : '7 pytań · wybierz A, B, C albo D'}</span><span>Odpowiedzi na odwrocie</span></div>
+        <div class="qc-stripe" style="${PASEK}"></div>
+        <div class="qc-qs">${wiersze}</div>
+        <div class="qc-foot"><span>Kółko = semestr${k.przyklad ? ' · przykład' : ''}</span><span>Odpowiedzi na odwrocie</span></div>
       </div>`;
   }
 
   function rewers(k) {
-    const sem = SEMESTRY[k.semestr];
-    const klucz = k.pytania.map((p, i) => {
-      const j = LITERY.indexOf(p.ok);
-      return `<div class="qc-key"><div class="qc-qn">${i + 1}</div><div class="qc-letter">${p.ok}</div><div class="qc-txt">${esc(p.a[j] ?? '?')}</div></div>`;
+    const klucz = k.wiersze.map(w => {
+      const kolor = SEMESTRY[w.semestr].kolor;
+      if (w.brak) return `<div class="qc-key" style="--qc-acc:${kolor}"><div class="qc-sem">${w.semestr}</div><div class="qc-letter">–</div><div class="qc-txt">brak pytania</div></div>`;
+      const j = LITERY.indexOf(w.ok);
+      return `<div class="qc-key" style="--qc-acc:${kolor}"><div class="qc-sem">${w.semestr}</div><div class="qc-letter">${w.ok}</div><div class="qc-txt">${esc(w.a[j] ?? '?')}<small>${esc(w.przedmiot)}</small></div></div>`;
     }).join('');
     return `
-      <div class="qc-card qc-back" data-nr="${nr3(k.nr)}" style="--qc-acc:${sem.kolor}">
-        <div class="qc-stripe"></div>
+      <div class="qc-card qc-back" data-id="${esc(id(k))}">
+        <div class="qc-stripe" style="${PASEK}"></div>
         <div class="qc-bhead">
           <div class="qc-btitle">ODPOWIEDZI</div>
-          <div class="qc-bsub">${esc(k.przedmiot)} · ${sem.nazwa}</div>
+          <div class="qc-bsub">Numer w kółku to semestr</div>
         </div>
         <div class="qc-keys">${klucz}</div>
-        <div class="qc-bfoot"><span>${esc(k.wykladowca)}</span><span class="qc-nr"><small>KARTA</small>${nr3(k.nr)}</span></div>
+        <div class="qc-bfoot"><span>${esc(k.wykladowca)}</span><span class="qc-bnum"><small>PYTANIE NR</small>${k.nr}</span></div>
       </div>`;
   }
 
-  // Błędy w danych: zły semestr, inna liczba pytań niż 7, brak 4 odpowiedzi, zła litera.
-  function sprawdz(karty = KARTY) {
+  // Błędy w bazie: brak przedmiotu w semestrze, różna liczba pytań, brak 4 odpowiedzi, zła litera.
+  function sprawdz(prowadzacy = PROWADZACY) {
     const bledy = [];
-    karty.forEach(k => {
-      if (!SEMESTRY[k.semestr]) bledy.push(`Karta ${nr3(k.nr)}: nieznany semestr ${k.semestr}.`);
-      if (k.pytania.length !== 7) bledy.push(`Karta ${nr3(k.nr)}: ma ${k.pytania.length} pytań zamiast 7.`);
-      k.pytania.forEach((p, i) => {
-        if (p.a.length !== 4) bledy.push(`Karta ${nr3(k.nr)}, pytanie ${i + 1}: potrzebne 4 odpowiedzi.`);
-        if (!LITERY.includes(p.ok)) bledy.push(`Karta ${nr3(k.nr)}, pytanie ${i + 1}: dobra odpowiedź musi być literą A, B, C albo D.`);
-      });
-    });
+    for (const p of prowadzacy) {
+      const ile = Math.max(0, ...p.przedmioty.map(pr => pr.pytania.length));
+      for (const sem of SEMESTRY_KARTY) {
+        const pr = p.przedmioty.find(x => x.semestr === sem);
+        if (!pr) { bledy.push(`${p.imie}: brak przedmiotu w semestrze ${sem}.`); continue; }
+        if (pr.pytania.length < ile) bledy.push(`${p.imie}, ${pr.nazwa} (semestr ${sem}): ${pr.pytania.length} pytań, a w innych semestrach ${ile}. Na części kart zabraknie pytania z tego semestru.`);
+        pr.pytania.forEach((q, i) => {
+          if (q.a.length !== 4) bledy.push(`${p.imie}, ${pr.nazwa}, pytanie nr ${i + 1}: potrzebne 4 odpowiedzi.`);
+          if (!LITERY.includes(q.ok)) bledy.push(`${p.imie}, ${pr.nazwa}, pytanie nr ${i + 1}: dobra odpowiedź musi być literą A, B, C albo D.`);
+        });
+      }
+    }
     return bledy;
   }
 
   // Jeśli tekst się nie mieści, czcionka maleje (nie mniej niż 4,8 pt).
-  // Zwraca numery kart, na których czcionka spadła poniżej 5,6 pt.
+  // Zwraca karty, na których czcionka spadła poniżej 5,6 pt.
   function dopasuj(root = document) {
     const male = new Set();
     root.querySelectorAll('.qc-qs, .qc-keys').forEach(el => {
@@ -105,10 +157,10 @@ window.KartyPytan = (() => {
         fs = Math.round((fs - 0.1) * 10) / 10;
         el.style.setProperty('--qc-fs', fs + 'pt');
       }
-      if (fs < 5.6) male.add(el.closest('.qc-card').dataset.nr);
+      if (fs < 5.6) male.add(el.closest('.qc-card').dataset.id);
     });
     return male;
   }
 
-  return { SEMESTRY, KARTY, LITERY, esc, nr3, awers, rewers, sprawdz, dopasuj };
+  return { SEMESTRY, SEMESTRY_KARTY, PROWADZACY, KARTY, LITERY, esc, utworzKarty, awers, rewers, sprawdz, dopasuj, id };
 })();

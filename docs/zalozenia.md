@@ -107,14 +107,17 @@ Do ustalenia: co z Kuchnią.
 ## Karty z pytaniami (wersja do druku)
 
 - Format karty do pokera: 63 × 88 mm.
-- **Awers:** semestr (kolorowa plakietka), numer karty, przedmiot, wykładowca i 7 pytań z odpowiedziami ABCD.
-- **Rewers:** klucz odpowiedzi (numer pytania, litera i treść dobrej odpowiedzi) dla osoby, która czyta pytanie.
-- Kolor paska oznacza semestr: 1 niebieski, 2 zielony, 3 pomarańczowy, 4 różowy, 5 fioletowy, 6 złoty, 7 morski, 8 (mieszane) grafitowy.
+- **Jedna karta = jeden prowadzący i jeden numer pytania.** Na karcie „Pytanie nr 1” są pytania nr 1 tego prowadzącego z semestrów 1–7, każde z przedmiotu, który prowadzi w danym semestrze. Karta „Pytanie nr 2” zbiera pytania nr 2 i tak dalej.
+- **Awers:** prowadzący, numer pytania (złote pole) i 7 pytań z odpowiedziami ABCD. Numer w kolorowym kółku to semestr. Gracz odpowiada na pytanie ze swojego semestru.
+- **Rewers:** klucz odpowiedzi dla osoby, która czyta pytanie: semestr, litera, treść dobrej odpowiedzi i nazwa przedmiotu.
+- Kolory semestrów: 1 niebieski, 2 zielony, 3 pomarańczowy, 4 różowy, 5 fioletowy, 6 złoty, 7 morski. Pasek pod nagłówkiem karty ma wszystkie 7 kolorów.
 - Mieści się pytanie do ok. 90 znaków i odpowiedzi do ok. 15 znaków. Przy dłuższym tekście czcionka sama się zmniejsza, a podgląd ostrzega, gdy robi się za mała.
-- Plik `druk/karty-pytan.html`, karty dopisuje się w tablicy `KARTY`. Gotowe PDF-y:
+- **Baza pytań:** `druk/karty-pytan.js`, tablica `PROWADZACY`: prowadzący, jego przedmioty w semestrach 1–7 i ponumerowane pytania. Karty powstają z niej automatycznie. Podgląd ostrzega, gdy prowadzącemu brakuje przedmiotu w którymś semestrze albo pytań jest różna liczba.
+- Wygląd karty jest w `druk/karty-pytan.css`. Ten sam plik i te same dane używa gra (zakładka „Karty”) i wersja do druku, więc zawsze wyglądają tak samo.
+- Wersja do druku: `druk/karty-pytan.html`. Gotowe PDF-y:
   - `druk/karty-pytan-A4.pdf`: do drukarki w domu, 9 kart na arkuszu A4, linie cięcia, rewersy ułożone do druku dwustronnego,
   - `druk/karty-pytan-drukarnia.pdf`: każda strona karty osobno, 69 × 94 mm z 3 mm spadu.
-- Na razie jest jedna karta wzorcowa z przykładowymi pytaniami.
+- Na razie jest jedna karta wzorcowa z przykładowymi pytaniami (dr Jan Kowalski, pytanie nr 1).
 
 ## Budynki
 

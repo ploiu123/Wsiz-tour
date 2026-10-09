@@ -10,7 +10,8 @@
 <link rel="stylesheet" href="karty-pytan.css">
 <!--
   Karty z pytaniami w formacie karty do pokera (63 × 88 mm).
-  Na awersie 7 pytań ABCD, na rewersie klucz odpowiedzi.
+  Jedna karta = jeden prowadzący i jeden numer pytania: pytanie o tym numerze
+  z każdego semestru 1–7. Na rewersie klucz odpowiedzi.
   Dane i wygląd kart są w karty-pytan.js i karty-pytan.css (te same pliki używa gra).
 
   Tryby druku (dopisz do adresu):
@@ -58,8 +59,8 @@
 
 <section class="intro screen-only">
   <h1>Karty z pytaniami</h1>
-  <p>Format karty do pokera: 63 × 88 mm. Na awersie jest 7 pytań z odpowiedziami ABCD, nazwa przedmiotu, wykładowca i numer karty. Na rewersie jest klucz odpowiedzi dla osoby, która czyta pytanie.</p>
-  <p>Kolor paska oznacza semestr, więc wydrukowane karty łatwo rozdzielić na kategorie.</p>
+  <p>Format karty do pokera: 63 × 88 mm. Jedna karta to jeden prowadzący i jeden numer pytania. Na awersie jest pytanie o tym numerze z każdego semestru od 1 do 7, z przedmiotu, który prowadzący ma w danym semestrze. Na rewersie jest klucz odpowiedzi z nazwami przedmiotów.</p>
+  <p>Numer w kolorowym kółku to semestr. Gracz odpowiada na pytanie ze swojego semestru.</p>
 </section>
 <div class="warn screen-only" id="warn" hidden></div>
 <section class="preview screen-only" id="preview"></section>
@@ -67,13 +68,13 @@
 
 <script src="karty-pytan.js"></script>
 <script>
-const { KARTY, awers, rewers, sprawdz, dopasuj, nr3, esc } = window.KartyPytan;
+const { KARTY, awers, rewers, sprawdz, dopasuj, esc, id } = window.KartyPytan;
 
 // Podgląd na ekranie
 document.getElementById('preview').innerHTML = KARTY.map(k => `
   <div class="pair">
-    <figure><div class="zoom">${awers(k)}</div><figcaption>Karta ${nr3(k.nr)}: awers</figcaption></figure>
-    <figure><div class="zoom">${rewers(k)}</div><figcaption>Karta ${nr3(k.nr)}: rewers</figcaption></figure>
+    <figure><div class="zoom">${awers(k)}</div><figcaption>${esc(id(k))}: awers</figcaption></figure>
+    <figure><div class="zoom">${rewers(k)}</div><figcaption>${esc(id(k))}: rewers</figcaption></figure>
   </div>`).join('');
 
 // Wersja do druku
@@ -112,7 +113,7 @@ if (tryb === 'drukarnia') {
 document.fonts.ready.then(() => {
   const male = dopasuj(document);
   const uwagi = sprawdz();
-  if (male.size) uwagi.push(`Na kartach ${[...male].join(', ')} tekstu jest dużo i czcionka jest bardzo mała. Skróć pytania albo odpowiedzi.`);
+  if (male.size) uwagi.push(`Na kartach: ${[...male].join('; ')} tekstu jest dużo i czcionka jest bardzo mała. Skróć pytania albo odpowiedzi.`);
   const warn = document.getElementById('warn');
   warn.hidden = !uwagi.length;
   warn.innerHTML = uwagi.map(esc).join('<br>');

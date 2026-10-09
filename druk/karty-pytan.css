@@ -26,30 +26,38 @@
 }
 .qc-card *, .qc-card *::before, .qc-card *::after { box-sizing: border-box; }
 
-/* ---------- awers ---------- */
-.qc-head { background: var(--qc-navy); color: #fff; padding: calc(3mm + var(--qc-b, 0mm)) calc(3.4mm + var(--qc-b, 0mm)) 2.3mm; }
-.qc-row { display: flex; align-items: center; justify-content: space-between; gap: 2mm; }
-.qc-sem {
-  font: 800 5.4pt/1 "Figtree", sans-serif; letter-spacing: .07em; text-transform: uppercase;
-  background: var(--qc-acc); color: #fff; padding: 1mm 1.9mm; border-radius: 3mm;
+/* nagłówek: prowadzący i numer pytania */
+.qc-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 2mm;
+  background: var(--qc-navy); color: #fff;
+  padding: calc(2.8mm + var(--qc-b, 0mm)) calc(3.4mm + var(--qc-b, 0mm)) 2.4mm;
 }
-.qc-nr { font: 700 10pt/1 "Fredoka", sans-serif; color: var(--qc-gold); white-space: nowrap; }
-.qc-nr small { font: 700 5.2pt "Figtree", sans-serif; color: rgba(255, 255, 255, .62); letter-spacing: .08em; margin-right: .9mm; vertical-align: .35mm; }
-.qc-subject { margin-top: 1.7mm; font: 700 7.4pt/1.12 "Fredoka", sans-serif; letter-spacing: .01em; }
-.qc-lecturer { margin-top: .55mm; font: 600 5.9pt/1.2 "Figtree", sans-serif; color: rgba(255, 255, 255, .8); }
-.qc-stripe { flex: none; height: 1.1mm; background: var(--qc-acc); }
+.qc-who { min-width: 0; }
+.qc-role { font: 800 5pt/1 "Figtree", sans-serif; letter-spacing: .09em; text-transform: uppercase; color: rgba(255, 255, 255, .6); }
+.qc-lecturer { margin-top: .9mm; font: 700 8pt/1.1 "Fredoka", sans-serif; letter-spacing: .01em; }
+.qc-span { margin-top: .7mm; font: 600 5.4pt/1.2 "Figtree", sans-serif; color: rgba(255, 255, 255, .72); }
+.qc-num {
+  flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-width: 12.5mm; padding: 1.2mm 1.6mm 1.3mm; border-radius: 2mm;
+  background: var(--qc-gold); color: var(--qc-navy);
+}
+.qc-num small { font: 800 4.6pt/1 "Figtree", sans-serif; letter-spacing: .07em; }
+.qc-num b { margin-top: .5mm; font: 700 13pt/1 "Fredoka", sans-serif; }
+.qc-stripe { flex: none; height: 1.2mm; }   /* kolory semestrów 1–7, ustawiane w karty-pytan.js */
+
+/* awers: 7 pytań, po jednym z każdego semestru */
 .qc-qs {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 1.7mm calc(3.2mm + var(--qc-b, 0mm)) 1.2mm;
+  padding: 1.6mm calc(3.2mm + var(--qc-b, 0mm)) 1.2mm;
   font-size: var(--qc-fs, 6.3pt);
 }
 .qc-q { display: grid; grid-template-columns: 3.4mm 1fr; column-gap: 1.5mm; padding-bottom: .85mm; border-bottom: .2mm solid var(--qc-line); }
 .qc-q:last-child { border-bottom: 0; padding-bottom: 0; }
-.qc-qn {
+.qc-sem {
   width: 3.4mm; height: 3.4mm; border-radius: 50%;
   background: var(--qc-acc); color: #fff;
   font: 700 5.6pt/3.4mm "Fredoka", sans-serif; text-align: center;
@@ -57,27 +65,28 @@
 .qc-qt { font-weight: 700; line-height: 1.17; padding-top: .2mm; }
 .qc-qa { grid-column: 2; display: flex; flex-wrap: wrap; column-gap: 2.3mm; row-gap: .15mm; margin-top: .4mm; font-size: .92em; font-weight: 500; line-height: 1.16; color: var(--qc-ink-2); }
 .qc-qa b { color: var(--qc-acc); font-weight: 800; margin-right: .55mm; }
+.qc-q.qc-empty .qc-qt { font-weight: 600; color: var(--qc-muted); font-style: italic; }
 .qc-foot {
   display: flex; justify-content: space-between; gap: 2mm;
   padding: 0 calc(3.2mm + var(--qc-b, 0mm)) calc(2.2mm + var(--qc-b, 0mm));
-  font: 600 4.8pt/1 "Figtree", sans-serif; color: var(--qc-muted); letter-spacing: .02em;
+  font: 600 4.8pt/1 "Figtree", sans-serif; color: var(--qc-muted); letter-spacing: .02em; white-space: nowrap;
 }
 
-/* ---------- rewers: klucz odpowiedzi ---------- */
+/* rewers: klucz odpowiedzi */
 .qc-card.qc-back {
   background-color: var(--qc-navy);
   background-image: repeating-linear-gradient(45deg, rgba(255, 255, 255, .045) 0 1.2mm, transparent 1.2mm 3.4mm);
   color: #fff;
 }
 .qc-back .qc-stripe { height: calc(1.4mm + var(--qc-b, 0mm)); }
-.qc-bhead { padding: 3.2mm calc(4mm + var(--qc-b, 0mm)) 2.4mm; text-align: center; }
+.qc-bhead { padding: 3mm calc(4mm + var(--qc-b, 0mm)) 2.2mm; text-align: center; }
 .qc-btitle { font: 700 10.5pt/1 "Fredoka", sans-serif; letter-spacing: .05em; }
-.qc-bsub { margin-top: 1.2mm; font: 600 5.6pt/1.25 "Figtree", sans-serif; color: rgba(255, 255, 255, .72); }
+.qc-bsub { margin-top: 1.1mm; font: 600 5.6pt/1.25 "Figtree", sans-serif; color: rgba(255, 255, 255, .75); }
 .qc-keys {
   flex: 1;
   min-height: 0;
   margin: 0 calc(3.4mm + var(--qc-b, 0mm));
-  padding: 1.2mm 2.6mm;
+  padding: 1mm 2.4mm;
   display: flex;
   flex-direction: column;
   justify-content: space-around;
@@ -86,13 +95,15 @@
   border-radius: 2mm;
   font-size: var(--qc-fs, 6.6pt);
 }
-.qc-key { display: grid; grid-template-columns: 3.4mm 3.6mm 1fr; align-items: center; column-gap: 1.6mm; padding: .75mm 0; border-bottom: .2mm solid var(--qc-line); }
+.qc-key { display: grid; grid-template-columns: 3.4mm 3.4mm 1fr; align-items: center; column-gap: 1.5mm; padding: .6mm 0; border-bottom: .2mm solid var(--qc-line); }
 .qc-key:last-child { border-bottom: 0; }
 .qc-letter { font: 700 1.3em/1 "Fredoka", sans-serif; color: var(--qc-acc); text-align: center; }
-.qc-txt { font-weight: 700; line-height: 1.15; }
+.qc-txt { font-weight: 700; line-height: 1.15; min-width: 0; }
+.qc-txt small { display: block; margin-top: .25mm; font-size: .76em; font-weight: 600; color: var(--qc-muted); }
 .qc-bfoot {
-  display: flex; justify-content: space-between; align-items: flex-end; gap: 2mm;
-  padding: 2.3mm calc(3.6mm + var(--qc-b, 0mm)) calc(2.8mm + var(--qc-b, 0mm));
-  font: 600 5.2pt/1.25 "Figtree", sans-serif; color: rgba(255, 255, 255, .72);
+  display: flex; justify-content: space-between; align-items: center; gap: 2mm;
+  padding: 2.2mm calc(3.6mm + var(--qc-b, 0mm)) calc(2.6mm + var(--qc-b, 0mm));
+  font: 600 5.2pt/1.25 "Figtree", sans-serif; color: rgba(255, 255, 255, .75);
 }
-.qc-bfoot .qc-nr { font-size: 9pt; }
+.qc-bnum { font: 700 8pt/1 "Fredoka", sans-serif; color: var(--qc-gold); white-space: nowrap; }
+.qc-bnum small { font: 800 4.8pt "Figtree", sans-serif; letter-spacing: .07em; color: rgba(255, 255, 255, .6); margin-right: .8mm; vertical-align: .3mm; }
