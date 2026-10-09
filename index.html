@@ -2550,7 +2550,7 @@ const PENALTY_CARDS = [
   { name: 'Zalanie sali', icon: 'flood', tag: 'atak', text: 'Budynek na jednej Twojej sali spada o 1 poziom.' },
   { name: 'Cięcia budżetowe', icon: 'scissors', tag: 'atak', text: 'Sprzedaj bankowi jedną swoją salę za pół ceny.' },
   { name: 'Zmiana planu zajęć', icon: 'swap', tag: 'atak', text: 'Losowa Twoja sala przechodzi do losowego przeciwnika.' },
-  { name: 'Brak prądu', icon: 'power', tag: 'atak', text: 'Twoja sala nie pobiera czynszu przez 3 tury.' },
+  { name: 'Brak prądu', icon: 'bulb', tag: 'atak', text: 'Twoja sala nie pobiera czynszu przez 3 tury.' },
   { name: 'Opłaty za sprzęt', icon: 'wrench', text: 'Zapłać 20 za każdy budynek i 100 za każdą serwerownię.', x2: 'Podwójne kwoty.' },
   { name: 'Warunek', icon: 'exam', text: 'Zapłać 100 do puli na środku planszy.', x2: 'Zapłać 200.' },
   { name: 'Spóźnienie na zajęcia', icon: 'clock', text: 'Cofnij się o 3 pola.', x2: 'Cofnij się o 6 pól.' },
@@ -2559,100 +2559,227 @@ const PENALTY_CARDS = [
   { name: 'Wykryty plagiat', icon: 'plagiarism', text: 'Oddaj do stosu 1 swoją kartę ułatwienia.', x2: 'Oddaj wszystkie.' },
 ];
 
-// Ikony w polu 200 × 200
-function cardIcon(name, c) {
-  const N = '#1E2A47', G = '#E0B04A', W = '#FFFFFF', R = '#D6534F';
-  const shield = `<path d="M100 20 L166 44 V98 C166 140 136 166 100 182 C64 166 34 140 34 98 V44 Z" fill="${c}" stroke="${N}" stroke-width="8" stroke-linejoin="round"/>`;
+// Ilustracje kart w polu 400 × 300, w tym samym stylu co karty „Wyjście z dziekanatu”
+const INK = '#3B2A20';
+const blush = (x, y) => `<ellipse cx="${x - 46}" cy="${y + 14}" rx="11" ry="6" fill="#F4A6A0" opacity=".75"/><ellipse cx="${x + 46}" cy="${y + 14}" rx="11" ry="6" fill="#F4A6A0" opacity=".75"/>`;
+const faceSad = (x, y, s = 1) => `<g transform="translate(${x} ${y}) scale(${s}) translate(${-x} ${-y})">
+  <circle cx="${x - 26}" cy="${y}" r="8" fill="${INK}"/><circle cx="${x + 26}" cy="${y}" r="8" fill="${INK}"/>
+  <path d="M${x - 38} ${y - 18} L${x - 18} ${y - 12} M${x + 38} ${y - 18} L${x + 18} ${y - 12}" stroke="${INK}" stroke-width="4" stroke-linecap="round"/>
+  <path d="M${x - 11} ${y + 22} Q${x} ${y + 12} ${x + 11} ${y + 22}" fill="none" stroke="${INK}" stroke-width="4" stroke-linecap="round"/>${blush(x, y)}</g>`;
+const faceShock = (x, y, s = 1) => `<g transform="translate(${x} ${y}) scale(${s}) translate(${-x} ${-y})">
+  <circle cx="${x - 26}" cy="${y}" r="11" fill="${INK}"/><circle cx="${x + 26}" cy="${y}" r="11" fill="${INK}"/>
+  <circle cx="${x - 23}" cy="${y - 4}" r="4" fill="#fff"/><circle cx="${x + 29}" cy="${y - 4}" r="4" fill="#fff"/>
+  <ellipse cx="${x}" cy="${y + 22}" rx="8" ry="10" fill="${INK}"/>${blush(x, y)}</g>`;
+const faceSleep = (x, y, s = 1) => `<g transform="translate(${x} ${y}) scale(${s}) translate(${-x} ${-y})">
+  <path d="M${x - 36} ${y} Q${x - 26} ${y + 9} ${x - 16} ${y} M${x + 16} ${y} Q${x + 26} ${y + 9} ${x + 36} ${y}" fill="none" stroke="${INK}" stroke-width="4" stroke-linecap="round"/>
+  <ellipse cx="${x}" cy="${y + 20}" rx="6" ry="4" fill="${INK}"/>${blush(x, y)}</g>`;
+const faceDizzy = (x, y, s = 1) => `<g transform="translate(${x} ${y}) scale(${s}) translate(${-x} ${-y})">
+  ${[-26, 26].map(dx => `<path d="M${x + dx} ${y} m-10 0 a10 10 0 1 1 10 10 a6 6 0 1 1 -6 -6" fill="none" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/>`).join('')}
+  <path d="M${x - 12} ${y + 22} Q${x - 6} ${y + 16} ${x} ${y + 22} T${x + 12} ${y + 22}" fill="none" stroke="${INK}" stroke-width="4" stroke-linecap="round"/>${blush(x, y)}</g>`;
+const sweat = (x, y, s = 1) => `<path transform="translate(${x} ${y}) scale(${s})" d="M0 -14 C0 -14 -10 0 -10 6 A10 10 0 0 0 10 6 C10 0 0 -14 0 -14 Z" fill="#8FD0F5" stroke="#5AAEE6" stroke-width="2"/>`;
+const groundShadow = (rx = 130) => `<ellipse cx="200" cy="284" rx="${rx}" ry="13" fill="#000" opacity=".08"/>`;
+const vgrad = (id, c1, c2) => `<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient>`;
+const coin = (x, y, r = 22) => `<circle cx="${x}" cy="${y + 4}" r="${r}" fill="#C8952C"/><circle cx="${x}" cy="${y}" r="${r}" fill="#F7CD5B" stroke="#C8952C" stroke-width="3"/><circle cx="${x}" cy="${y}" r="${r * 0.62}" fill="none" stroke="#E0A93A" stroke-width="3"/>`;
+const banknote = (x, y, w = 150, h = 84, rot = 0) => `<g transform="translate(${x} ${y}) rotate(${rot})">
+  <rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" rx="10" fill="#5DB37E"/><rect x="${-w / 2 + 9}" y="${-h / 2 + 9}" width="${w - 18}" height="${h - 18}" rx="6" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="3"/>
+  <circle r="${h * 0.24}" fill="#fff" fill-opacity=".8"/></g>`;
+
+function actionArt(name, id, st) {
+  const c = st.color, dk = st.dark;
+  const sp = (x, y, r, f = '#fff') => sparkle(x, y, r, f);
   switch (name) {
-    case 'helmet': return `
-      <path d="M32 128 Q32 52 100 46 Q168 52 168 128 Z" fill="${G}" stroke="${N}" stroke-width="7" stroke-linejoin="round"/>
-      <rect x="86" y="48" width="28" height="80" rx="8" fill="${W}" opacity=".55"/>
-      <rect x="16" y="124" width="168" height="24" rx="12" fill="${G}" stroke="${N}" stroke-width="7"/>
-      <path d="M100 160 V188 M86 175 L100 189 L114 175" stroke="${R}" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
-    case 'power': return `
-      <circle cx="100" cy="100" r="80" fill="${W}" stroke="${N}" stroke-width="8"/>
-      <path d="M114 28 L62 110 H98 L84 172 L140 86 H104 Z" fill="${G}" stroke="${N}" stroke-width="6" stroke-linejoin="round"/>
-      <path d="M44 44 L156 156" stroke="${R}" stroke-width="14" stroke-linecap="round"/>`;
-    case 'gavel': return `
-      <g transform="rotate(-35 100 92)">
-        <rect x="52" y="44" width="96" height="46" rx="10" fill="${N}"/>
-        <rect x="40" y="48" width="16" height="38" rx="5" fill="${G}"/><rect x="144" y="48" width="16" height="38" rx="5" fill="${G}"/>
-        <rect x="92" y="90" width="16" height="92" rx="7" fill="#8B5E3C"/>
+    case 'helmet': return `<defs>${vgrad(id + 'h', '#FFD86A', '#F2A93B')}</defs>${groundShadow()}
+      <g transform="translate(268 96) rotate(8)">
+        <rect width="100" height="136" rx="12" fill="#C69C6D"/><rect x="10" y="16" width="80" height="110" rx="6" fill="#fff"/>
+        <rect x="30" y="-8" width="40" height="20" rx="6" fill="#8A93A8"/>
+        <path d="M22 46 l8 8 l14 -16 M22 78 l8 8 l14 -16" fill="none" stroke="#2E9E8A" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M24 104 l14 14 M38 104 l-14 14" stroke="#E5484D" stroke-width="5" stroke-linecap="round"/>
+        <path d="M54 48 H78 M54 80 H78 M54 112 H78" stroke="#C9D0DC" stroke-width="5" stroke-linecap="round"/>
       </g>
-      <rect x="34" y="166" width="132" height="20" rx="6" fill="#8B5E3C"/>`;
-    case 'shieldRoom': return shield + `
-      <path d="M66 126 V92 L100 68 L134 92 V126 Z" fill="${W}"/><rect x="90" y="102" width="20" height="24" fill="${c}"/>`;
-    case 'shieldPerson': return shield + `
-      <circle cx="100" cy="82" r="20" fill="${W}"/><path d="M64 136 C66 106 134 106 136 136 Z" fill="${W}"/>`;
-    case 'grant': return `
-      <rect x="26" y="126" width="38" height="50" rx="6" fill="${c}" opacity=".5"/>
-      <rect x="80" y="96" width="38" height="80" rx="6" fill="${c}" opacity=".75"/>
-      <rect x="134" y="62" width="38" height="114" rx="6" fill="${c}"/>
-      <path d="M30 96 L84 52 L112 72 L162 26 M136 26 H162 V52" stroke="${N}" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
-    case 'coins': return [0, 1, 2, 3].map(k => `
-      <ellipse cx="${k === 3 ? 140 : 84}" cy="${k === 3 ? 148 : 156 - k * 26}" rx="52" ry="18" fill="#B98A2A"/>
-      <ellipse cx="${k === 3 ? 140 : 84}" cy="${k === 3 ? 140 : 148 - k * 26}" rx="52" ry="18" fill="${G}" stroke="#B98A2A" stroke-width="4"/>`).join('');
-    case 'refund': return `
-      <rect x="22" y="62" width="156" height="84" rx="10" fill="#4FA36B" stroke="${N}" stroke-width="6"/>
-      <circle cx="100" cy="104" r="24" fill="${W}" opacity=".85"/>
-      <path d="M150 40 A62 62 0 0 0 52 40" fill="none" stroke="${c}" stroke-width="9" stroke-linecap="round"/>
-      <path d="M40 26 L52 42 L68 30" fill="none" stroke="${c}" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>`;
-    case 'people': return [[60, 0.8], [140, 0.8], [100, 1]].map(([x, sc]) => `
-      <g transform="translate(${x} ${sc === 1 ? 104 : 92}) scale(${sc})">
-        <circle cx="0" cy="-26" r="22" fill="${sc === 1 ? c : N}"/><path d="M-40 44 C-38 6 38 6 40 44 Z" fill="${sc === 1 ? c : N}"/>
-      </g>`).join('') + `<circle cx="150" cy="160" r="22" fill="${G}" stroke="#B98A2A" stroke-width="4"/>`;
-    case 'forward': return `
-      <path d="M36 50 L86 100 L36 150" fill="none" stroke="${c}" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M90 50 L140 100 L90 150" fill="none" stroke="${N}" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
-      <circle cx="164" cy="44" r="26" fill="${G}"/><text x="164" y="46" class="svg-display" font-size="34" fill="${N}" text-anchor="middle" dominant-baseline="central">3</text>`;
-    case 'notes': return `
-      <rect x="44" y="24" width="112" height="152" rx="10" fill="${W}" stroke="${N}" stroke-width="7"/>
-      ${[56, 80, 104, 128].map(y => `<path d="M64 ${y} H136" stroke="${c}" stroke-width="7" stroke-linecap="round"/>`).join('')}
-      <path d="M128 150 L168 110 L180 122 L140 162 L124 166 Z" fill="${G}" stroke="${N}" stroke-width="5" stroke-linejoin="round"/>`;
-    case 'flood': return `
-      <path d="M44 118 V70 L100 34 L156 70 V118 Z" fill="${W}" stroke="${N}" stroke-width="7" stroke-linejoin="round"/>
-      <rect x="86" y="80" width="28" height="38" fill="${N}"/>
-      <path d="M20 132 Q40 118 60 132 T100 132 T140 132 T180 132 V180 H20 Z" fill="#4FB3E8" opacity=".85"/>
-      <path d="M150 20 C150 20 134 42 134 52 A16 16 0 0 0 166 52 C166 42 150 20 150 20 Z" fill="#4FB3E8"/>`;
-    case 'scissors': return `
-      <rect x="22" y="104" width="156" height="72" rx="10" fill="#4FA36B" stroke="${N}" stroke-width="6"/>
-      <path d="M100 98 V182" stroke="${W}" stroke-width="5" stroke-dasharray="10 8"/>
-      <circle cx="70" cy="50" r="22" fill="none" stroke="${N}" stroke-width="9"/><circle cx="130" cy="50" r="22" fill="none" stroke="${N}" stroke-width="9"/>
-      <path d="M84 66 L118 120 M116 66 L82 120" stroke="${R}" stroke-width="10" stroke-linecap="round"/>`;
-    case 'swap': return `
-      <rect x="30" y="34" width="140" height="136" rx="12" fill="${W}" stroke="${N}" stroke-width="7"/>
-      <rect x="30" y="34" width="140" height="34" rx="12" fill="${c}"/>
-      <path d="M60 24 V46 M140 24 V46" stroke="${N}" stroke-width="8" stroke-linecap="round"/>
-      <path d="M58 100 H138 M122 86 L140 100 L122 114 M142 140 H62 M78 126 L60 140 L78 154" fill="none" stroke="${N}" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>`;
-    case 'wrench': return `
-      <g transform="rotate(-45 100 100)">
-        <rect x="86" y="70" width="28" height="112" rx="14" fill="#9AA6BC" stroke="${N}" stroke-width="7"/>
-        <circle cx="100" cy="56" r="38" fill="#9AA6BC" stroke="${N}" stroke-width="7"/>
-        <rect x="88" y="8" width="24" height="52" rx="3" fill="${W}"/>
+      <path d="M58 206 Q58 92 162 86 Q266 92 266 206 Z" fill="url(#${id}h)"/>
+      <path d="M150 88 Q162 84 174 88 V206 H150 Z" fill="#fff" opacity=".35"/>
+      <path d="M86 130 Q110 104 140 98" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" opacity=".5"/>
+      <rect x="30" y="196" width="264" height="36" rx="18" fill="#E39A32"/><rect x="36" y="198" width="252" height="12" rx="6" fill="#FFD86A" opacity=".7"/>
+      ${face(162, 158, 0.85)}${sp(40, 70, 14)}${sp(240, 40, 10, '#FFD86A')}`;
+    case 'power': return `<defs>${vgrad(id + 'p', '#A9BDE3', '#6F86B8')}</defs>${groundShadow()}
+      <path d="M78 176 C40 196 40 250 96 266 C150 280 120 300 160 300" fill="none" stroke="#6F86B8" stroke-width="14" stroke-linecap="round"/>
+      <rect x="252" y="80" width="118" height="128" rx="24" fill="#fff" stroke="#D5DBE6" stroke-width="6"/>
+      <circle cx="311" cy="144" r="36" fill="#EEF1F6"/><rect x="295" y="130" width="9" height="28" rx="4" fill="#5A6580"/><rect x="318" y="130" width="9" height="28" rx="4" fill="#5A6580"/>
+      <rect x="196" y="118" width="38" height="13" rx="6" fill="#C9CFDA"/><rect x="196" y="160" width="38" height="13" rx="6" fill="#C9CFDA"/>
+      <rect x="70" y="92" width="130" height="112" rx="30" fill="url(#${id}p)"/>
+      <rect x="82" y="100" width="40" height="12" rx="6" fill="#fff" opacity=".4"/>
+      ${faceSleep(135, 148, 0.85)}
+      <text x="214" y="70" class="svg-display" font-size="34" fill="${dk}">z</text><text x="238" y="44" class="svg-display" font-size="26" fill="${dk}" opacity=".7">z</text>
+      ${sp(48, 60, 12, '#FFD86A')}`;
+    case 'gavel': return `<defs>${vgrad(id + 'g', '#B9825A', '#7A4F2E')}</defs>${groundShadow(150)}
+      <g transform="translate(40 120) rotate(-6)">
+        <rect width="92" height="122" rx="8" fill="#fff" stroke="#E2D6C2" stroke-width="4"/>
+        <path d="M16 26 H76 M16 46 H76 M16 66 H60" stroke="#D9CDB8" stroke-width="5" stroke-linecap="round"/>
+        <path d="M58 100 l-8 34 l14 -10 l12 12 l2 -36 Z" fill="#E5484D"/><circle cx="66" cy="96" r="20" fill="#F7CD5B" stroke="#C8952C" stroke-width="3"/>
       </g>
-      <circle cx="152" cy="52" r="28" fill="${G}" stroke="#B98A2A" stroke-width="5"/>`;
-    case 'exam': return `
-      <g transform="rotate(-6 100 100)"><rect x="46" y="22" width="108" height="150" rx="8" fill="${W}" stroke="${N}" stroke-width="7"/>
-      ${[52, 74, 96].map(y => `<path d="M66 ${y} H134" stroke="#C9D0DC" stroke-width="7" stroke-linecap="round"/>`).join('')}</g>
-      <circle cx="132" cy="138" r="34" fill="${R}"/><text x="132" y="140" class="svg-display" font-size="48" fill="${W}" text-anchor="middle" dominant-baseline="central">!</text>`;
-    case 'clock': return `
-      <circle cx="104" cy="104" r="72" fill="${W}" stroke="${N}" stroke-width="9"/>
-      <path d="M104 62 V104 L132 120" stroke="${N}" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M40 54 A80 80 0 0 1 104 22" fill="none" stroke="${c}" stroke-width="10" stroke-linecap="round"/>
-      <path d="M24 46 L40 58 L52 40" fill="none" stroke="${c}" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>`;
-    case 'door': return `
-      <rect x="54" y="20" width="92" height="160" rx="6" fill="#8B5E3C" stroke="${N}" stroke-width="7"/>
-      <circle cx="128" cy="104" r="7" fill="${G}"/>
-      <circle cx="100" cy="62" r="24" fill="${W}"/><text x="100" y="64" class="svg-display" font-size="30" fill="${N}" text-anchor="middle" dominant-baseline="central">D</text>`;
-    case 'hourglass': return `
-      <rect x="44" y="20" width="112" height="16" rx="6" fill="${N}"/><rect x="44" y="164" width="112" height="16" rx="6" fill="${N}"/>
-      <path d="M58 36 H142 C142 76 108 88 108 100 C108 112 142 124 142 164 H58 C58 124 92 112 92 100 C92 88 58 76 58 36 Z" fill="${W}" stroke="${N}" stroke-width="7"/>
-      <path d="M72 150 C80 128 120 128 128 150 Z M84 62 H116 C112 76 104 82 100 88 C96 82 88 76 84 62 Z" fill="${G}"/>`;
-    case 'plagiarism': return `
-      <rect x="30" y="30" width="96" height="128" rx="8" fill="${W}" stroke="${N}" stroke-width="7"/>
-      <rect x="74" y="50" width="96" height="128" rx="8" fill="${W}" stroke="${N}" stroke-width="7"/>
-      ${[78, 100, 122].map(y => `<path d="M92 ${y} H152" stroke="#C9D0DC" stroke-width="7" stroke-linecap="round"/>`).join('')}
-      <path d="M96 140 L148 186 M148 140 L96 186" stroke="${R}" stroke-width="12" stroke-linecap="round"/>`;
+      <ellipse cx="236" cy="262" rx="104" ry="20" fill="#7A4F2E"/><rect x="132" y="240" width="208" height="22" fill="#A8744B"/><ellipse cx="236" cy="240" rx="104" ry="20" fill="#C08A5B"/>
+      <g transform="rotate(-28 236 140)">
+        <rect x="228" y="150" width="18" height="120" rx="9" fill="#C08A5B"/>
+        <rect x="160" y="76" width="152" height="76" rx="18" fill="url(#${id}g)"/>
+        <rect x="150" y="84" width="16" height="60" rx="6" fill="#F7CD5B"/><rect x="306" y="84" width="16" height="60" rx="6" fill="#F7CD5B"/>
+        <rect x="176" y="84" width="60" height="10" rx="5" fill="#fff" opacity=".3"/>
+        ${face(236, 116, 0.7)}
+      </g>${sp(356, 60, 13, '#F7CD5B')}${sp(150, 40, 10)}`;
+    case 'shieldRoom': return `<defs>${vgrad(id + 's', mix(c, '#ffffff', 0.25), dk)}</defs>${groundShadow(150)}
+      <path d="M230 254 V140 L300 92 L370 140 V254 Z" fill="#fff" stroke="#D5DBE6" stroke-width="5" stroke-linejoin="round"/>
+      <path d="M220 146 L300 86 L380 146" fill="none" stroke="${GOLD}" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="250" y="160" width="34" height="30" rx="4" fill="#BFE3F7"/><rect x="316" y="160" width="34" height="30" rx="4" fill="#BFE3F7"/><rect x="284" y="206" width="32" height="48" rx="4" fill="#C08A5B"/>
+      <path d="M150 44 L234 74 V148 C234 206 198 238 150 260 C102 238 66 206 66 148 V74 Z" fill="url(#${id}s)" stroke="#fff" stroke-width="7" stroke-linejoin="round"/>
+      <path d="M92 90 L150 70 V118 C120 120 100 110 92 90 Z" fill="#fff" opacity=".22"/>
+      ${face(150, 156, 0.8)}${sp(54, 52, 13)}${sp(250, 52, 11, '#FFD86A')}${heart(372, 70, 1.1, '#fff')}`;
+    case 'shieldPerson': return `<defs>${vgrad(id + 's', mix(c, '#ffffff', 0.25), dk)}</defs>${groundShadow()}
+      <path d="M200 66 L292 98 V170 C292 226 252 258 200 280 C148 258 108 226 108 170 V98 Z" fill="url(#${id}s)" stroke="#fff" stroke-width="7" stroke-linejoin="round"/>
+      <path d="M136 112 L200 90 V140 C168 142 146 132 136 112 Z" fill="#fff" opacity=".22"/>
+      <path d="M200 20 L272 50 L200 80 L128 50 Z" fill="#1E2A47"/><path d="M158 62 V86 C158 96 242 96 242 86 V62 L200 80 Z" fill="#2B3A5E"/>
+      <path d="M272 50 V92" stroke="${GOLD}" stroke-width="4"/><circle cx="272" cy="96" r="8" fill="${GOLD}"/>
+      ${face(200, 176, 0.85)}${sp(76, 80, 14)}${sp(330, 150, 11, '#FFD86A')}${heart(84, 220, 1.2, '#fff')}${heart(326, 236, 0.9, mix(c, '#ffffff', 0.5))}`;
+    case 'grant': return `<defs>${vgrad(id + 'l', '#6FE0C2', '#2E9E8A')}<clipPath id="${id}f"><path d="M178 104 L118 232 Q110 254 134 256 H266 Q290 254 282 232 L222 104 Z"/></clipPath></defs>${groundShadow()}
+      <path d="M178 104 L118 232 Q110 254 134 256 H266 Q290 254 282 232 L222 104 Z" fill="#fff" stroke="#D5DBE6" stroke-width="5"/>
+      <g clip-path="url(#${id}f)"><rect x="100" y="168" width="200" height="100" fill="url(#${id}l)"/>
+        <path d="M100 170 Q140 160 180 170 T260 170 T300 170 V180 H100 Z" fill="#fff" opacity=".35"/></g>
+      <rect x="176" y="42" width="48" height="66" rx="6" fill="#fff" stroke="#D5DBE6" stroke-width="5"/><rect x="170" y="34" width="60" height="14" rx="7" fill="#C08A5B"/>
+      <circle cx="166" cy="146" r="9" fill="#9BE8D3"/><circle cx="196" cy="124" r="6" fill="#9BE8D3"/><circle cx="214" cy="150" r="7" fill="#9BE8D3"/>
+      ${face(200, 214, 0.7)}
+      ${coin(330, 230, 24)}${coin(350, 196, 20)}
+      <path d="M64 236 V120 M40 144 L64 118 L88 144" fill="none" stroke="${c}" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+      ${sp(110, 60, 12, '#FFD86A')}${sp(296, 70, 10)}`;
+    case 'coins': return `<defs>${vgrad(id + 'c', '#FFE07E', '#F2B33B')}</defs>${groundShadow(160)}
+      ${banknote(200, 100, 200, 100, -6)}
+      ${[0, 1, 2].map(k => coin(78, 250 - k * 16, 30)).join('')}${[0, 1, 2, 3].map(k => coin(326, 250 - k * 16, 30)).join('')}
+      <circle cx="200" cy="200" r="70" fill="#C8952C"/><circle cx="200" cy="192" r="70" fill="url(#${id}c)" stroke="#C8952C" stroke-width="6"/>
+      <circle cx="200" cy="192" r="52" fill="none" stroke="#E0A93A" stroke-width="4"/>
+      <path d="M156 160 Q170 140 194 136" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" opacity=".6"/>
+      ${face(200, 196, 0.78, '#7A4F12')}${sp(60, 70, 15, '#F7CD5B')}${sp(350, 60, 12, '#F7CD5B')}${sp(330, 140, 9)}`;
+    case 'refund': return `${groundShadow()}
+      ${banknote(200, 104, 150, 84, -8)}
+      <rect x="96" y="124" width="208" height="140" rx="16" fill="#fff" stroke="#D5DBE6" stroke-width="5"/>
+      <path d="M96 140 L200 206 L304 140" fill="none" stroke="#D5DBE6" stroke-width="5" stroke-linejoin="round"/>
+      <path d="M100 262 L176 200 M300 262 L224 200" stroke="#E6EAF0" stroke-width="5"/>
+      ${face(200, 226, 0.65)}
+      <path d="M340 168 A64 64 0 0 0 300 60" fill="none" stroke="${c}" stroke-width="12" stroke-linecap="round"/>
+      <path d="M286 48 L302 62 L284 76" fill="none" stroke="${c}" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+      ${sp(58, 80, 13, '#FFD86A')}${sp(70, 220, 10)}`;
+    case 'people': return `<defs>${vgrad(id + 'm', mix(c, '#ffffff', 0.2), dk)}</defs>${groundShadow()}
+      <rect x="72" y="122" width="40" height="66" rx="12" fill="#5A6580"/>
+      <path d="M108 118 L254 64 V244 L108 190 Z" fill="url(#${id}m)"/>
+      <ellipse cx="254" cy="154" rx="22" ry="90" fill="${dk}"/><ellipse cx="256" cy="154" rx="12" ry="74" fill="#fff" opacity=".25"/>
+      <rect x="150" y="188" width="18" height="56" rx="8" fill="#5A6580" transform="rotate(-12 159 216)"/>
+      ${face(180, 150, 0.6, '#fff')}
+      <path d="M292 108 Q314 154 292 200 M318 86 Q350 154 318 222" fill="none" stroke="${GOLD}" stroke-width="8" stroke-linecap="round"/>
+      ${coin(352, 64, 20)}${coin(364, 248, 18)}${coin(54, 70, 16)}`;
+    case 'forward': return `${groundShadow(120)}
+      <path d="M40 150 H96 M24 182 H86 M50 214 H100" stroke="#C9D0DC" stroke-width="8" stroke-linecap="round"/>
+      <path d="M176 236 L160 270 M226 236 L250 268" stroke="#3B2A20" stroke-width="9" stroke-linecap="round"/>
+      <ellipse cx="152" cy="274" rx="18" ry="8" fill="#3B2A20"/><ellipse cx="258" cy="272" rx="18" ry="8" fill="#3B2A20"/>
+      <rect x="120" y="54" width="160" height="186" rx="18" fill="#fff" stroke="#D5DBE6" stroke-width="5"/>
+      <path d="M120 72 A18 18 0 0 1 138 54 H262 A18 18 0 0 1 280 72 V104 H120 Z" fill="${c}"/>
+      <rect x="152" y="40" width="12" height="30" rx="6" fill="#5A6580"/><rect x="236" y="40" width="12" height="30" rx="6" fill="#5A6580"/>
+      <text x="200" y="150" class="svg-display" font-size="62" fill="${dk}" text-anchor="middle" dominant-baseline="central">+3</text>
+      ${face(200, 204, 0.55)}
+      <path d="M306 112 L346 152 L306 192 M338 112 L378 152 L338 192" fill="none" stroke="${GOLD}" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>`;
+    case 'notes': return `<defs>${vgrad(id + 'n', '#FFFFFF', '#EEF3FB')}</defs>${groundShadow()}
+      <g transform="rotate(-4 200 160)">
+        <rect x="110" y="54" width="176" height="216" rx="14" fill="url(#${id}n)" stroke="#D5DBE6" stroke-width="5"/>
+        ${[84, 118, 152, 186, 220].map(y => `<circle cx="110" cy="${y}" r="9" fill="none" stroke="#5A6580" stroke-width="5"/>`).join('')}
+        ${[96, 120].map(y => `<path d="M140 ${y} H260" stroke="${c}" stroke-width="6" stroke-linecap="round" opacity=".55"/>`).join('')}
+        ${face(198, 182, 0.75)}
+      </g>
+      <g transform="translate(268 40) rotate(10)"><rect width="88" height="84" rx="6" fill="#FFE27A"/><path d="M14 26 H70 M14 44 H62 M14 62 H54" stroke="#E0B04A" stroke-width="5" stroke-linecap="round"/></g>
+      <g transform="translate(60 252) rotate(-40)"><rect width="150" height="22" rx="4" fill="#F7A23B"/><rect x="128" width="22" height="22" fill="#F4A6A0"/><path d="M0 0 L-24 11 L0 22 Z" fill="#F6DDB8"/><path d="M-16 7 L-24 11 L-16 15 Z" fill="#3B2A20"/></g>
+      ${sp(66, 70, 13, '#FFD86A')}${sp(352, 170, 10)}`;
+    case 'flood': return `${groundShadow(170)}
+      ${[[140, 24], [220, 10], [300, 30]].map(([x, y]) => `<path transform="translate(${x} ${y})" d="M0 0 C0 0 -12 18 -12 26 A12 12 0 0 0 12 26 C12 18 0 0 0 0 Z" fill="#6EC6F0"/>`).join('')}
+      <path d="M96 250 V130 L200 66 L304 130 V250 Z" fill="#fff" stroke="#D5DBE6" stroke-width="5" stroke-linejoin="round"/>
+      <path d="M84 136 L200 60 L316 136" fill="none" stroke="#9AA6BC" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+      ${faceSad(200, 150, 0.8)}
+      <path d="M-40 214 Q-10 198 20 214 T80 214 T140 214 T200 214 T260 214 T320 214 T380 214 T440 214 V304 H-40 Z" fill="#6EC6F0" opacity=".85"/>
+      <path d="M-40 234 Q-10 220 20 234 T80 234 T140 234 T200 234 T260 234 T320 234 T380 234 T440 234" fill="none" stroke="#fff" stroke-width="5" opacity=".6"/>
+      <ellipse cx="324" cy="206" rx="30" ry="18" fill="#FFD43B"/><circle cx="342" cy="184" r="15" fill="#FFD43B"/><path d="M354 182 L372 186 L354 192 Z" fill="#F08A2C"/><circle cx="346" cy="180" r="3" fill="${INK}"/>`;
+    case 'scissors': return `${groundShadow(160)}
+      <g transform="translate(118 214) rotate(-8)"><path d="M-70 -44 H62 L54 -30 L66 -14 L54 2 L66 18 L54 34 L62 44 H-70 Z" fill="#5DB37E"/><circle cx="-6" r="20" fill="#fff" fill-opacity=".7"/>${faceSad(-6, -2, 0.4)}</g>
+      <g transform="translate(282 214) rotate(8)"><path d="M70 -44 H-62 L-54 -30 L-66 -14 L-54 2 L-66 18 L-54 34 L-62 44 H70 Z" fill="#5DB37E"/><circle cx="6" r="20" fill="#fff" fill-opacity=".7"/>${faceSad(6, -2, 0.4)}</g>
+      <g transform="translate(200 104)">
+        <path d="M-8 0 L-20 -96 Q-12 -104 -2 -96 L8 0 Z" fill="#C9CFDA" transform="rotate(-18)"/>
+        <path d="M8 0 L20 -96 Q12 -104 2 -96 L-8 0 Z" fill="#E3E7EE" transform="rotate(18)"/>
+        <circle r="8" fill="#5A6580"/>
+        <circle cx="-34" cy="46" r="26" fill="none" stroke="${c}" stroke-width="12"/><circle cx="34" cy="46" r="26" fill="none" stroke="${c}" stroke-width="12"/>
+      </g>`;
+    case 'swap': return `${groundShadow(140)}
+      <rect x="114" y="60" width="172" height="196" rx="18" fill="#fff" stroke="#D5DBE6" stroke-width="5"/>
+      <path d="M114 78 A18 18 0 0 1 132 60 H268 A18 18 0 0 1 286 78 V108 H114 Z" fill="${c}"/>
+      <rect x="148" y="44" width="12" height="32" rx="6" fill="#5A6580"/><rect x="240" y="44" width="12" height="32" rx="6" fill="#5A6580"/>
+      ${faceDizzy(200, 170, 0.85)}
+      <path d="M78 120 A130 130 0 0 1 150 34" fill="none" stroke="${dk}" stroke-width="10" stroke-linecap="round"/><path d="M134 28 L152 34 L142 52" fill="none" stroke="${dk}" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M322 200 A130 130 0 0 1 250 280" fill="none" stroke="${dk}" stroke-width="10" stroke-linecap="round"/><path d="M266 286 L248 280 L258 262" fill="none" stroke="${dk}" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="330" y="96" class="svg-display" font-size="44" fill="${c}">?</text><text x="50" y="230" class="svg-display" font-size="34" fill="${c}" opacity=".7">?</text>`;
+    case 'bulb': return `${groundShadow(110)}
+      <circle cx="200" cy="124" r="78" fill="#E9EDF3" stroke="#C9D0DC" stroke-width="6"/>
+      <path d="M152 92 Q166 70 192 64" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round"/>
+      <path d="M232 70 L218 96 L236 108 L222 136" fill="none" stroke="#9AA6BC" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M158 188 H242 L232 214 H168 Z" fill="#E9EDF3" stroke="#C9D0DC" stroke-width="5"/>
+      ${[218, 238, 258].map(y => `<rect x="166" y="${y}" width="68" height="14" rx="7" fill="#9AA6BC"/>`).join('')}
+      ${faceSad(200, 128, 0.8)}
+      <rect x="300" y="196" width="66" height="36" rx="6" fill="none" stroke="#5A6580" stroke-width="5"/><rect x="366" y="206" width="8" height="16" rx="2" fill="#5A6580"/><rect x="306" y="202" width="12" height="24" rx="2" fill="#E5484D"/>
+      <text x="44" y="110" class="svg-display" font-size="30" fill="#9AA6BC">?</text>`;
+    case 'wrench': return `${groundShadow(150)}
+      <path d="M150 34 H250 V250 l-10 12 l-10 -12 l-10 12 l-10 -12 l-10 12 l-10 -12 l-10 12 l-10 -12 l-10 12 l-10 -12 Z" fill="#fff" stroke="#D5DBE6" stroke-width="5" stroke-linejoin="round"/>
+      ${faceShock(200, 84, 0.6)}
+      ${[136, 160, 184].map(y => `<path d="M168 ${y} H210 M222 ${y} H234" stroke="#C9D0DC" stroke-width="6" stroke-linecap="round"/>`).join('')}
+      <path d="M168 216 H234" stroke="${dk}" stroke-width="8" stroke-linecap="round"/>
+      <g transform="translate(86 176) rotate(-40)">
+        <rect x="-12" y="-6" width="24" height="104" rx="12" fill="#9AA6BC"/><circle cy="-20" r="32" fill="#9AA6BC"/><rect x="-11" y="-58" width="22" height="42" rx="3" fill="${st.light}"/>
+      </g>
+      ${coin(318, 210, 24)}${coin(342, 172, 20)}${coin(312, 136, 16)}`;
+    case 'exam': return `${groundShadow(130)}
+      <g transform="rotate(-5 200 150)">
+        <rect x="116" y="34" width="168" height="226" rx="10" fill="#fff" stroke="#D5DBE6" stroke-width="5"/>
+        ${[64, 86].map(y => `<path d="M140 ${y} H260" stroke="#C9D0DC" stroke-width="6" stroke-linecap="round"/>`).join('')}
+        ${faceSad(200, 146, 0.75)}${sweat(256, 120, 1)}
+      </g>
+      <circle cx="270" cy="222" r="40" fill="#fff" stroke="#E5484D" stroke-width="7"/>
+      <text x="270" y="226" class="svg-display" font-size="56" fill="#E5484D" text-anchor="middle" dominant-baseline="central">2</text>
+      ${sp(70, 80, 10, '#F4A6A0')}`;
+    case 'clock': return `<defs>${vgrad(id + 'k', '#FF8A86', '#D6534F')}</defs>${groundShadow(120)}
+      <path d="M118 64 A40 40 0 0 1 176 40 Z" fill="${GOLD}"/><path d="M224 40 A40 40 0 0 1 282 64 Z" fill="${GOLD}"/>
+      <path d="M188 38 H212" stroke="#5A6580" stroke-width="8" stroke-linecap="round"/>
+      <circle cx="200" cy="154" r="98" fill="url(#${id}k)"/><circle cx="200" cy="154" r="78" fill="#fff"/>
+      <path d="M200 92 V106 M200 202 V216 M138 154 H152 M248 154 H262" stroke="#C9D0DC" stroke-width="6" stroke-linecap="round"/>
+      ${faceShock(200, 158, 0.75)}
+      <path d="M140 246 L122 274 M260 246 L278 274" stroke="#D6534F" stroke-width="10" stroke-linecap="round"/>
+      <path d="M78 110 L58 100 M74 154 H52 M78 198 L58 208 M322 110 L342 100 M326 154 H348 M322 198 L342 208" stroke="#9AA6BC" stroke-width="6" stroke-linecap="round"/>
+      ${sweat(282, 92, 1.1)}`;
+    case 'door': return `${groundShadow(150)}
+      <rect x="110" y="20" width="180" height="262" rx="10" fill="#6B4528"/>
+      <rect x="124" y="32" width="152" height="250" rx="6" fill="#9A6A42"/>
+      <rect x="140" y="112" width="120" height="66" rx="6" fill="none" stroke="#7A4F2E" stroke-width="5"/><rect x="140" y="194" width="120" height="70" rx="6" fill="none" stroke="#7A4F2E" stroke-width="5"/>
+      <rect x="140" y="46" width="120" height="40" rx="6" fill="#fff"/>
+      <text x="200" y="67" class="svg-body" font-size="17" font-weight="800" fill="#1E2A47" text-anchor="middle" dominant-baseline="central" letter-spacing="1">DZIEKANAT</text>
+      <circle cx="260" cy="190" r="9" fill="${GOLD}"/>
+      ${faceSad(200, 146, 0.6)}
+      ${[[60, 262], [86, 246], [52, 226], [78, 210]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="10" ry="6" fill="#C9D0DC"/>`).join('')}
+      <path d="M318 250 H364 M330 236 L316 250 L330 264" fill="none" stroke="${c}" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>`;
+    case 'hourglass': return `${groundShadow(110)}
+      <rect x="120" y="22" width="160" height="22" rx="10" fill="#A8744B"/><rect x="120" y="262" width="160" height="22" rx="10" fill="#A8744B"/>
+      <path d="M140 44 H260 C260 104 214 120 214 152 C214 184 260 200 260 262 H140 C140 200 186 184 186 152 C186 120 140 104 140 44 Z" fill="#EEF6FF" stroke="#C9D0DC" stroke-width="6"/>
+      <path d="M160 70 H240 C232 100 210 112 200 126 C190 112 168 100 160 70 Z" fill="#F7CD5B"/>
+      <path d="M200 132 V214" stroke="#F7CD5B" stroke-width="4" stroke-dasharray="6 6"/>
+      <path d="M150 256 C158 222 242 222 250 256 Z" fill="#F7CD5B"/>
+      ${faceSleep(200, 212, 0.45)}${sweat(250, 100, 0.9)}
+      <text x="300" y="80" class="svg-display" font-size="30" fill="${dk}">z</text>`;
+    case 'plagiarism': return `${groundShadow(160)}
+      ${[[46, 70, -7], [168, 60, 5]].map(([x, y, r]) => `<g transform="translate(${x} ${y}) rotate(${r})"><rect width="130" height="170" rx="8" fill="#fff" stroke="#D5DBE6" stroke-width="5"/>${[34, 58, 82, 106, 130].map(yy => `<path d="M20 ${yy} H${yy === 130 ? 76 : 110}" stroke="#C9D0DC" stroke-width="6" stroke-linecap="round"/>`).join('')}</g>`).join('')}
+      <g transform="translate(270 150)">
+        <rect x="34" y="34" width="24" height="84" rx="12" fill="#5A6580" transform="rotate(-40 46 76)"/>
+        <circle r="56" fill="#DDF1FF" fill-opacity=".85" stroke="${dk}" stroke-width="12"/>
+        ${faceShock(0, 4, 0.55)}
+      </g>
+      <g transform="translate(108 250) rotate(-10)"><rect x="-62" y="-22" width="124" height="44" rx="8" fill="none" stroke="#E5484D" stroke-width="5"/>
+        <text y="2" class="svg-display" font-size="26" fill="#E5484D" text-anchor="middle" dominant-baseline="central" letter-spacing="3">KOPIA</text></g>`;
   }
   return '';
 }
@@ -2680,14 +2807,14 @@ function actionCardSVG(card, kind, idx) {
   const titleLines = wrapSvgText(card.name, '700 46px Fredoka, sans-serif', 520);
   const titleSize = titleLines.length > 1 ? 40 : 46;
   const title = titleLines.map((l, k) => `<text x="315" y="${(titleLines.length > 1 ? 136 : 158) + k * 44}" class="svg-display" font-size="${titleSize}" fill="${st.dark}" text-anchor="middle" dominant-baseline="central">${esc(l)}</text>`).join('');
-  const mainLines = wrapSvgText(card.text, '700 27px Figtree, sans-serif', 500);
+  const mainLines = wrapSvgText(card.text, '700 27px Figtree, sans-serif', 470);
   let y = 618;
   let body = mainLines.map(l => { const t = `<text x="315" y="${y}" class="svg-body" font-size="27" font-weight="700" fill="#1E2A47" text-anchor="middle" dominant-baseline="central">${esc(l)}</text>`; y += 34; return t; }).join('');
   y += 8;
   body += `<path d="M80 ${y} H550" stroke="${st.color}" stroke-opacity=".35" stroke-width="2"/>`;
   y += 28;
   if (card.x2) {
-    const x2Lines = wrapSvgText(`${st.x2}: ${card.x2}`, '600 23px Figtree, sans-serif', 500);
+    const x2Lines = wrapSvgText(`${st.x2}: ${card.x2}`, '600 23px Figtree, sans-serif', 470);
     body += x2Lines.map((l, k) => { const t = `<text x="315" y="${y}" class="svg-body" font-size="23" font-weight="600" fill="${st.dark}" text-anchor="middle" dominant-baseline="central">${esc(l)}</text>`; y += 29; return t; }).join('');
   } else {
     body += `<text x="315" y="${y}" class="svg-body" font-size="23" font-weight="600" fill="#6B7280" text-anchor="middle" dominant-baseline="central">Bez działania ×2</text>`;
@@ -2711,7 +2838,7 @@ function actionCardSVG(card, kind, idx) {
     <rect ${art} fill="${st.light}"/>
     <rect ${art} fill="url(#${id}-dots)"/>
     <rect ${art} fill="url(#${id}-glow)"/>
-    <g transform="translate(175 258) scale(1.4)">${cardIcon(card.icon, st.color)}</g>
+    <g transform="translate(115 248)">${actionArt(card.icon, id, st)}</g>
     <rect x="40" y="588" width="550" height="262" rx="22" fill="${st.light}" stroke="${st.color}" stroke-width="3"/>
     ${body}
     <rect width="630" height="880" rx="36" fill="none" stroke="${st.color}" stroke-width="12"/>

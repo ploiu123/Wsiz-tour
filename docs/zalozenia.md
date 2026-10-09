@@ -138,6 +138,8 @@ Karty ataku to: **zburzenie budynku**, **przymus sprzedaży pola**, **przymus od
 
 Kwoty są przykładowe, do dopasowania po ustaleniu waluty i cen pól. Wszystkie karty są w grze w zakładce „Karty”.
 
+Ilustracje kart są wektorowe (SVG), rysowane w kodzie przez asystenta AI (Claude), w tym samym stylu co karty „Wyjście z dziekanatu”: przedmioty z buźkami, cieniowanie, ozdobniki. Bez generatorów obrazów i bez gotowych grafik.
+
 **Ułatwienia** (oprócz 4 kart „Wyjście z dziekanatu”):
 
 | Karta | Rodzaj | Działanie | ×2 |
