@@ -89,7 +89,7 @@ Do ustalenia: co z Kuchnią.
 - **Logo uczelni** jest na środku planszy, w białym medalionie z granatową obwódką (plik `assets/logo-wsiz.png`). Kolory uczelni z logo: granat `#00276F` i jasny szaroniebieski `#CCD3E1`.
 - Dwa wyglądy środka planszy do wyboru (przełącznik „Środek” w lewym górnym rogu). Po wyborze zostaje jeden:
   1. **Pieczęć:** medalion z logo, tło środka zależy od wybranej wersji wyglądu planszy (np. trawnik),
-  2. **Wzór z logo:** granatowe tło z ukośnymi taśmami z logo, jak na tyłach kart, i jasną poświatą wokół medalionu.
+  2. **Wzór z logo:** granatowe tło z ukośnymi taśmami z białych logo, jak na tyle kart utrudnień, i jasną poświatą wokół medalionu.
 - Nazwy gry nie ma na planszy.
 
 ## Ekrany
@@ -110,8 +110,9 @@ Do ustalenia: co z Kuchnią.
 ## Tyły kart ułatwień i utrudnień
 
 - Wzór: ukośne taśmy z małych logo uczelni, biegnące pod kątem 45° z lewego dolnego do prawego górnego rogu. Logo stoją obok siebie, każde kolejne trochę wyżej, ale samo logo się nie obraca.
-- **Ułatwienia:** jasne (białe taśmy na jasnym szaroniebieskim tle), granatowa ramka, na środku napis „UŁATWIENIA” z zielonym „+”.
-- **Utrudnienia:** niebieskie (niebieskie taśmy na granatowym tle), biała ramka, na środku napis „UTRUDNIENIA” z czerwonym „!”.
+- **Ułatwienia:** białe tło, pełne i wyraziste granatowe logo w jednym kolorze, granatowa podwójna ramka.
+- **Utrudnienia:** granatowe tło, białe logo w jednym kolorze, biała podwójna ramka.
+- Zasada kolorów: na jasnym tle logo granatowe, na ciemnym białe. Bez napisów na tyle karty. Taśmy są tylko o odcień jaśniejsze albo ciemniejsze od tła.
 - Ten sam tył mają karty w stosach na planszy i karty w zakładce „Karty”, w tym karty „Przekup dziekanat” (są w stosie ułatwień).
 
 ## Karty z pytaniami (wersja do druku)

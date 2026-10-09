@@ -438,7 +438,7 @@
   <section class="cards-view" id="cardsView" hidden aria-label="Karty">
     <div class="cards-head">
       <h2>Tyły kart</h2>
-      <p>Ukośne taśmy z małych logo uczelni, od lewego dolnego do prawego górnego rogu. Jasne karty to ułatwienia, niebieskie to utrudnienia.</p>
+      <p>Ukośne taśmy z małych logo uczelni, od lewego dolnego do prawego górnego rogu. Ułatwienia: granatowe logo na białym tle. Utrudnienia: białe logo na granatowym tle.</p>
     </div>
     <div class="cards-grid backs-grid" id="backsGrid"></div>
 
@@ -696,6 +696,34 @@ function drawLogo(g, cx, cy, r) {
   g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.clip();
   g.drawImage(logoImg, cx - r, cy - r, r * 2, r * 2);
   g.restore();
+  return true;
+}
+// Logo w jednym kolorze: granatowe na jasnym tle, białe na ciemnym.
+// Ciemne elementy logo są pełne, jasny szaroniebieski zostaje delikatnym odcieniem, białe tło znika.
+// gain: im mniejszy, tym logo pełniejsze i bardziej wyraziste.
+const logoInkCache = new Map();
+function logoInk(color, gain = 200) {
+  const key = `${color}|${gain}`;
+  if (!logoInkCache.has(key)) {
+    const [c, g] = makeCanvas(logoImg.naturalWidth, logoImg.naturalHeight);
+    g.drawImage(logoImg, 0, 0);
+    const img = g.getImageData(0, 0, c.width, c.height);
+    const d = img.data;
+    const n = parseInt(color.slice(1), 16);
+    for (let i = 0; i < d.length; i += 4) {
+      const L = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+      d[i + 3] = Math.round(Math.min(1, Math.pow(Math.max(0, 255 - L) / gain, 0.7)) * 255);   // pogrubia cienkie linie przy małym logo
+      d[i] = n >> 16; d[i + 1] = (n >> 8) & 255; d[i + 2] = n & 255;
+    }
+    g.putImageData(img, 0, 0);
+    logoInkCache.set(key, c);
+  }
+  return logoInkCache.get(key);
+}
+function drawLogoInk(g, cx, cy, r, color, gain) {
+  if (!logoOk) return false;
+  g.imageSmoothingQuality = 'high';
+  g.drawImage(logoInk(color, gain), cx - r, cy - r, r * 2, r * 2);
   return true;
 }
 
@@ -1156,7 +1184,7 @@ function centerBackground(g, s) {
 }
 // Wzór z logo uczelni: ukośne taśmy biegnące z lewego dolnego do prawego górnego rogu.
 // Na każdej taśmie stoi rząd małych logo, każde kolejne trochę wyżej. Samo logo się nie obraca.
-function logoRibbons(g, w, h, { band, bg, tape, edge, logoAlpha = 1 }) {
+function logoRibbons(g, w, h, { band, bg, tape, edge, ink, inkGain, logoAlpha = 1 }) {
   g.fillStyle = bg; g.fillRect(0, 0, w, h);
   const period = band * 1.55;          // taśma + przerwa
   const r = band * 0.36, step = r * 2.6;
@@ -1182,38 +1210,31 @@ function logoRibbons(g, w, h, { band, bg, tape, edge, logoAlpha = 1 }) {
     for (let u = -L + (k % 2) * step / 2; u <= L; u += step) {
       const x = w / 2 + (u + v) * c, y = h / 2 + (v - u) * c;   // punkt na taśmie, logo rysowane prosto
       if (x < -r || x > w + r || y < -r || y > h + r) continue;
-      drawLogo(g, x, y, r);
+      if (ink) drawLogoInk(g, x, y, r, ink, inkGain); else drawLogo(g, x, y, r);
     }
   }
   g.globalAlpha = 1;
 }
 
-// Tył kart: jasny dla ułatwień, niebieski dla utrudnień
+// Tył kart w kolorach uczelni: ułatwienia białe z granatowym logo, utrudnienia granatowe z białym logo.
+// Jak na kartach do gry: gładki margines, w środku ukośne taśmy z logo, podwójna ramka.
 const CARD_BACKS = {
-  ulatwienia: { bg: '#E3E9F3', tape: '#FFFFFF', edge: UNI_LIGHT, frame: UNI_NAVY, pill: '#FFFFFF', ink: UNI_NAVY, badge: '#2E9E8A', icon: '+', label: 'UŁATWIENIA' },
-  utrudnienia: { bg: UNI_NAVY, tape: '#1747A6', edge: '#3D6BC9', frame: '#FFFFFF', pill: UNI_NAVY, ink: '#FFFFFF', badge: '#D6534F', icon: '!', label: 'UTRUDNIENIA' },
+  ulatwienia: { bg: '#FFFFFF', tape: '#EDF1F8', ink: UNI_NAVY, inkGain: 105, frame: UNI_NAVY },   // pełniejsze, wyraziste logo
+  utrudnienia: { bg: UNI_NAVY, tape: '#0B348F', ink: '#FFFFFF', frame: '#FFFFFF' },
 };
 function drawCardBack(g, w, h, kind) {
   const b = CARD_BACKS[kind];
-  logoRibbons(g, w, h, { band: w * 0.14, bg: b.bg, tape: b.tape, edge: b.edge });
-  const m = w * 0.05;
-  g.strokeStyle = b.frame; g.lineWidth = w * 0.016;
-  g.beginPath(); g.roundRect(m, m, w - 2 * m, h - 2 * m, w * 0.05); g.stroke();
-  // podpis na środku karty
-  const pw = w * 0.76, ph = w * 0.19, px0 = (w - pw) / 2, cy = h / 2;
-  g.fillStyle = b.pill; g.lineWidth = w * 0.012;
-  g.beginPath(); g.roundRect(px0, cy - ph / 2, pw, ph, ph / 2); g.fill(); g.stroke();
-  const br = ph * 0.34, bx = px0 + ph / 2;
-  g.fillStyle = b.badge; g.beginPath(); g.arc(bx, cy, br, 0, Math.PI * 2); g.fill();
-  g.textAlign = 'center'; g.textBaseline = 'middle';
-  g.fillStyle = '#FFFFFF'; g.font = `700 ${Math.round(br * 1.6)}px Fredoka, sans-serif`;
-  g.fillText(b.icon, bx, cy + br * 0.06);
-  const room = pw - ph * 1.25;
-  let fs = ph * 0.4;
-  g.font = `700 ${Math.round(fs)}px Fredoka, sans-serif`;
-  while (g.measureText(b.label).width > room && fs > 10) { fs -= 1; g.font = `700 ${Math.round(fs)}px Fredoka, sans-serif`; }
-  g.fillStyle = b.ink;
-  g.fillText(b.label, px0 + ph * 0.95 + room / 2, cy + ph * 0.03);
+  const m1 = w * 0.05, m2 = w * 0.075;
+  g.fillStyle = b.bg; g.fillRect(0, 0, w, h);
+  g.save();
+  g.beginPath(); g.roundRect(m2, m2, w - 2 * m2, h - 2 * m2, w * 0.03); g.clip();
+  logoRibbons(g, w, h, { band: w * 0.13, bg: b.bg, tape: b.tape, ink: b.ink, inkGain: b.inkGain });
+  g.restore();
+  g.strokeStyle = b.frame;
+  g.lineWidth = w * 0.011;
+  g.beginPath(); g.roundRect(m1, m1, w - 2 * m1, h - 2 * m1, w * 0.045); g.stroke();
+  g.lineWidth = w * 0.0045;
+  g.beginPath(); g.roundRect(m2, m2, w - 2 * m2, h - 2 * m2, w * 0.03); g.stroke();
 }
 const backUrls = {};
 function cardBackUrl(kind) {   // obrazek tyłu karty do widoku „Karty”
@@ -1248,7 +1269,7 @@ function centerTexture() {
   const [c, g] = makeCanvas(s, s);
   if (centerStyle === 1) {
     // Wzór z logo: granatowe tło z ukośnymi taśmami z logo, jak na tyłach kart
-    logoRibbons(g, s, s, { band: 150, bg: UNI_NAVY, tape: '#0B3485', edge: '#1A4596', logoAlpha: 0.45 });
+    logoRibbons(g, s, s, { band: 150, bg: UNI_NAVY, tape: '#0B348F', ink: '#FFFFFF', logoAlpha: 0.4 });
     const glow = g.createRadialGradient(s / 2, s / 2, 360, s / 2, s / 2, 760);
     glow.addColorStop(0, 'rgba(204,211,225,.5)'); glow.addColorStop(1, 'rgba(204,211,225,0)');
     g.fillStyle = glow; g.fillRect(0, 0, s, s);
