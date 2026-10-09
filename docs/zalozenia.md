@@ -122,8 +122,15 @@ Do ustalenia: co z Kuchnią.
 3. Po wyciągnięciu karty dostaje **drugie pytanie**:
    - przy **ułatwieniu** dobra odpowiedź daje **podwójne (×2) działanie** karty, zła zostawia zwykłe działanie,
    - przy **utrudnieniu** zła odpowiedź daje **podwójne (×2) działanie** karty, czyli gorzej, a dobra zostawia zwykłe działanie.
-4. Przy niektórych kartach podwójne działanie nie ma sensu (np. „Wyjście z dziekanatu”). Które to karty, ustalimy później.
+4. Przy niektórych kartach podwójne działanie nie ma sensu (np. „Wyjście z dziekanatu”).
 5. Lista kart: **do wyboru** (propozycje są w rozmowie, zapiszemy wybrane).
+
+### Karty ataku na pola
+
+Karty ataku to: **zburzenie budynku**, **przymus sprzedaży pola**, **przymus oddania pola** i **wyłączenie prądu** (zarówno ułatwienia wymierzone w przeciwnika, jak i utrudnienia wymierzone w gracza).
+- **Nie mają działania ×2.** Druga odpowiedź nic przy nich nie zmienia.
+- **Nie działają na pole z hotelem** (serwerownią, poziom 5).
+- **Tarcza** chroni jedno pole przed **jednym** atakiem. Kiedy ktoś użyje karty ataku na pole z tarczą, atak nie działa, a tarcza się zużywa.
 
 ## Karty „Wyjście z dziekanatu”
 
@@ -190,7 +197,8 @@ Do ustalenia: co z Kuchnią.
 - Wybór jednej z 5 wersji wyglądu planszy.
 - Sala balowa i Kuchnia: czy zostają i gdzie.
 - Zasady gry od nowa: pytania, kupowanie pól, dziekanat, pola specjalne, 2 na 2, boty.
-- Wybór kart ułatwień i utrudnień oraz kart, przy których nie działa ×2.
+- Wybór kart ułatwień i utrudnień.
+- Czy monopol chroni przed kartami ataku.
 - Wybór jednego z 2 wyglądów środka planszy (Pieczęć albo Wzór z logo).
 - Nazwa i wygląd waluty.
 
