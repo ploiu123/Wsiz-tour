@@ -115,6 +115,16 @@ Do ustalenia: co z Kuchnią.
 - Zasada kolorów: na jasnym tle logo granatowe, na ciemnym białe. Bez napisów na tyle karty. Taśmy są tylko o odcień jaśniejsze albo ciemniejsze od tła.
 - Ten sam tył mają karty w stosach na planszy i karty w zakładce „Karty”, w tym karty „Wyjście z dziekanatu” (są w stosie ułatwień).
 
+## Karty ułatwień i utrudnień: jak działają
+
+1. Gracz staje na polu **Szansa** i dostaje pytanie.
+2. Dobra odpowiedź: ciągnie kartę **ułatwienia**. Zła odpowiedź: ciągnie kartę **utrudnienia**.
+3. Po wyciągnięciu karty dostaje **drugie pytanie**:
+   - przy **ułatwieniu** dobra odpowiedź daje **podwójne (×2) działanie** karty, zła zostawia zwykłe działanie,
+   - przy **utrudnieniu** zła odpowiedź daje **podwójne (×2) działanie** karty, czyli gorzej, a dobra zostawia zwykłe działanie.
+4. Przy niektórych kartach podwójne działanie nie ma sensu (np. „Wyjście z dziekanatu”). Które to karty, ustalimy później.
+5. Lista kart: **do wyboru** (propozycje są w rozmowie, zapiszemy wybrane).
+
 ## Karty „Wyjście z dziekanatu”
 
 - Dawna nazwa „Przekup dziekanat” jest zmieniona, żeby karta nie sugerowała przekupstwa.
@@ -179,7 +189,8 @@ Do ustalenia: co z Kuchnią.
 
 - Wybór jednej z 5 wersji wyglądu planszy.
 - Sala balowa i Kuchnia: czy zostają i gdzie.
-- Zasady gry od nowa: pytania, kupowanie pól, dziekanat, karty, pola specjalne, 2 na 2, boty.
+- Zasady gry od nowa: pytania, kupowanie pól, dziekanat, pola specjalne, 2 na 2, boty.
+- Wybór kart ułatwień i utrudnień oraz kart, przy których nie działa ×2.
 - Wybór jednego z 2 wyglądów środka planszy (Pieczęć albo Wzór z logo).
 - Nazwa i wygląd waluty.
 
