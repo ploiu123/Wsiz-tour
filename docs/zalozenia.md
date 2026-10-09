@@ -130,7 +130,9 @@ Do ustalenia: co z Kuchnią.
 Karty ataku to: **zburzenie budynku**, **przymus sprzedaży pola**, **przymus oddania pola** i **wyłączenie prądu** (zarówno ułatwienia wymierzone w przeciwnika, jak i utrudnienia wymierzone w gracza).
 - **Nie mają działania ×2.** Druga odpowiedź nic przy nich nie zmienia.
 - **Nie działają na pole z hotelem** (serwerownią, poziom 5).
-- **Tarcza** chroni jedno pole przed **jednym** atakiem. Kiedy ktoś użyje karty ataku na pole z tarczą, atak nie działa, a tarcza się zużywa.
+- Są dwie tarcze:
+  - **Tarcza na pole** chroni jedno pole przed **jednym** atakiem, bez limitu czasu. Kiedy ktoś użyje karty ataku na pole z tarczą, atak nie działa, a tarcza się zużywa.
+  - **Tarcza na gracza** działa przez **określoną liczbę tur** (liczba do ustalenia) i chroni gracza przez ten czas.
 
 ## Karty „Wyjście z dziekanatu”
 
