@@ -2,7 +2,8 @@
 <title>Plansza uczelniana 3D</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Fredoka:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Fredoka:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="druk/karty-pytan.css">
 <style>
   :root {
     --sky-top: #d5e0ef;
@@ -114,6 +115,18 @@
   .svg-display { font-family: var(--display); font-weight: 700; }
   .svg-body { font-family: var(--body); }
   @media (max-width: 860px) { .cards-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; } }
+  .cards-head-2 { margin-top: 56px; }
+  .qc-layout { max-width: 1040px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 400px) minmax(0, 1fr); gap: 28px; align-items: start; }
+  .qc-info { padding: 18px 20px; display: grid; gap: 16px; }
+  .qc-info h3 { margin: 0 0 6px; font: 600 16px/1.2 var(--display); }
+  .qc-info p { margin: 0; font-size: 14px; line-height: 1.5; color: var(--ink-soft); }
+  .qc-info code { font-size: 12.5px; background: var(--chip); padding: 1px 6px; border-radius: 6px; color: var(--ink); }
+  .qc-legend { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 14px; font-size: 13.5px; }
+  .qc-legend li { display: flex; align-items: center; gap: 8px; }
+  .qc-legend i { width: 14px; height: 14px; border-radius: 4px; background: var(--c); flex: none; }
+  .qc-fit { position: absolute; inset: 0; overflow: hidden; }
+  .qc-fit > .qc-card { position: absolute; left: 0; top: 0; transform: scale(var(--s, 1)); transform-origin: 0 0; }
+  @media (max-width: 760px) { .qc-layout { grid-template-columns: minmax(0, 1fr); } .qc-layout .card-slot { max-width: 400px; width: 100%; margin: 0 auto; } }
   .hud-top { top: 16px; align-items: flex-start; }
   .hud-bottom { bottom: 16px; align-items: flex-end; flex-wrap: wrap; }
 
@@ -297,6 +310,7 @@
     * { transition: none !important; }
   }
 </style>
+<script src="druk/karty-pytan.js"></script>
 <script type="importmap">
 {
   "imports": {
@@ -425,6 +439,28 @@
       <p>4 karty ze stosu ułatwień. Każda pozwala od razu wyjść z dziekanatu, a gracz może mieć najwyżej 4. Kliknij kartę, żeby zobaczyć jej tył.</p>
     </div>
     <div class="cards-grid" id="cardsGrid"></div>
+
+    <div class="cards-head cards-head-2">
+      <h2>Karty z pytaniami</h2>
+      <p>Wzór karty do druku. Tak będzie wyglądać wydrukowana karta: 7 pytań z odpowiedziami ABCD na awersie, klucz odpowiedzi na rewersie. Kliknij kartę, żeby ją odwrócić.</p>
+    </div>
+    <div class="qc-layout">
+      <div class="card-slot" id="questionSlot"></div>
+      <div class="qc-info panel">
+        <div>
+          <h3>Format</h3>
+          <p>Karta do pokera, 63 × 88 mm. Mieści się pytanie do ok. 90 znaków i odpowiedzi do ok. 15 znaków. Przy dłuższym tekście czcionka sama się zmniejsza.</p>
+        </div>
+        <div>
+          <h3>Kolor paska = semestr</h3>
+          <ul class="qc-legend" id="qcLegend"></ul>
+        </div>
+        <div>
+          <h3>Pliki do druku</h3>
+          <p><code>druk/karty-pytan-A4.pdf</code> do drukarki w domu: 9 kart na arkuszu A4, druk dwustronny. <code>druk/karty-pytan-drukarnia.pdf</code> dla drukarni: 69 × 94 mm ze spadem.</p>
+        </div>
+      </div>
+    </div>
   </section>
 </div>
 
@@ -1638,7 +1674,7 @@ function updateLimits() {
 const HINTS = {
   board: '32 pola · przeciągnij, aby obracać · kliknij pole lub stos kart',
   models: 'Pionki i budynki · przeciągnij, aby obejrzeć z każdej strony',
-  cards: 'Karty „Przekup dziekanat” · kliknij kartę, aby ją odwrócić',
+  cards: 'Karty · kliknij kartę, aby ją odwrócić',
 };
 function setView(v) {
   if (v === view) return;
@@ -1659,6 +1695,7 @@ function setView(v) {
   if (v === 'board') jumpTo(presetBoard());
   if (v === 'models') jumpTo(presetShow());
   controls.enabled = v !== 'cards';
+  if (v === 'cards') requestAnimationFrame(() => window.KartyPytan?.dopasuj($('questionSlot')));
 }
 
 // ---------------------------------------------------------------------------
@@ -2319,6 +2356,37 @@ BRIBE_CARDS.forEach((card, i) => {
   });
   $('cardsGrid').append(slot);
 });
+
+// Karta z pytaniami: ten sam wygląd i dane co wersja do druku (druk/karty-pytan.js i .css).
+// Karta ma wymiary w milimetrach, więc skalujemy ją do szerokości miejsca w siatce.
+if (window.KartyPytan) {
+  const { KARTY, SEMESTRY, awers, rewers, nr3 } = window.KartyPytan;
+  const karta = KARTY[0];
+  const slot = $('questionSlot');
+  slot.innerHTML = `
+    <button class="flip" type="button" aria-pressed="false" aria-label="Karta z pytaniami ${nr3(karta.nr)}, kliknij, aby odwrócić">
+      <span class="flip-inner">
+        <span class="face front"><span class="qc-fit">${awers(karta)}</span></span>
+        <span class="face back"><span class="qc-fit">${rewers(karta)}</span></span>
+      </span>
+    </button>
+    <p class="card-cap"><b>Karta ${nr3(karta.nr)}</b> · ${karta.przedmiot} · dane przykładowe</p>`;
+  const btn = slot.querySelector('.flip');
+  btn.addEventListener('click', () => {
+    const on = !btn.classList.contains('flipped');
+    btn.classList.toggle('flipped', on);
+    btn.setAttribute('aria-pressed', String(on));
+  });
+  const skaluj = new ResizeObserver(entries => {
+    for (const { target } of entries) {
+      const card = target.firstElementChild;
+      if (card.offsetWidth) target.style.setProperty('--s', target.clientWidth / card.offsetWidth);
+    }
+  });
+  slot.querySelectorAll('.qc-fit').forEach(el => skaluj.observe(el));
+  $('qcLegend').innerHTML = Object.values(SEMESTRY)
+    .map(s => `<li><i style="--c:${s.kolor}" aria-hidden="true"></i>${s.nazwa}</li>`).join('');
+}
 
 // Klikanie pól
 const ray = new THREE.Raycaster();

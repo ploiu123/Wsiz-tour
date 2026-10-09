@@ -1,0 +1,98 @@
+/* Karty z pytaniami: wspólny wygląd wersji do druku (druk/karty-pytan.html)
+   i podglądu w grze (index.html). Wymiary w milimetrach, karta do pokera 63 × 88 mm.
+   --qc-b to spad na docięcie: 0 mm zwykle, 3 mm w wersji dla drukarni. */
+
+.qc-card {
+  --qc-navy: #1E2A47;
+  --qc-gold: #E0B04A;
+  --qc-ink: #1E2A47;
+  --qc-ink-2: #39445E;
+  --qc-muted: #6B7590;
+  --qc-line: #DCE1EA;
+  position: relative;
+  box-sizing: border-box;
+  width: calc(63mm + 2 * var(--qc-b, 0mm));
+  height: calc(88mm + 2 * var(--qc-b, 0mm));
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  color: var(--qc-ink);
+  font-family: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  text-align: left;
+  letter-spacing: normal;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.qc-card *, .qc-card *::before, .qc-card *::after { box-sizing: border-box; }
+
+/* ---------- awers ---------- */
+.qc-head { background: var(--qc-navy); color: #fff; padding: calc(3mm + var(--qc-b, 0mm)) calc(3.4mm + var(--qc-b, 0mm)) 2.3mm; }
+.qc-row { display: flex; align-items: center; justify-content: space-between; gap: 2mm; }
+.qc-sem {
+  font: 800 5.4pt/1 "Figtree", sans-serif; letter-spacing: .07em; text-transform: uppercase;
+  background: var(--qc-acc); color: #fff; padding: 1mm 1.9mm; border-radius: 3mm;
+}
+.qc-nr { font: 700 10pt/1 "Fredoka", sans-serif; color: var(--qc-gold); white-space: nowrap; }
+.qc-nr small { font: 700 5.2pt "Figtree", sans-serif; color: rgba(255, 255, 255, .62); letter-spacing: .08em; margin-right: .9mm; vertical-align: .35mm; }
+.qc-subject { margin-top: 1.7mm; font: 700 7.4pt/1.12 "Fredoka", sans-serif; letter-spacing: .01em; }
+.qc-lecturer { margin-top: .55mm; font: 600 5.9pt/1.2 "Figtree", sans-serif; color: rgba(255, 255, 255, .8); }
+.qc-stripe { flex: none; height: 1.1mm; background: var(--qc-acc); }
+.qc-qs {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.7mm calc(3.2mm + var(--qc-b, 0mm)) 1.2mm;
+  font-size: var(--qc-fs, 6.3pt);
+}
+.qc-q { display: grid; grid-template-columns: 3.4mm 1fr; column-gap: 1.5mm; padding-bottom: .85mm; border-bottom: .2mm solid var(--qc-line); }
+.qc-q:last-child { border-bottom: 0; padding-bottom: 0; }
+.qc-qn {
+  width: 3.4mm; height: 3.4mm; border-radius: 50%;
+  background: var(--qc-acc); color: #fff;
+  font: 700 5.6pt/3.4mm "Fredoka", sans-serif; text-align: center;
+}
+.qc-qt { font-weight: 700; line-height: 1.17; padding-top: .2mm; }
+.qc-qa { grid-column: 2; display: flex; flex-wrap: wrap; column-gap: 2.3mm; row-gap: .15mm; margin-top: .4mm; font-size: .92em; font-weight: 500; line-height: 1.16; color: var(--qc-ink-2); }
+.qc-qa b { color: var(--qc-acc); font-weight: 800; margin-right: .55mm; }
+.qc-foot {
+  display: flex; justify-content: space-between; gap: 2mm;
+  padding: 0 calc(3.2mm + var(--qc-b, 0mm)) calc(2.2mm + var(--qc-b, 0mm));
+  font: 600 4.8pt/1 "Figtree", sans-serif; color: var(--qc-muted); letter-spacing: .02em;
+}
+
+/* ---------- rewers: klucz odpowiedzi ---------- */
+.qc-card.qc-back {
+  background-color: var(--qc-navy);
+  background-image: repeating-linear-gradient(45deg, rgba(255, 255, 255, .045) 0 1.2mm, transparent 1.2mm 3.4mm);
+  color: #fff;
+}
+.qc-back .qc-stripe { height: calc(1.4mm + var(--qc-b, 0mm)); }
+.qc-bhead { padding: 3.2mm calc(4mm + var(--qc-b, 0mm)) 2.4mm; text-align: center; }
+.qc-btitle { font: 700 10.5pt/1 "Fredoka", sans-serif; letter-spacing: .05em; }
+.qc-bsub { margin-top: 1.2mm; font: 600 5.6pt/1.25 "Figtree", sans-serif; color: rgba(255, 255, 255, .72); }
+.qc-keys {
+  flex: 1;
+  min-height: 0;
+  margin: 0 calc(3.4mm + var(--qc-b, 0mm));
+  padding: 1.2mm 2.6mm;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  background: #fff;
+  color: var(--qc-ink);
+  border-radius: 2mm;
+  font-size: var(--qc-fs, 6.6pt);
+}
+.qc-key { display: grid; grid-template-columns: 3.4mm 3.6mm 1fr; align-items: center; column-gap: 1.6mm; padding: .75mm 0; border-bottom: .2mm solid var(--qc-line); }
+.qc-key:last-child { border-bottom: 0; }
+.qc-letter { font: 700 1.3em/1 "Fredoka", sans-serif; color: var(--qc-acc); text-align: center; }
+.qc-txt { font-weight: 700; line-height: 1.15; }
+.qc-bfoot {
+  display: flex; justify-content: space-between; align-items: flex-end; gap: 2mm;
+  padding: 2.3mm calc(3.6mm + var(--qc-b, 0mm)) calc(2.8mm + var(--qc-b, 0mm));
+  font: 600 5.2pt/1.25 "Figtree", sans-serif; color: rgba(255, 255, 255, .72);
+}
+.qc-bfoot .qc-nr { font-size: 9pt; }
