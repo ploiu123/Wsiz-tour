@@ -86,7 +86,10 @@ Do ustalenia: co z Kuchnią.
 - Plansza i pola mają proste, pionowe ściany i ostre rogi, bez zaokrągleń.
 - Na planszy nie ma pięter: ani napisów pięter na środku, ani na polach. Pola bez grupy mają szary pasek, pola z grupą pasek w kolorze grupy.
 - Wygląd ma być dopracowany i nowoczesny, w stylu Business Tour, a nie jak tania animacja 3D. W grze jest przełącznik 5 wersji wyglądu (Trawnik, Kampus, Drewniany stół, Nocny, Pastelowy). Po wyborze zostaje jedna.
-- Środek planszy i kolory planszy będą w kolorach uczelni, z logo na środku (**później**, po otrzymaniu logo i kolorów).
+- **Logo uczelni** jest na środku planszy, w białym medalionie z granatową obwódką (plik `assets/logo-wsiz.png`). Kolory uczelni z logo: granat `#00276F` i jasny szaroniebieski `#CCD3E1`.
+- Dwa wyglądy środka planszy do wyboru (przełącznik „Środek” w lewym górnym rogu). Po wyborze zostaje jeden:
+  1. **Pieczęć:** medalion z logo, tło środka zależy od wybranej wersji wyglądu planszy (np. trawnik),
+  2. **Wzór z logo:** granatowe tło z ukośnymi taśmami z logo, jak na tyłach kart, i jasną poświatą wokół medalionu.
 - Nazwy gry nie ma na planszy.
 
 ## Ekrany
@@ -104,8 +107,16 @@ Do ustalenia: co z Kuchnią.
 - **Na razie wyłączone:** gra startuje od razu na planszy. Kod menu zostaje, włącza się go w `index.html` zmianą `MENU_ON` na `true`.
 - Ustawienia i profil zapisują się w przeglądarce gracza.
 
+## Tyły kart ułatwień i utrudnień
+
+- Wzór: ukośne taśmy z małych logo uczelni, biegnące pod kątem 45° z lewego dolnego do prawego górnego rogu. Logo stoją obok siebie, każde kolejne trochę wyżej, ale samo logo się nie obraca.
+- **Ułatwienia:** jasne (białe taśmy na jasnym szaroniebieskim tle), granatowa ramka, na środku napis „UŁATWIENIA” z zielonym „+”.
+- **Utrudnienia:** niebieskie (niebieskie taśmy na granatowym tle), biała ramka, na środku napis „UTRUDNIENIA” z czerwonym „!”.
+- Ten sam tył mają karty w stosach na planszy i karty w zakładce „Karty”, w tym karty „Przekup dziekanat” (są w stosie ułatwień).
+
 ## Karty z pytaniami (wersja do druku)
 
+- **Odłożone na później.** Teraz skupiamy się na wersji wirtualnej gry. Wzór karty i baza pytań zostają gotowe na potem.
 - Format karty do pokera: 63 × 88 mm.
 - **Jedna karta = jeden prowadzący i jeden numer pytania.** Na karcie „Pytanie nr 1” są pytania nr 1 tego prowadzącego z semestrów 1–7, każde z przedmiotu, który prowadzi w danym semestrze. Karta „Pytanie nr 2” zbiera pytania nr 2 i tak dalej.
 - **Awers:** prowadzący, numer pytania (złote pole) i 7 pytań z odpowiedziami ABCD. Numer w kolorowym kółku to semestr. Gracz odpowiada na pytanie ze swojego semestru.
@@ -139,7 +150,7 @@ Do ustalenia: co z Kuchnią.
 
 - Pionki to przedmioty, nie postacie. Każdy stoi na podstawce w kolorze gracza.
 - 4 pionki:
-  1. **Sztandar uczelni** z logo uczelni na fladze (na razie napis „LOGO”, podmienimy po otrzymaniu pliku),
+  1. **Sztandar uczelni** z logo uczelni na fladze,
   2. **Drukarka 3D** z wydrukiem na stole i szpulą filamentu,
   3. **Koparka kryptowalut**: rama z kartami graficznymi i obracająca się złota moneta,
   4. **Ekspres do kawy** z filiżanką i parą.
@@ -161,7 +172,7 @@ Do ustalenia: co z Kuchnią.
 - Wybór jednej z 5 wersji wyglądu planszy.
 - Sala balowa i Kuchnia: czy zostają i gdzie.
 - Zasady gry od nowa: pytania, kupowanie pól, dziekanat, karty, pola specjalne, 2 na 2, boty.
-- Logo i kolory uczelni.
+- Wybór jednego z 2 wyglądów środka planszy (Pieczęć albo Wzór z logo).
 - Nazwa i wygląd waluty.
 
 ## Harmonogram
@@ -169,7 +180,7 @@ Do ustalenia: co z Kuchnią.
 | Etap | Zakres | Stan |
 |---|---|---|
 | 0 | Repozytorium na GitHubie, folder projektu, uruchamianie gry lokalnie | w trakcie |
-| 1 | Wygląd całej gry: logo, kolory uczelni, tło | czeka na logo |
+| 1 | Wygląd całej gry: logo, kolory uczelni, tło | logo na środku planszy (2 wyglądy do wyboru), tyły kart z logo |
 | 2 | Pionki i panel wyboru pionka i koloru | 4 pionki gotowe, panel gotowy (na razie wyłączony) |
 | 3 | Karty: rewersy, awersy, treść | karty „Przekup dziekanat” gotowe |
 | 4 | Pola planszy: nazwy, grupy kolorów, pola specjalne | pola 1–21 i 31 gotowe |
