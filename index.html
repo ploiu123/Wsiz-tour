@@ -443,8 +443,8 @@
     <div class="cards-grid backs-grid" id="backsGrid"></div>
 
     <div class="cards-head cards-head-2">
-      <h2>Przekup dziekanat</h2>
-      <p>4 karty ze stosu ułatwień. Każda pozwala od razu wyjść z dziekanatu, a gracz może mieć najwyżej 4. Kliknij kartę, żeby zobaczyć jej tył.</p>
+      <h2>Wyjście z dziekanatu</h2>
+      <p>4 karty ze stosu ułatwień. Każdą można wykorzystać, żeby wcześniej wyjść z dziekanatu. Kliknij kartę, żeby zobaczyć jej tył.</p>
     </div>
     <div class="cards-grid" id="cardsGrid"></div>
 
@@ -2280,7 +2280,7 @@ $('viewCards').addEventListener('click', () => setView('cards'));
 
 
 // ---------------------------------------------------------------------------
-// Karty „Przekup dziekanat” (ilustracje wektorowe rysowane w kodzie)
+// Karty „Wyjście z dziekanatu” (ilustracje wektorowe rysowane w kodzie)
 // ---------------------------------------------------------------------------
 const face = (x, y, s = 1, ink = '#3B2A20') => `
   <g transform="translate(${x} ${y}) scale(${s})">
@@ -2449,17 +2449,18 @@ function artPet() {
     ${sparkle(150, 480, 13, '#fff')}${sparkle(498, 476, 12, '#fff')}${sparkle(488, 330, 9, '#8FB8F7')}`;
 }
 
-const BRIBE_CARDS = [
-  { name: 'Kawusia', color: '#8B5E3C', dark: '#5C3A22', light: '#F6E7D8', flavor: ['Dziekanat nigdy nie odmawia', 'dobrej kawy.'], art: artCoffee },
-  { name: 'Kwiatuszki', color: '#D6457A', dark: '#9E2553', light: '#FCE4EC', flavor: ['Bukiet na biurko i sprawa', 'załatwiona od ręki.'], art: artFlowers },
-  { name: 'Słodkości', color: '#F08A4B', dark: '#B4531C', light: '#FFEBDD', flavor: ['Pudełko pączków', 'otwiera każde drzwi.'], art: artSweets },
-  { name: 'Zwierzaczek', color: '#3E8EDE', dark: '#1F5FA8', light: '#E3F0FC', flavor: ['Nikt nie oprze się', 'takiemu słodziakowi.'], art: artPet },
+// Każda karta ma inny kolor i ilustrację, ale ten sam napis i działanie
+const EXIT_CARDS = [
+  { motif: 'filiżanka kawy', color: '#8B5E3C', light: '#F6E7D8', art: artCoffee },
+  { motif: 'bukiet kwiatów', color: '#D6457A', light: '#FCE4EC', art: artFlowers },
+  { motif: 'słodycze', color: '#F08A4B', light: '#FFEBDD', art: artSweets },
+  { motif: 'kotek', color: '#3E8EDE', light: '#E3F0FC', art: artPet },
 ];
 
-function bribeCardSVG(card, i) {
+function exitCardSVG(card, i) {
   const id = `bc${i}`;
-  const art = 'x="40" y="136" width="550" height="470" rx="28"';
-  return `<svg viewBox="0 0 630 880" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Karta ${card.name}">
+  const art = 'x="40" y="136" width="550" height="500" rx="28"';
+  return `<svg viewBox="0 0 630 880" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Karta Wyjście z dziekanatu, ${i + 1} z 4: ${card.motif}">
   <defs>
     <clipPath id="${id}-clip"><rect width="630" height="880" rx="36"/></clipPath>
     <clipPath id="${id}-art"><rect ${art}/></clipPath>
@@ -2471,18 +2472,16 @@ function bribeCardSVG(card, i) {
     <rect width="630" height="112" fill="${card.color}"/>
     <circle cx="72" cy="56" r="30" fill="#fff"/>
     <text x="72" y="58" class="svg-display" font-size="46" fill="#2E9E8A" text-anchor="middle" dominant-baseline="central">+</text>
-    <text x="330" y="58" class="svg-display" font-size="34" fill="#fff" text-anchor="middle" dominant-baseline="central" letter-spacing="1">PRZEKUP DZIEKANAT</text>
+    <text x="324" y="58" class="svg-display" font-size="31" fill="#fff" text-anchor="middle" dominant-baseline="central" letter-spacing=".5">WYJŚCIE Z DZIEKANATU</text>
     <text x="574" y="58" class="svg-body" font-size="26" font-weight="700" fill="#fff" fill-opacity=".85" text-anchor="middle" dominant-baseline="central">${i + 1}/4</text>
     <rect ${art} fill="${card.light}"/>
     <rect ${art} fill="url(#${id}-dots)"/>
     <rect ${art} fill="url(#${id}-glow)"/>
     <g clip-path="url(#${id}-art)">${card.art(id, card)}</g>
-    <text x="315" y="662" class="svg-display" font-size="62" fill="${card.dark}" text-anchor="middle" dominant-baseline="central">${card.name}</text>
-    <text x="315" y="714" class="svg-body" font-size="24" font-style="italic" fill="#6B7280" text-anchor="middle" dominant-baseline="central">${card.flavor[0]}</text>
-    <text x="315" y="744" class="svg-body" font-size="24" font-style="italic" fill="#6B7280" text-anchor="middle" dominant-baseline="central">${card.flavor[1]}</text>
-    <rect x="40" y="776" width="550" height="78" rx="18" fill="${card.light}" stroke="${card.color}" stroke-width="3"/>
-    <text x="315" y="804" class="svg-body" font-size="23" font-weight="700" fill="#1E2A47" text-anchor="middle" dominant-baseline="central">Wychodzisz z dziekanatu od razu</text>
-    <text x="315" y="832" class="svg-body" font-size="21" fill="#55607A" text-anchor="middle" dominant-baseline="central">bez pytania, rzutu i płacenia</text>
+    <rect x="40" y="664" width="550" height="184" rx="22" fill="${card.light}" stroke="${card.color}" stroke-width="3"/>
+    <text x="315" y="722" class="svg-body" font-size="29" font-weight="700" fill="#1E2A47" text-anchor="middle" dominant-baseline="central">Możesz wykorzystać tę kartę,</text>
+    <text x="315" y="764" class="svg-body" font-size="29" font-weight="700" fill="#1E2A47" text-anchor="middle" dominant-baseline="central">żeby wcześniej wyjść</text>
+    <text x="315" y="806" class="svg-body" font-size="29" font-weight="700" fill="#1E2A47" text-anchor="middle" dominant-baseline="central">z dziekanatu.</text>
     <rect width="630" height="880" rx="36" fill="none" stroke="${card.color}" stroke-width="12"/>
   </g>
 </svg>`;
@@ -2498,14 +2497,14 @@ for (const [kind, name] of [['ulatwienia', 'Ułatwienia'], ['utrudnienia', 'Utru
   $('backsGrid').append(slot);
 }
 
-BRIBE_CARDS.forEach((card, i) => {
+EXIT_CARDS.forEach((card, i) => {
   const slot = document.createElement('div');
   slot.className = 'card-slot';
   slot.innerHTML = `
-    <button class="flip" type="button" aria-pressed="false" aria-label="Karta ${card.name}, kliknij, aby odwrócić">
-      <span class="flip-inner"><span class="face front">${bribeCardSVG(card, i)}</span><span class="face back"><img class="face-img" src="${cardBackUrl('ulatwienia')}" alt="Tył karty ułatwienia"></span></span>
+    <button class="flip" type="button" aria-pressed="false" aria-label="Karta Wyjście z dziekanatu ${i + 1} z 4, kliknij, aby odwrócić">
+      <span class="flip-inner"><span class="face front">${exitCardSVG(card, i)}</span><span class="face back"><img class="face-img" src="${cardBackUrl('ulatwienia')}" alt="Tył karty ułatwienia"></span></span>
     </button>
-    <p class="card-cap"><b>${card.name}</b> · karta ${i + 1} z 4</p>`;
+    <p class="card-cap"><b>Karta ${i + 1}</b> z 4</p>`;
   const btn = slot.querySelector('.flip');
   btn.addEventListener('click', () => {
     const on = !btn.classList.contains('flipped');

@@ -113,7 +113,14 @@ Do ustalenia: co z Kuchnią.
 - **Ułatwienia:** białe tło, pełne i wyraziste granatowe logo w jednym kolorze, granatowa podwójna ramka.
 - **Utrudnienia:** granatowe tło, białe logo w jednym kolorze, biała podwójna ramka.
 - Zasada kolorów: na jasnym tle logo granatowe, na ciemnym białe. Bez napisów na tyle karty. Taśmy są tylko o odcień jaśniejsze albo ciemniejsze od tła.
-- Ten sam tył mają karty w stosach na planszy i karty w zakładce „Karty”, w tym karty „Przekup dziekanat” (są w stosie ułatwień).
+- Ten sam tył mają karty w stosach na planszy i karty w zakładce „Karty”, w tym karty „Wyjście z dziekanatu” (są w stosie ułatwień).
+
+## Karty „Wyjście z dziekanatu”
+
+- Dawna nazwa „Przekup dziekanat” jest zmieniona, żeby karta nie sugerowała przekupstwa.
+- 4 karty w stosie ułatwień. Każda ma inny kolor i ilustrację (filiżanka kawy, bukiet kwiatów, słodycze, kotek), ale ten sam napis.
+- Na górze pasek „WYJŚCIE Z DZIEKANATU” z numerem 1/4–4/4. Bez imion kart i bez żartobliwych podpisów.
+- Napis na karcie: „Możesz wykorzystać tę kartę, żeby wcześniej wyjść z dziekanatu.”
 
 ## Karty z pytaniami (wersja do druku)
 
@@ -183,7 +190,7 @@ Do ustalenia: co z Kuchnią.
 | 0 | Repozytorium na GitHubie, folder projektu, uruchamianie gry lokalnie | w trakcie |
 | 1 | Wygląd całej gry: logo, kolory uczelni, tło | logo na środku planszy (2 wyglądy do wyboru), tyły kart z logo |
 | 2 | Pionki i panel wyboru pionka i koloru | 4 pionki gotowe, panel gotowy (na razie wyłączony) |
-| 3 | Karty: rewersy, awersy, treść | karty „Przekup dziekanat” gotowe |
+| 3 | Karty: rewersy, awersy, treść | karty „Wyjście z dziekanatu” gotowe |
 | 4 | Pola planszy: nazwy, grupy kolorów, pola specjalne | pola 1–21 i 31 gotowe |
 | 5 | Pieniądze: waluta, banknoty, pula na środku | |
 | 6 | Pytania: szablon dla wykładowców, okno pytania z minutnikiem | wzór karty z pytaniami do druku gotowy |
