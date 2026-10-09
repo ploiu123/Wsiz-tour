@@ -449,6 +449,18 @@
     <div class="cards-grid" id="cardsGrid"></div>
 
     <div class="cards-head cards-head-2">
+      <h2>Ułatwienia: propozycje</h2>
+      <p>Wersja robocza do wyboru. Na dole karty jest zwykłe działanie i działanie ×2 po dobrej odpowiedzi na drugie pytanie. Karty ataku nie mają ×2, nie działają na salę z hotelem, a tarcza je blokuje.</p>
+    </div>
+    <div class="cards-grid" id="bonusGrid"></div>
+
+    <div class="cards-head cards-head-2">
+      <h2>Utrudnienia: propozycje</h2>
+      <p>Wersja robocza do wyboru. Działanie ×2 jest po złej odpowiedzi na drugie pytanie.</p>
+    </div>
+    <div class="cards-grid" id="penaltyGrid"></div>
+
+    <div class="cards-head cards-head-2">
       <h2>Karty z pytaniami</h2>
       <p>Wzór karty do druku. Jedna karta to jeden prowadzący i jeden numer pytania: pytanie o tym numerze z każdego semestru od 1 do 7. Na odwrocie jest klucz odpowiedzi. Kliknij kartę, żeby ją odwrócić.</p>
     </div>
@@ -2511,6 +2523,223 @@ EXIT_CARDS.forEach((card, i) => {
   });
   $('cardsGrid').append(slot);
 });
+
+// ---------------------------------------------------------------------------
+// Karty ułatwień i utrudnień (propozycje do wyboru)
+// tag: atak = bez ×2, nie działa na salę z hotelem, tarcza blokuje
+// ---------------------------------------------------------------------------
+const DECK_STYLE = {
+  bonus: { label: 'UŁATWIENIE', color: '#2E9E8A', dark: '#1D6B5E', light: '#E2F4F0', x2: 'Dobra odpowiedź ×2' },
+  penalty: { label: 'UTRUDNIENIE', color: '#D6534F', dark: '#9C2E2B', light: '#FBE7E6', x2: 'Zła odpowiedź ×2' },
+};
+const TAGS = { atak: { text: 'ATAK', bg: '#1E2A47' }, tarcza: { text: 'TARCZA', bg: '#2F7FF0' }, zachowaj: { text: 'ZACHOWAJ', bg: '#B8862B' } };
+const BONUS_CARDS = [
+  { name: 'Kontrola BHP', icon: 'helmet', tag: 'atak', text: 'Wybierz salę przeciwnika. Jej budynek spada o 1 poziom.' },
+  { name: 'Wyłączenie prądu', icon: 'power', tag: 'atak', text: 'Wybierz salę przeciwnika. Przez 3 tury nie pobiera czynszu.' },
+  { name: 'Decyzja rektora', icon: 'gavel', tag: 'atak', text: 'Przeciwnik musi Ci sprzedać wybraną salę po jej cenie.' },
+  { name: 'Ochrona mienia', icon: 'shieldRoom', tag: 'tarcza', text: 'Połóż tarczę na swojej sali. Blokuje jeden atak na tę salę.', x2: 'Tarcza na 2 sale.' },
+  { name: 'Ubezpieczenie studenckie', icon: 'shieldPerson', tag: 'tarcza', text: 'Przez 3 tury przeciwnicy nie mogą atakować Twoich sal.', x2: 'Ochrona przez 6 tur.' },
+  { name: 'Grant badawczy', icon: 'grant', text: 'Ulepsz za darmo swój budynek o 1 poziom.', x2: 'Ulepsz o 2 poziomy.' },
+  { name: 'Stypendium naukowe', icon: 'coins', text: 'Dostajesz 200 z banku.', x2: 'Dostajesz 400.' },
+  { name: 'Zwrot czesnego', icon: 'refund', text: 'Weź 100 z puli na środku planszy.', x2: 'Weź 200 z puli.' },
+  { name: 'Praca w samorządzie', icon: 'people', text: 'Każdy gracz płaci Ci 50.', x2: 'Każdy gracz płaci Ci 100.' },
+  { name: 'Wcześniejsza sesja', icon: 'forward', text: 'Przesuń się o 3 pola do przodu.', x2: 'Wybierz: 3 albo 6 pól.' },
+  { name: 'Notatki od kolegi', icon: 'notes', tag: 'zachowaj', text: 'Przy następnym pytaniu znikają 2 złe odpowiedzi.' },
+];
+const PENALTY_CARDS = [
+  { name: 'Zalanie sali', icon: 'flood', tag: 'atak', text: 'Budynek na jednej Twojej sali spada o 1 poziom.' },
+  { name: 'Cięcia budżetowe', icon: 'scissors', tag: 'atak', text: 'Sprzedaj bankowi jedną swoją salę za pół ceny.' },
+  { name: 'Zmiana planu zajęć', icon: 'swap', tag: 'atak', text: 'Losowa Twoja sala przechodzi do losowego przeciwnika.' },
+  { name: 'Brak prądu', icon: 'power', tag: 'atak', text: 'Twoja sala nie pobiera czynszu przez 3 tury.' },
+  { name: 'Opłaty za sprzęt', icon: 'wrench', text: 'Zapłać 20 za każdy budynek i 100 za każdą serwerownię.', x2: 'Podwójne kwoty.' },
+  { name: 'Warunek', icon: 'exam', text: 'Zapłać 100 do puli na środku planszy.', x2: 'Zapłać 200.' },
+  { name: 'Spóźnienie na zajęcia', icon: 'clock', text: 'Cofnij się o 3 pola.', x2: 'Cofnij się o 6 pól.' },
+  { name: 'Udaj się do dziekanatu', icon: 'door', text: 'Idziesz od razu do dziekanatu.', x2: 'Nie możesz użyć karty wyjścia.' },
+  { name: 'Kolokwium poprawkowe', icon: 'hourglass', text: 'Tracisz 1 kolejkę.', x2: 'Tracisz 2 kolejki.' },
+  { name: 'Wykryty plagiat', icon: 'plagiarism', text: 'Oddaj do stosu 1 swoją kartę ułatwienia.', x2: 'Oddaj wszystkie.' },
+];
+
+// Ikony w polu 200 × 200
+function cardIcon(name, c) {
+  const N = '#1E2A47', G = '#E0B04A', W = '#FFFFFF', R = '#D6534F';
+  const shield = `<path d="M100 20 L166 44 V98 C166 140 136 166 100 182 C64 166 34 140 34 98 V44 Z" fill="${c}" stroke="${N}" stroke-width="8" stroke-linejoin="round"/>`;
+  switch (name) {
+    case 'helmet': return `
+      <path d="M32 128 Q32 52 100 46 Q168 52 168 128 Z" fill="${G}" stroke="${N}" stroke-width="7" stroke-linejoin="round"/>
+      <rect x="86" y="48" width="28" height="80" rx="8" fill="${W}" opacity=".55"/>
+      <rect x="16" y="124" width="168" height="24" rx="12" fill="${G}" stroke="${N}" stroke-width="7"/>
+      <path d="M100 160 V188 M86 175 L100 189 L114 175" stroke="${R}" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+    case 'power': return `
+      <circle cx="100" cy="100" r="80" fill="${W}" stroke="${N}" stroke-width="8"/>
+      <path d="M114 28 L62 110 H98 L84 172 L140 86 H104 Z" fill="${G}" stroke="${N}" stroke-width="6" stroke-linejoin="round"/>
+      <path d="M44 44 L156 156" stroke="${R}" stroke-width="14" stroke-linecap="round"/>`;
+    case 'gavel': return `
+      <g transform="rotate(-35 100 92)">
+        <rect x="52" y="44" width="96" height="46" rx="10" fill="${N}"/>
+        <rect x="40" y="48" width="16" height="38" rx="5" fill="${G}"/><rect x="144" y="48" width="16" height="38" rx="5" fill="${G}"/>
+        <rect x="92" y="90" width="16" height="92" rx="7" fill="#8B5E3C"/>
+      </g>
+      <rect x="34" y="166" width="132" height="20" rx="6" fill="#8B5E3C"/>`;
+    case 'shieldRoom': return shield + `
+      <path d="M66 126 V92 L100 68 L134 92 V126 Z" fill="${W}"/><rect x="90" y="102" width="20" height="24" fill="${c}"/>`;
+    case 'shieldPerson': return shield + `
+      <circle cx="100" cy="82" r="20" fill="${W}"/><path d="M64 136 C66 106 134 106 136 136 Z" fill="${W}"/>`;
+    case 'grant': return `
+      <rect x="26" y="126" width="38" height="50" rx="6" fill="${c}" opacity=".5"/>
+      <rect x="80" y="96" width="38" height="80" rx="6" fill="${c}" opacity=".75"/>
+      <rect x="134" y="62" width="38" height="114" rx="6" fill="${c}"/>
+      <path d="M30 96 L84 52 L112 72 L162 26 M136 26 H162 V52" stroke="${N}" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+    case 'coins': return [0, 1, 2, 3].map(k => `
+      <ellipse cx="${k === 3 ? 140 : 84}" cy="${k === 3 ? 148 : 156 - k * 26}" rx="52" ry="18" fill="#B98A2A"/>
+      <ellipse cx="${k === 3 ? 140 : 84}" cy="${k === 3 ? 140 : 148 - k * 26}" rx="52" ry="18" fill="${G}" stroke="#B98A2A" stroke-width="4"/>`).join('');
+    case 'refund': return `
+      <rect x="22" y="62" width="156" height="84" rx="10" fill="#4FA36B" stroke="${N}" stroke-width="6"/>
+      <circle cx="100" cy="104" r="24" fill="${W}" opacity=".85"/>
+      <path d="M150 40 A62 62 0 0 0 52 40" fill="none" stroke="${c}" stroke-width="9" stroke-linecap="round"/>
+      <path d="M40 26 L52 42 L68 30" fill="none" stroke="${c}" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>`;
+    case 'people': return [[60, 0.8], [140, 0.8], [100, 1]].map(([x, sc]) => `
+      <g transform="translate(${x} ${sc === 1 ? 104 : 92}) scale(${sc})">
+        <circle cx="0" cy="-26" r="22" fill="${sc === 1 ? c : N}"/><path d="M-40 44 C-38 6 38 6 40 44 Z" fill="${sc === 1 ? c : N}"/>
+      </g>`).join('') + `<circle cx="150" cy="160" r="22" fill="${G}" stroke="#B98A2A" stroke-width="4"/>`;
+    case 'forward': return `
+      <path d="M36 50 L86 100 L36 150" fill="none" stroke="${c}" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M90 50 L140 100 L90 150" fill="none" stroke="${N}" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="164" cy="44" r="26" fill="${G}"/><text x="164" y="46" class="svg-display" font-size="34" fill="${N}" text-anchor="middle" dominant-baseline="central">3</text>`;
+    case 'notes': return `
+      <rect x="44" y="24" width="112" height="152" rx="10" fill="${W}" stroke="${N}" stroke-width="7"/>
+      ${[56, 80, 104, 128].map(y => `<path d="M64 ${y} H136" stroke="${c}" stroke-width="7" stroke-linecap="round"/>`).join('')}
+      <path d="M128 150 L168 110 L180 122 L140 162 L124 166 Z" fill="${G}" stroke="${N}" stroke-width="5" stroke-linejoin="round"/>`;
+    case 'flood': return `
+      <path d="M44 118 V70 L100 34 L156 70 V118 Z" fill="${W}" stroke="${N}" stroke-width="7" stroke-linejoin="round"/>
+      <rect x="86" y="80" width="28" height="38" fill="${N}"/>
+      <path d="M20 132 Q40 118 60 132 T100 132 T140 132 T180 132 V180 H20 Z" fill="#4FB3E8" opacity=".85"/>
+      <path d="M150 20 C150 20 134 42 134 52 A16 16 0 0 0 166 52 C166 42 150 20 150 20 Z" fill="#4FB3E8"/>`;
+    case 'scissors': return `
+      <rect x="22" y="104" width="156" height="72" rx="10" fill="#4FA36B" stroke="${N}" stroke-width="6"/>
+      <path d="M100 98 V182" stroke="${W}" stroke-width="5" stroke-dasharray="10 8"/>
+      <circle cx="70" cy="50" r="22" fill="none" stroke="${N}" stroke-width="9"/><circle cx="130" cy="50" r="22" fill="none" stroke="${N}" stroke-width="9"/>
+      <path d="M84 66 L118 120 M116 66 L82 120" stroke="${R}" stroke-width="10" stroke-linecap="round"/>`;
+    case 'swap': return `
+      <rect x="30" y="34" width="140" height="136" rx="12" fill="${W}" stroke="${N}" stroke-width="7"/>
+      <rect x="30" y="34" width="140" height="34" rx="12" fill="${c}"/>
+      <path d="M60 24 V46 M140 24 V46" stroke="${N}" stroke-width="8" stroke-linecap="round"/>
+      <path d="M58 100 H138 M122 86 L140 100 L122 114 M142 140 H62 M78 126 L60 140 L78 154" fill="none" stroke="${N}" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>`;
+    case 'wrench': return `
+      <g transform="rotate(-45 100 100)">
+        <rect x="86" y="70" width="28" height="112" rx="14" fill="#9AA6BC" stroke="${N}" stroke-width="7"/>
+        <circle cx="100" cy="56" r="38" fill="#9AA6BC" stroke="${N}" stroke-width="7"/>
+        <rect x="88" y="8" width="24" height="52" rx="3" fill="${W}"/>
+      </g>
+      <circle cx="152" cy="52" r="28" fill="${G}" stroke="#B98A2A" stroke-width="5"/>`;
+    case 'exam': return `
+      <g transform="rotate(-6 100 100)"><rect x="46" y="22" width="108" height="150" rx="8" fill="${W}" stroke="${N}" stroke-width="7"/>
+      ${[52, 74, 96].map(y => `<path d="M66 ${y} H134" stroke="#C9D0DC" stroke-width="7" stroke-linecap="round"/>`).join('')}</g>
+      <circle cx="132" cy="138" r="34" fill="${R}"/><text x="132" y="140" class="svg-display" font-size="48" fill="${W}" text-anchor="middle" dominant-baseline="central">!</text>`;
+    case 'clock': return `
+      <circle cx="104" cy="104" r="72" fill="${W}" stroke="${N}" stroke-width="9"/>
+      <path d="M104 62 V104 L132 120" stroke="${N}" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M40 54 A80 80 0 0 1 104 22" fill="none" stroke="${c}" stroke-width="10" stroke-linecap="round"/>
+      <path d="M24 46 L40 58 L52 40" fill="none" stroke="${c}" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>`;
+    case 'door': return `
+      <rect x="54" y="20" width="92" height="160" rx="6" fill="#8B5E3C" stroke="${N}" stroke-width="7"/>
+      <circle cx="128" cy="104" r="7" fill="${G}"/>
+      <circle cx="100" cy="62" r="24" fill="${W}"/><text x="100" y="64" class="svg-display" font-size="30" fill="${N}" text-anchor="middle" dominant-baseline="central">D</text>`;
+    case 'hourglass': return `
+      <rect x="44" y="20" width="112" height="16" rx="6" fill="${N}"/><rect x="44" y="164" width="112" height="16" rx="6" fill="${N}"/>
+      <path d="M58 36 H142 C142 76 108 88 108 100 C108 112 142 124 142 164 H58 C58 124 92 112 92 100 C92 88 58 76 58 36 Z" fill="${W}" stroke="${N}" stroke-width="7"/>
+      <path d="M72 150 C80 128 120 128 128 150 Z M84 62 H116 C112 76 104 82 100 88 C96 82 88 76 84 62 Z" fill="${G}"/>`;
+    case 'plagiarism': return `
+      <rect x="30" y="30" width="96" height="128" rx="8" fill="${W}" stroke="${N}" stroke-width="7"/>
+      <rect x="74" y="50" width="96" height="128" rx="8" fill="${W}" stroke="${N}" stroke-width="7"/>
+      ${[78, 100, 122].map(y => `<path d="M92 ${y} H152" stroke="#C9D0DC" stroke-width="7" stroke-linecap="round"/>`).join('')}
+      <path d="M96 140 L148 186 M148 140 L96 186" stroke="${R}" stroke-width="12" stroke-linecap="round"/>`;
+  }
+  return '';
+}
+
+// Zawijanie tekstu do szerokości (mierzone na canvasie)
+const wrapCtx = document.createElement('canvas').getContext('2d');
+function wrapSvgText(text, font, maxW) {
+  wrapCtx.font = font;
+  const lines = [];
+  let line = '';
+  for (const word of text.split(' ')) {
+    const t = line ? `${line} ${word}` : word;
+    if (line && wrapCtx.measureText(t).width > maxW) { lines.push(line); line = word; } else line = t;
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+const esc = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+
+function actionCardSVG(card, kind, idx) {
+  const st = DECK_STYLE[kind];
+  const id = `${kind}${idx}`;
+  const tag = card.tag && TAGS[card.tag];
+  const attack = card.tag === 'atak';
+  const titleLines = wrapSvgText(card.name, '700 46px Fredoka, sans-serif', 520);
+  const titleSize = titleLines.length > 1 ? 40 : 46;
+  const title = titleLines.map((l, k) => `<text x="315" y="${(titleLines.length > 1 ? 136 : 158) + k * 44}" class="svg-display" font-size="${titleSize}" fill="${st.dark}" text-anchor="middle" dominant-baseline="central">${esc(l)}</text>`).join('');
+  const mainLines = wrapSvgText(card.text, '700 27px Figtree, sans-serif', 500);
+  let y = 618;
+  let body = mainLines.map(l => { const t = `<text x="315" y="${y}" class="svg-body" font-size="27" font-weight="700" fill="#1E2A47" text-anchor="middle" dominant-baseline="central">${esc(l)}</text>`; y += 34; return t; }).join('');
+  y += 8;
+  body += `<path d="M80 ${y} H550" stroke="${st.color}" stroke-opacity=".35" stroke-width="2"/>`;
+  y += 28;
+  if (card.x2) {
+    const x2Lines = wrapSvgText(`${st.x2}: ${card.x2}`, '600 23px Figtree, sans-serif', 500);
+    body += x2Lines.map((l, k) => { const t = `<text x="315" y="${y}" class="svg-body" font-size="23" font-weight="600" fill="${st.dark}" text-anchor="middle" dominant-baseline="central">${esc(l)}</text>`; y += 29; return t; }).join('');
+  } else {
+    body += `<text x="315" y="${y}" class="svg-body" font-size="23" font-weight="600" fill="#6B7280" text-anchor="middle" dominant-baseline="central">Bez działania ×2</text>`;
+    y += 29;
+  }
+  if (attack) body += `<text x="315" y="${y + 2}" class="svg-body" font-size="20" fill="#6B7280" text-anchor="middle" dominant-baseline="central">Nie działa na salę z hotelem · tarcza blokuje</text>`;
+  const art = 'x="40" y="222" width="550" height="352" rx="28"';
+  return `<svg viewBox="0 0 630 880" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${st.label === 'UŁATWIENIE' ? 'Ułatwienie' : 'Utrudnienie'}: ${esc(card.name)}">
+  <defs>
+    <clipPath id="${id}-clip"><rect width="630" height="880" rx="36"/></clipPath>
+    <pattern id="${id}-dots" width="36" height="36" patternUnits="userSpaceOnUse"><circle cx="18" cy="18" r="3" fill="${st.color}" opacity=".14"/></pattern>
+    <radialGradient id="${id}-glow" cx="50%" cy="50%" r="58%"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <g clip-path="url(#${id}-clip)">
+    <rect width="630" height="880" fill="#FFFDF9"/>
+    <rect width="630" height="100" fill="${st.color}"/>
+    <text x="48" y="52" class="svg-display" font-size="32" fill="#fff" dominant-baseline="central" letter-spacing="1">${st.label}</text>
+    ${tag ? `<rect x="${582 - tag.text.length * 16 - 24}" y="30" width="${tag.text.length * 16 + 24}" height="44" rx="22" fill="${tag.bg}"/>
+    <text x="${582 - (tag.text.length * 16 + 24) / 2}" y="53" class="svg-body" font-size="22" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central" letter-spacing="1">${tag.text}</text>` : ''}
+    ${title}
+    <rect ${art} fill="${st.light}"/>
+    <rect ${art} fill="url(#${id}-dots)"/>
+    <rect ${art} fill="url(#${id}-glow)"/>
+    <g transform="translate(175 258) scale(1.4)">${cardIcon(card.icon, st.color)}</g>
+    <rect x="40" y="588" width="550" height="262" rx="22" fill="${st.light}" stroke="${st.color}" stroke-width="3"/>
+    ${body}
+    <rect width="630" height="880" rx="36" fill="none" stroke="${st.color}" stroke-width="12"/>
+  </g>
+</svg>`;
+}
+
+function addActionCards(list, kind, gridId) {
+  const back = kind === 'bonus' ? 'ulatwienia' : 'utrudnienia';
+  list.forEach((card, i) => {
+    const slot = document.createElement('div');
+    slot.className = 'card-slot';
+    slot.innerHTML = `
+      <button class="flip" type="button" aria-pressed="false" aria-label="Karta ${esc(card.name)}, kliknij, aby odwrócić">
+        <span class="flip-inner"><span class="face front">${actionCardSVG(card, kind, i)}</span><span class="face back"><img class="face-img" src="${cardBackUrl(back)}" alt="Tył karty"></span></span>
+      </button>
+      <p class="card-cap"><b>${esc(card.name)}</b></p>`;
+    const btn = slot.querySelector('.flip');
+    btn.addEventListener('click', () => {
+      const on = !btn.classList.contains('flipped');
+      btn.classList.toggle('flipped', on);
+      btn.setAttribute('aria-pressed', String(on));
+    });
+    $(gridId).append(slot);
+  });
+}
+addActionCards(BONUS_CARDS, 'bonus', 'bonusGrid');
+addActionCards(PENALTY_CARDS, 'penalty', 'penaltyGrid');
 
 // Karta z pytaniami: ten sam wygląd i dane co wersja do druku (druk/karty-pytan.js i .css).
 // Karta ma wymiary w milimetrach, więc skalujemy ją do szerokości miejsca w siatce.

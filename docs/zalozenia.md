@@ -134,6 +134,41 @@ Karty ataku to: **zburzenie budynku**, **przymus sprzedaży pola**, **przymus od
   - **Tarcza na pole** chroni jedno pole przed **jednym** atakiem, bez limitu czasu. Kiedy ktoś użyje karty ataku na pole z tarczą, atak nie działa, a tarcza się zużywa.
   - **Tarcza na gracza** działa przez **określoną liczbę tur** (liczba do ustalenia) i chroni gracza przez ten czas.
 
+### Propozycje kart (wersja robocza, do wyboru)
+
+Kwoty są przykładowe, do dopasowania po ustaleniu waluty i cen pól. Wszystkie karty są w grze w zakładce „Karty”.
+
+**Ułatwienia** (oprócz 4 kart „Wyjście z dziekanatu”):
+
+| Karta | Rodzaj | Działanie | ×2 |
+|---|---|---|---|
+| Kontrola BHP | atak | budynek na wybranej sali przeciwnika spada o 1 poziom | — |
+| Wyłączenie prądu | atak | wybrana sala przeciwnika nie pobiera czynszu przez 3 tury | — |
+| Decyzja rektora | atak | przeciwnik musi sprzedać Ci wybraną salę po jej cenie | — |
+| Ochrona mienia | tarcza na pole | blokuje jeden atak na wybraną Twoją salę | tarcza na 2 sale (propozycja) |
+| Ubezpieczenie studenckie | tarcza na gracza | przez 3 tury przeciwnicy nie mogą atakować Twoich sal | 6 tur (propozycja) |
+| Grant badawczy | | ulepszasz za darmo swój budynek o 1 poziom | o 2 poziomy |
+| Stypendium naukowe | | dostajesz 200 | 400 |
+| Zwrot czesnego | | bierzesz 100 z puli | 200 |
+| Praca w samorządzie | | każdy gracz płaci Ci 50 | 100 |
+| Wcześniejsza sesja | | 3 pola do przodu | wybierasz 3 albo 6 pól |
+| Notatki od kolegi | zachowaj | przy następnym pytaniu znikają 2 złe odpowiedzi | — |
+
+**Utrudnienia:**
+
+| Karta | Rodzaj | Działanie | ×2 |
+|---|---|---|---|
+| Zalanie sali | atak | budynek na jednej Twojej sali spada o 1 poziom | — |
+| Cięcia budżetowe | atak | sprzedajesz bankowi jedną swoją salę za pół ceny | — |
+| Zmiana planu zajęć | atak | losowa Twoja sala przechodzi do losowego przeciwnika | — |
+| Brak prądu | atak | Twoja sala nie pobiera czynszu przez 3 tury | — |
+| Opłaty za sprzęt | | 20 za każdy budynek i 100 za każdą serwerownię | podwójne kwoty |
+| Warunek | | płacisz 100 do puli | 200 |
+| Spóźnienie na zajęcia | | cofasz się o 3 pola | o 6 pól |
+| Udaj się do dziekanatu | | idziesz od razu do dziekanatu | nie możesz użyć karty wyjścia |
+| Kolokwium poprawkowe | | tracisz 1 kolejkę | 2 kolejki |
+| Wykryty plagiat | | oddajesz do stosu 1 kartę ułatwienia | wszystkie |
+
 ## Karty „Wyjście z dziekanatu”
 
 - Dawna nazwa „Przekup dziekanat” jest zmieniona, żeby karta nie sugerowała przekupstwa.
