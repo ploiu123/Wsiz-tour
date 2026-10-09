@@ -45,7 +45,7 @@ Z gry usunięte są wszystkie dema: rzut kostkami, ruch pionków, przykładowe b
 | 16 | Sala 23 | sala do kupienia, grupa 4 |
 | 17 | Stypendium rektorskie | narożnik |
 | 18 | Sala 31 | sala do kupienia, grupa 5 |
-| 19 | Parking duży | stacja 2/2 |
+| 19 | Parking uczelniany duży | stacja 2/2 |
 | 20 | Pokój kwestora | sala do kupienia, grupa 5 |
 | 21 | Sala senatu | pole specjalne 3/4 (unikatowe, fasada z kolumnami) |
 | 22 | Pokój kanclerza | sala do kupienia, grupa 6 |
