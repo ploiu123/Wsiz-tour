@@ -371,7 +371,7 @@ Prezentacja zawsze pokazuje dioramę, a po jej zamknięciu wraca wybrany wygląd
 - **Prezentacja:** osobny utwór (112 uderzeń na minutę), który rośnie z energią sceny, z pogłosem, echem raz w lewo, raz w prawo, „pompowaniem” w rytm stopy, uderzeniami i szumem przy cięciach.
 - Mikser ma kompresor i limiter, więc nic nie przesterowuje (sprawdzone nagraniem offline: brak przesterowań, poziomy i proporcje basu, środka i góry zmierzone).
 - **Prezentacja:** utwór ma dwie części (A i B, co 8 taktów na zmianę, z inną melodią), przejścia perkusji na końcu frazy, narastający szum przed nową frazą i talerz na jej początku.
-- **Muzyka z pliku (opcjonalnie):** w `index.html` jest stała `MUSIC_FILE` (`game` i `promo`). Wpisana ścieżka do pliku w `assets/muzyka/` zastępuje syntezator (uderzenia i szumy w prezentacji zostają). Tylko licencja CC0 albo własne nagranie; muzyki ze Spotify, YouTube i radia nie wolno użyć. Instrukcja: `assets/muzyka/PRZECZYTAJ.md`.
+- **Muzyka z plików (od 13.10.2026):** prezentacja: „Epic Cinematic Trailer | ELITE” (Alex-Productions, CC BY 3.0, plik w repozytorium, podpis w Ustawieniach i na ostatniej planszy prezentacji). Menu i gra: „Tropical Sun” (All Good Folks) i „New Life” (Moire) z Uppbeat, na zmianę, tylko lokalnie (w `.gitignore`, bo licencja Uppbeat nie pozwala udostępniać plików). Gdy pliku nie ma, gra wraca do syntezatora. Lista plików: stała `MUSIC_FILE`; autorzy i licencje: `assets/muzyka/AUTORZY.md`. Przy utworze z pliku prezentacja nie dokłada własnej stopy (inne tempo), zostają uderzenia i szumy przy cięciach.
 
 ## Efekty w grze (od 13.10.2026)
 

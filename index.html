@@ -444,6 +444,7 @@
   .m-set:last-child { border-bottom: 0; }
   .m-set > span { font-weight: 600; font-size: 14.5px; color: var(--ink); }
   .m-set > span small { display: block; font-weight: 500; font-size: 12.5px; color: var(--ink-soft); }
+  .m-credits { margin: 0; font-size: 12.5px; line-height: 1.55; color: var(--ink-soft); }
   .m-range { display: flex; align-items: center; gap: 12px; }
   .m-range input { flex: 1; accent-color: var(--btn); }
   .m-range output { min-width: 44px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; color: var(--ink); }
@@ -880,6 +881,7 @@
   }
   .pr-nike.gold { color: #F2C766; text-shadow: 0 0 60px rgba(242, 199, 102, .35), 0 14px 70px rgba(0, 0, 0, .65); }
   @keyframes pr-slam { from { opacity: 0; transform: skewX(-9deg) scale(1.45); filter: blur(10px); } 55% { opacity: 1; filter: none; } to { opacity: 1; transform: skewX(-9deg) scale(1); } }
+  .pr-legal.pr-credit { margin-top: 8px; letter-spacing: .08em; text-transform: none; opacity: .8; }
   .pr-legal { margin: 26px 0 0; font: 600 11px var(--pr-font); letter-spacing: .3em; text-transform: uppercase; color: rgba(255, 255, 255, .45); }
   .promo .pr-logo { box-shadow: 0 0 0 1px rgba(255, 255, 255, .25), 0 0 90px 12px rgba(120, 160, 255, .28); }
   .promo .pr-cta .is-main { background: #FFFFFF; color: #000000; box-shadow: 0 18px 50px rgba(255, 255, 255, .18); }
@@ -4150,6 +4152,7 @@ function renderSettingsPage() {
     <div class="m-set"><span>Motyw</span>${chips([['system', 'Systemowy'], ['light', 'Jasny'], ['dark', 'Ciemny']], prefs.theme, 'data-theme-set')}</div>
     <div class="m-set"><span>Muzyka<small>W menu, w grze i w prezentacji</small></span><div class="m-range"><input type="range" id="volMusic" min="0" max="100" step="5" value="${prefs.music}" aria-label="Głośność muzyki"><output id="volMusicOut">${prefs.music}%</output></div></div>
     <div class="m-set"><span>Efekty dźwiękowe<small>Np. rzut kostkami</small></span><div class="m-range"><input type="range" id="volFx" min="0" max="100" step="5" value="${prefs.effects}" aria-label="Głośność efektów"><output id="volFxOut">${prefs.effects}%</output></div></div>
+    <div class="m-set"><span>Autorzy muzyki<small>Licencje: assets/muzyka/AUTORZY.md</small></span><p class="m-credits">Prezentacja: „Epic Cinematic Trailer | ELITE”, Alex-Productions (onsound.eu), licencja CC BY 3.0, źródło chosic.com.<br>Menu i gra: „Tropical Sun”, All Good Folks oraz „New Life”, Moire (Uppbeat), gdy pliki są w folderze gry. Bez nich gra muzyka napisana w kodzie.</p></div>
     <div class="m-set"><span>Rozmiar elementów</span>${chips([[0.9, 'Mały'], [1, 'Średni'], [1.15, 'Duży']], prefs.scale, 'data-scale')}</div>
     <div class="m-set"><span>Wygląd planszy</span>${chips(SKIN_NAMES, prefs.skin, 'data-skin')}</div>
     <div class="m-set"><span>Obracanie planszy w menu</span>${chips([[1, 'Włączone'], [0, 'Wyłączone']], prefs.spin ? 1 : 0, 'data-spin')}</div>`;
@@ -7295,7 +7298,8 @@ const SCENES = [
         <button type="button" class="is-main" data-cta="play">${pIco('play')}Zagraj teraz</button>
         <button type="button" class="is-ghost" data-cta="replay">Obejrzyj jeszcze raz</button>
       </div>
-      ${fadeP('pr-legal', 'Wyższa Szkoła Informatyki i Zarządzania w Bielsku-Białej', 2.2)}</div>`,
+      ${fadeP('pr-legal', 'Wyższa Szkoła Informatyki i Zarządzania w Bielsku-Białej', 2.2)}
+      ${fadeP('pr-legal pr-credit', 'Muzyka: „Epic Cinematic Trailer | ELITE”, Alex-Productions (onsound.eu), CC BY 3.0', 2.4)}</div>`,
   },
 ];
 
@@ -7501,9 +7505,11 @@ const SONGS = {
   },
 };
 const ARP = [0, 1, 2, 3, 2, 1, 3, 2];
-// Własna muzyka z pliku (tylko licencja CC0 albo własne nagranie). Wrzuć plik do assets/muzyka/ i wpisz ścieżkę,
-// np. 'assets/muzyka/gra.mp3'. Puste = muzyka z syntezatora (napisana w kodzie, w całości nasza).
-const MUSIC_FILE = { game: '', promo: '' };
+// Muzyka z plików (licencje i autorzy: assets/muzyka/AUTORZY.md). Lista = utwory grają po kolei.
+// Brak pliku albo błąd = następny z listy, a gdy żadnego nie ma, muzyka z syntezatora (napisana w kodzie, w całości nasza).
+//  - prezentacja: „Epic Cinematic Trailer | ELITE”, Alex-Productions, CC BY 3.0 (plik jest w repozytorium),
+//  - menu i gra: „Tropical Sun” (All Good Folks) i „New Life” (Moire) z Uppbeat, tylko lokalnie (pliki w .gitignore).
+const MUSIC_FILE = { game: ['assets/muzyka/gra.mp3', 'assets/muzyka/gra-2.mp3'], promo: ['assets/muzyka/prezentacja.mp3'] };
 function createMusic(style, opts = {}) {
   const a = opts.ctx || audio();
   if (!a) return null;
@@ -7735,12 +7741,22 @@ function createMusic(style, opts = {}) {
     }
   }
   let timer = 0, fileEl = null, fileSrc = null;
-  if (!opts.until && MUSIC_FILE[style]) {   // utwór z pliku zamiast syntezatora; efekty (uderzenia, szum) zostają
-    fileEl = new Audio(MUSIC_FILE[style]);
-    fileEl.loop = true;
+  const list = opts.until ? [] : [].concat(MUSIC_FILE[style] || []).filter(Boolean);
+  if (list.length) {   // utwory z plików zamiast syntezatora; efekty (uderzenia, szum) zostają
+    let k = 0, failed = 0;
+    fileEl = new Audio();
+    fileEl.preload = 'auto';
+    fileEl.loop = list.length === 1;
     fileSrc = a.createMediaElementSource(fileEl);
     fileSrc.connect(out);
-    fileEl.play().catch(() => {});
+    const playK = () => { fileEl.src = list[k % list.length]; fileEl.play().catch(() => {}); };
+    fileEl.addEventListener('playing', () => { failed = 0; });
+    fileEl.addEventListener('ended', () => { k++; playK(); });
+    fileEl.addEventListener('error', () => {
+      if (++failed >= list.length) { fileSrc.disconnect(); fileEl = null; next = a.currentTime + 0.1; return; }   // żadnego pliku: syntezator
+      k++; playK();
+    });
+    playK();
   }
   if (opts.until) run(opts.until);   // tryb nagrania (OfflineAudioContext): wszystko planowane od razu
   else {
@@ -7775,7 +7791,7 @@ function createMusic(style, opts = {}) {
       duck.gain.setTargetAtTime(0.25, t, 0.005); duck.gain.setTargetAtTime(1, t + 0.15, 0.35);
     },
     chime() { [84, 88, 91, 96].forEach((m, k) => bell(a.currentTime + 0.01 + k * 0.07, m, 0.8, 1.1, (k - 1.5) * 0.4)); },
-    thump() { kick(a.currentTime + 0.01, 0.85, 0.3); },
+    thump() { if (!fileEl) kick(a.currentTime + 0.01, 0.85, 0.3); },   // przy utworze z pliku bez dodatkowej stopy (inne tempo)
     stop() {
       clearInterval(timer);
       out.gain.setTargetAtTime(0, a.currentTime, 0.25);
