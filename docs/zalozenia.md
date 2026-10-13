@@ -208,11 +208,10 @@ Do ustalenia: co z Kuchnią.
 - Plansza jest płaska i ma się dać wydrukować jako gra planszowa.
 - Plansza i pola mają proste, pionowe ściany i ostre rogi, bez zaokrągleń.
 - Na planszy nie ma pięter: ani napisów pięter na środku, ani na polach. Pola bez grupy mają szary pasek, pola z grupą pasek w kolorze grupy.
-- Wygląd ma być dopracowany i nowoczesny, w stylu Business Tour, a nie jak tania animacja 3D. W grze jest przełącznik 5 wersji wyglądu (Trawnik, Kampus, Drewniany stół, Nocny, Pastelowy). Po wyborze zostaje jedna.
+- Wygląd ma być dopracowany i nowoczesny, w stylu Business Tour, a nie jak tania animacja 3D. Został jeden wygląd: jasne pola, trawa na środku, plansza na wyspie kampusu. Stare wersje (Kampus, Drewniany stół, Nocny, Pastelowy) i ich przełączniki usunięte 13.10.2026.
 - **Logo uczelni** jest na środku planszy, w białym medalionie z granatową obwódką (plik `assets/logo-wsiz.png`). Kolory uczelni z logo: granat `#00276F` i jasny szaroniebieski `#CCD3E1`.
-- Dwa wyglądy środka planszy do wyboru (przełącznik „Środek” w lewym górnym rogu). Po wyborze zostaje jeden:
-  1. **Pieczęć:** medalion z logo, tło środka zależy od wybranej wersji wyglądu planszy (np. trawnik),
-  2. **Wzór z logo:** granatowe tło z ukośnymi taśmami z białych logo, jak na tyle kart utrudnień, i jasną poświatą wokół medalionu.
+- Środek planszy: trawa z pasami po koszeniu i medalion z logo (wersja „Pieczęć”). Druga wersja („Wzór z logo”) usunięta, wzór z logo został na tyłach kart.
+- **Podgląd planszy** (przycisk „Obejrzyj planszę” w menu): u góry pasek z przyciskami „Menu”, „Plansza”, „Modele”, „Karty” i „Prezentacja”. Stary panel z pokazem budowania i przełącznikami wyglądu usunięty.
 - Nazwy gry nie ma na planszy.
 
 ## Ekrany
