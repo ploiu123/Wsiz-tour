@@ -6821,7 +6821,7 @@ const SCENES = [
   },
   {
     name: 'Czynsz', dur: 7600, energy: 2,
-    cam: shot(V3(-3, 8.5, 21), V3(0, 0, 7.5), V3(3, 7.2, 19.5), V3(0, 0, 7.8)),
+    cam: shot(V3(-14, 10, 14), V3(-4.2, 0, 4.2), V3(-11.5, 8.5, 16), V3(-4, 0, 4.4)),   // stoły graczy 1 i 2 (przy dwóch bokach planszy)
     events: [700, 2300, 3900, 5500].map((at, k) => [at, () => {
       const [a, b] = k % 2 ? [DEMO.players[0], DEMO.players[1]] : [DEMO.players[1], DEMO.players[0]];
       if (a && b) demoPay(a, b, [320, 480, 260, 640][k] * K);
