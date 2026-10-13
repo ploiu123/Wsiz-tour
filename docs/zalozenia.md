@@ -197,7 +197,8 @@ Do ustalenia: co z Kuchnią.
 - Przyciski: „Prezentacja gry” w menu głównym (zaraz pod „Graj”), „Zobacz prezentację gry” pod okienkiem logowania (bez logowania) i „Prezentacja” na planszy, obok „Menu”. Link z dopiskiem `?prezentacja` (np. `http://localhost:8000/?prezentacja`) otwiera zwiastun od razu, z ekranem „Odtwórz”. Przydaje się do pokazania gry opiekunowi albo na prezentacji pracy.
 - Styl reklam Apple i Nike: ciemne tło, kinowe pasy u góry i u dołu, wielkie napisy wjeżdżające od dołu, przejścia przez czerń, szklane karty z rozmyciem.
 - Kamera jedzie po prawdziwej planszy 3D z gry, więc każda zmiana planszy, pionków i budynków od razu jest w zwiastunie.
-- 13 scen, ok. 1,5 minuty: logo i nazwa gry, plansza z lotu ptaka, przejazd wzdłuż pól („32 pola”), rzut kostkami z dubletem, przykładowe pytanie z minutnikiem (7 × 8, nigdy z prawdziwej bazy), budowanie od telefonu do serwerowni, 4 pionki, wachlarz kart, dziekanat, tryby gry, liczby (1500 zł, 60 s, 5 poziomów, 7 semestrów), „Wiedza się opłaca” i końcowa plansza z przyciskami „Zagraj teraz” i „Obejrzyj jeszcze raz”.
+- 16 scen, ok. 2 minuty: logo i nazwa gry, wyspa nocą z lotu ptaka („Wyspa, na której zawsze coś się dzieje”), plansza, przejazd wzdłuż pól („32 pola”), rzut kostkami z dubletem, przykładowe pytanie z minutnikiem (7 × 8, nigdy z prawdziwej bazy), budowanie od telefonu do serwerowni, czynsz (paczki pieniędzy lecą między stołami graczy), monopol (pola rozbłyskują, konfetti), 4 pionki, wachlarz kart, dziekanat, tryby gry, liczby (2 mln zł, 60 s, 5 poziomów, 7 semestrów), „Wiedza się opłaca” z deszczem pieniędzy i końcowa plansza z fajerwerkami oraz przyciskami „Zagraj teraz” i „Obejrzyj jeszcze raz”.
+- **Żywa plansza:** przez cały zwiastun trwa w tle gra czterech graczy: sale mają właścicieli (ramki, chorągiewki, budynki w kolorach graczy), na stole leżą pieniądze i karty, pionki skaczą po planszy, a czynsz przelatuje między graczami.
 - Muzyka jest generowana w kodzie (akordy, bas, arpeggio, perkusja, „whoosh” przy przejściach), bez plików i bez cudzych nagrań. Głośność bierze z ustawienia „Muzyka”, w zwiastunie jest też przycisk wyciszenia.
 - Sterowanie: pauza, poprzednia i następna scena, pasek scen (klik = skok do sceny), wyciszenie, zamknięcie. Klawisze: strzałki, spacja, Esc. Przyciski chowają się, gdy nie ruszasz myszką.
 - Kod jest w `index.html`: style z prefiksem `.pr-`, znaczniki w `<section class="promo">`, logika w bloku „Prezentacja” (lista `SCENES`: czas sceny, ujęcie kamery, napisy i zdarzenia).
@@ -310,18 +311,42 @@ Ilustracje kart są wektorowe (SVG), rysowane w kodzie przez asystenta AI (Claud
 
 ## Karty graczy na planszy i perspektywa gracza
 
-- Stosy ułatwień i utrudnień leżą po bokach logo. Cztery rogi środka planszy to miejsca graczy („KARTY GRACZA”): róg przy START dla miejsca 1, dalej zgodnie z ruchem pionków.
-- Karty, które gracz trzyma (np. „Wyjście z dziekanatu”, „Notatki od kolegi”), i działające na niego efekty (ubezpieczenie, tarcze, utracona kolejka, brak prądu) leżą w jego rogu tyłem do góry. Każdy widzi, że ktoś ma ułatwienia albo utrudnienia, ale nie widzi, jakie.
-- **Kamera z perspektywy gracza:** ekran patrzy od strony rogu gracza, który jest przy komputerze. Przy grze kilku osób na jednym komputerze kamera obraca się na róg gracza, którego jest tura. W trybie online każdy będzie miał swój róg na dole ekranu.
-- **Panel „Twoje karty”** w prawej kolumnie: miniatury aktów własności gracza i jego kart ułatwień i utrudnień (z opisem, np. „do użycia”, „2 tury”). Kliknięcie miniatury otwiera kartę w okienku. Panel można zwinąć.
+- Stosy ułatwień i utrudnień leżą po bokach logo. Każdy gracz ma swój róg planszy: róg przy START dla miejsca 1, dalej zgodnie z ruchem pionków.
+- Karty, które gracz trzyma (np. „Wyjście z dziekanatu”, „Notatki od kolegi”), i działające na niego efekty (ubezpieczenie, tarcze, utracona kolejka, brak prądu) leżą na stole przy jego boku planszy tyłem do góry (zob. „Pieniądze i karty graczy na stole”). Każdy widzi, że ktoś ma ułatwienia albo utrudnienia, ale nie widzi, jakie.
+- **Kamera z perspektywy gracza:** ekran patrzy od strony rogu gracza, który jest przy komputerze (pierwszy gracz przy tym komputerze). Kamera nie obraca się sama w trakcie gry. W trybie online każdy będzie miał swój róg na dole ekranu.
+- **Panel „Twoje karty”** w prawym dolnym rogu ekranu: miniatury aktów własności gracza i jego kart ułatwień i utrudnień (z opisem, np. „do użycia”, „2 tury”). Kliknięcie miniatury otwiera kartę w okienku. Panel można zwinąć.
 
-## Ekran gry: panele z boku planszy (od 13.10.2026)
+## Ekran gry i kamera (od 13.10.2026)
 
-- Nic nie leży na planszy. **Lewa kolumna:** gracze, każdy na swojej karcie (pionek, nazwa, pieniądze dużą czcionką, liczba pól i kart, oznaczenia typu „dziekanat”, „wyjście ×1”). Gracz, którego jest tura, ma ramkę w swoim kolorze.
-- **Prawa kolumna:** pula Stypendium rektorskiego, przycisk Menu, czas gry (jeśli jest limit) i panel „Twoje karty”.
-- Plansza stoi w wolnym miejscu między kolumnami. Kamera sama dopasowuje się do tego miejsca, także po zmianie rozmiaru okna.
-- **Plansza w grze jest 2× większa** (kamera 2× bliżej), żeby napisy na polach były czytelne. Kamera jedzie za pionkiem gracza, którego jest tura, a przy rzucie patrzy na kostki. Kółkiem myszy albo dwoma palcami można oddalić widok i zobaczyć całą planszę. Przycisk „Rzuć kostkami” jest na środku planszy, a opis ruchu pod planszą.
-- Na wąskim ekranie (do 900 px, np. telefon) gracze są nad planszą, a pula, menu i karty pod planszą. „Twoje karty” startują wtedy zwinięte.
+- **Kamera stoi w miejscu.** Nie jedzie za pionkiem, nie przybliża się do pól i nie obraca się sama. Gracz może ją tylko obracać myszką albo palcem (bez przybliżania).
+- Odległość kamery jest dobrana tak, żeby cała plansza była jak największa i w całości widoczna, także po zmianie rozmiaru okna. Kamera patrzy od rogu gracza, który jest przy komputerze (START na dole), trochę niżej niż wcześniej, więc plansza jest większa.
+- **Panele w rogach ekranu** (jak w Business Tour), w pustych miejscach obok rombu planszy, więc nic nie zasłania pól:
+  - lewy górny róg: gracze, każdy w jednym wierszu (pionek, nazwa, pieniądze, liczba pól i kart, oznaczenia typu „dziekanat”, „wyjście ×1”); gracz, którego jest tura, ma pulsującą ramkę w swoim kolorze,
+  - prawy górny róg: pula Stypendium rektorskiego, przycisk Menu, czas gry (jeśli jest limit),
+  - prawy dolny róg: „Twoje karty” (zwinięte, rozwija je gracz),
+  - na dole: opis ruchu; przycisk „Rzuć kostkami” na środku planszy.
+- Na mniejszym ekranie (do 1100 px) gracze są w pasku nad planszą, a pula, menu i karty w pasku pod planszą. Na telefonie gracze są w dwóch rzędach.
+- Kwoty w panelu przewijają się do nowej wartości, a przy zmianie pojawia się zielony albo czerwony znaczek z kwotą.
+
+## Wyspa i życie w tle (od 13.10.2026)
+
+- Plansza leży na granatowym stole ze złotą ramką (kolory uczelni), a stół stoi na placu kampusu na wyspie na morzu. Wszystko zbudowane w kodzie z prostych brył, bez gotowych modeli i bez grafik z generatorów.
+- Na wyspie: plac z kostki ułożonej w kręgi, żywopłot, ławki, latarnie, flagi uczelni przy wejściach, 9 budynków kampusu (największy, przeszklony, naprzeciw pola START), drzewa, latarnia morska z obracającym się światłem, pomost z łódką, plaża i piana przy brzegu.
+- Ciągle coś się dzieje: fale na morzu, żaglówki w kolorach graczy i prom pływają dookoła wyspy, mewy krążą, balon w barwach uczelni lata nad kampusem, studenci chodzą po placu i ścieżkach, ryby wyskakują z wody, chmury płyną, nad planszą unoszą się drobinki światła.
+- W prezentacji wyspa jest nocą: niebo granatowe, okna budynków i latarnie świecą, latarnia morska świeci mocniej.
+
+## Pieniądze i karty graczy na stole (od 13.10.2026)
+
+- Rogi „KARTY GRACZA” zniknęły ze środka planszy.
+- Każdy gracz ma swoje miejsce na stole przy boku planszy, który zaczyna się w jego rogu: paczki banknotów (każda to 100 tys. zł, w czterech stosach), monety (po 10 tys. zł) i karty ułatwień i utrudnień tyłem do góry. Każdy widzi, kto ile ma i że ktoś ma karty, ale nie widzi, jakie.
+- Gdy gracz płaci, paczki lecą łukiem z jego stosu na stos właściciela pola, do puli na środku albo do banku (w górę). Pieniądze z banku spadają z nieba, za START lecą z pola START, a pula leci ze środka planszy.
+
+## Efekty w grze (od 13.10.2026)
+
+- Nad pionkiem pojawia się kwota (+ zielona, − czerwona).
+- Po ruchu pole pod pionkiem rozchodzi się falą w kolorze gracza. Kostki lekko potrząsają kamerą, dziekanat i bankructwo mocniej (bez przesuwania kamery).
+- Kupno: fala, iskry i napis „KUPIONE!”. Monopol: pola grupy po kolei rozbłyskują, konfetti i napis „MONOPOL!”. Hotel: konfetti. Stypendium rektorskie: konfetti nad pulą. Koniec gry: kilka wystrzałów konfetti w kolorach zwycięzcy.
+- Komunikaty na środku mają kolorowy pasek u góry, wjeżdżają z odbiciem i mają błysk.
 
 ## Karty „Wyjście z dziekanatu”
 
