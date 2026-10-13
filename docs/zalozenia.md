@@ -198,7 +198,7 @@ Do ustalenia: co z Kuchnią.
 - Styl reklam Apple i Nike: czarne tło, kinowe pasy, ziarno filmowe, winieta, typografia Inter Tight (napisy wjeżdżają z rozmyciem, srebrne i złote gradienty), wielkie hasła krojem Anton (pochylone, wielkie litery, cięcia do rytmu muzyki z błyskiem).
 - **Studio produktowe:** każdy pionek pokazany osobno jak produkt (czarne tło bez krawędzi, lśniąca podłoga, reflektor z góry, niebieskie i ciepłe światła konturowe, obrót na talerzu) z podpisem „Pionek 01 · Sztandar.” itd.
 - **Żywa plansza:** przez cały zwiastun trwa w tle gra czterech graczy (właściciele sal, budynki, pieniądze na stole, pionki skaczą, czynsz przelatuje między graczami). Wyspa jest nocą.
-- 18 scen, ok. 1 minuty 50 sekund: „Uczelnia, jakiej jeszcze nie znasz.”, logo i nazwa, wyspa z lotu ptaka, 4 pionki w studiu, plansza („32 pola”), kostki w zwolnionym tempie („RZUĆ.” / „DUBLET.”), przykładowe pytanie z minutnikiem (7 × 8, nigdy z prawdziwej bazy), budowanie od telefonu do serwerowni, czynsz, monopol, wachlarz kart, manifest („UCZ SIĘ. GRAJ. KUPUJ. BUDUJ. BLOKUJ. WYGRYWAJ.”), liczby (2 mln zł, 60 s, 32 pola, 7 semestrów), „Wiedza się opłaca” z deszczem pieniędzy i finał z fajerwerkami, przyciskami „Zagraj teraz” i „Obejrzyj jeszcze raz”.
+- 18 scen, ok. 1 minuty 50 sekund: „Uczelnia, jakiej jeszcze nie znasz.”, logo i nazwa, makieta z lotu ptaka („Uniwersytet z jednej strony. Wakacje z drugiej.”), 4 pionki w studiu, plansza („32 pola”), kostki w zwolnionym tempie („RZUĆ.” / „DUBLET.”), przykładowe pytanie z minutnikiem (7 × 8, nigdy z prawdziwej bazy), budowanie od telefonu do serwerowni, czynsz, monopol, wachlarz kart, manifest („UCZ SIĘ. GRAJ. KUPUJ. BUDUJ. BLOKUJ. WYGRYWAJ.”), liczby (2 mln zł, 60 s, 32 pola, 7 semestrów), „Wiedza się opłaca” z deszczem pieniędzy i finał z fajerwerkami, przyciskami „Zagraj teraz” i „Obejrzyj jeszcze raz”.
 - Muzyka jest generowana w kodzie (akordy, bas, arpeggio, perkusja, uderzenia przy cięciach), bez plików i bez cudzych nagrań. Głośność bierze z ustawienia „Muzyka”, w zwiastunie jest też przycisk wyciszenia.
 - Sterowanie: pauza, poprzednia i następna scena, pasek scen (klik = skok do sceny), wyciszenie, zamknięcie. Klawisze: strzałki, spacja, Esc. Przyciski chowają się, gdy nie ruszasz myszką.
 - Kod jest w `index.html`: style z prefiksem `.pr-`, znaczniki w `<section class="promo">`, logika w bloku „Prezentacja” (studio `setStudio`, lista `SCENES`: czas sceny, ujęcie kamery, napisy i zdarzenia).
@@ -208,7 +208,7 @@ Do ustalenia: co z Kuchnią.
 - Plansza jest płaska i ma się dać wydrukować jako gra planszowa.
 - Plansza i pola mają proste, pionowe ściany i ostre rogi, bez zaokrągleń.
 - Na planszy nie ma pięter: ani napisów pięter na środku, ani na polach. Pola bez grupy mają szary pasek, pola z grupą pasek w kolorze grupy.
-- Wygląd ma być dopracowany i nowoczesny, w stylu Business Tour, a nie jak tania animacja 3D. Został jeden wygląd: jasne pola, trawa na środku, plansza na wyspie kampusu. Stare wersje (Kampus, Drewniany stół, Nocny, Pastelowy) i ich przełączniki usunięte 13.10.2026.
+- Wygląd ma być dopracowany i nowoczesny, w stylu Business Tour, a nie jak tania animacja 3D. Plansza: jasne pola, trawa na środku. Otoczenie do wyboru: diorama nad wodą albo czysta tektura (zob. „Wygląd planszy do wyboru”). Stare wersje (Kampus, Drewniany stół, Nocny, Pastelowy) i ich przełączniki usunięte 13.10.2026.
 - **Logo uczelni** jest na środku planszy, w białym medalionie z granatową obwódką (plik `assets/logo-wsiz.png`). Kolory uczelni z logo: granat `#00276F` i jasny szaroniebieski `#CCD3E1`.
 - Środek planszy: trawa z pasami po koszeniu i medalion z logo (wersja „Pieczęć”). Druga wersja („Wzór z logo”) usunięta, wzór z logo został na tyłach kart.
 - **Podgląd planszy** (przycisk „Obejrzyj planszę” w menu): u góry pasek z przyciskami „Menu”, „Plansza”, „Modele”, „Karty” i „Prezentacja”. Stary panel z pokazem budowania i przełącznikami wyglądu usunięty.
@@ -327,12 +327,18 @@ Ilustracje kart są wektorowe (SVG), rysowane w kodzie przez asystenta AI (Claud
 - Na mniejszym ekranie (do 1100 px) gracze są w pasku nad planszą, a pula, menu i karty w pasku pod planszą. Na telefonie gracze są w dwóch rzędach.
 - Kwoty w panelu przewijają się do nowej wartości, a przy zmianie pojawia się zielony albo czerwony znaczek z kwotą.
 
-## Wyspa i życie w tle (od 13.10.2026)
+## Wygląd planszy do wyboru (od 13.10.2026)
 
-- Plansza leży na granatowym stole ze złotą ramką (kolory uczelni), a stół stoi na placu kampusu na wyspie na morzu. Wszystko zbudowane w kodzie z prostych brył, bez gotowych modeli i bez grafik z generatorów.
-- Na wyspie: plac z kostki ułożonej w kręgi, żywopłot, ławki, latarnie, flagi uczelni przy wejściach, 9 budynków kampusu (największy, przeszklony, naprzeciw pola START), drzewa, latarnia morska z obracającym się światłem, pomost z łódką, plaża i piana przy brzegu.
-- Ciągle coś się dzieje: fale na morzu, żaglówki w kolorach graczy i prom pływają dookoła wyspy, mewy krążą, balon w barwach uczelni lata nad kampusem, studenci chodzą po placu i ścieżkach, ryby wyskakują z wody, chmury płyną, nad planszą unoszą się drobinki światła.
-- W prezentacji wyspa jest nocą: niebo granatowe, okna budynków i latarnie świecą, latarnia morska świeci mocniej.
+W Ustawieniach → „Wygląd planszy” są dwie wersje (zapamiętuje się wybór):
+
+1. **Diorama nad wodą** (domyślna, w stylu makiety „Harbor Jelly”): plansza leży na granatowym stole ze złotą ramką, na placu uczelni. Całość to wycięty blok jak makieta w przekroju: na bokach warstwy ziemi, a woda jest przezroczysta, turkusowa i widoczna z boku jak galaretka. Tło jest jasne i czyste, pod blokiem miękki cień.
+   - **Wzdłuż boku planszy jest plaża i woda (klimat wakacji):** piasek tuż za stołem, parasole w kolorach graczy i uczelni, leżaki z ręcznikami, palmy, wieża ratownika, pomost z łódką, falochron z latarnią w biało-czerwone pasy, boje, pływacy z kołami, żaglówki i skuter wodny z pianą za sobą, ryby wyskakujące z wody, kaustyki (falujące światło) na dnie.
+   - **Z drugiej strony uniwersytet:** główny gmach z kolumnadą, frontonem i wieżą zegarową, wydziały i biblioteka (jedna przeszklona), dziedziniec z aleją i fontanną, boisko, parking z samochodzikami, drzewa, latarnie, ławki i flagi uczelni.
+   - Ciągle coś się dzieje: studenci chodzą dookoła stołu, plażą i aleją do gmachu, mewy krążą nad wodą, balon w barwach uczelni lata nad kampusem, chmurki płyną, fontanna tryska.
+   - W grze, przy stałej kamerze, plaża i woda są widoczne obok planszy (lewy dolny róg ekranu). Całą makietę widać w menu, w podglądzie planszy po oddaleniu i w prezentacji (tam nocą, ze świecącymi oknami i latarnią).
+2. **Czysta tektura:** sama plansza jak gra planszowa z kartonu, na jasnym, gładkim stole. Boki planszy i pól mają fakturę falistej tektury, podstawa jest z jasnego papieru. Pieniądze i karty graczy leżą na stole obok planszy. Bez makiety i ruchu w tle.
+
+Prezentacja zawsze pokazuje dioramę, a po jej zamknięciu wraca wybrany wygląd.
 
 ## Pieniądze i karty graczy na stole (od 13.10.2026)
 
