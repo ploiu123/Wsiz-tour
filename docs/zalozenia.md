@@ -195,11 +195,11 @@ Do ustalenia: co z Kuchnią.
 ## Prezentacja gry (zwiastun, 13.10.2026, wersja premium)
 
 - Przyciski: „Prezentacja gry” w menu głównym (zaraz pod „Graj”), „Zobacz prezentację gry” pod okienkiem logowania (bez logowania) i „Prezentacja” w pasku podglądu planszy. Link z dopiskiem `?prezentacja` (np. `http://localhost:8000/?prezentacja`) otwiera zwiastun od razu, z ekranem „Odtwórz”. Przydaje się do pokazania gry opiekunowi albo na obronie.
-- Styl reklam Apple i Nike: czarne tło, kinowe pasy, ziarno filmowe, winieta, typografia Inter Tight (napisy wjeżdżają z rozmyciem, srebrne i złote gradienty), wielkie hasła krojem Anton (pochylone, wielkie litery, cięcia do rytmu muzyki z błyskiem).
-- **Studio produktowe:** każdy pionek pokazany osobno jak produkt (czarne tło bez krawędzi, lśniąca podłoga, reflektor z góry, niebieskie i ciepłe światła konturowe, obrót na talerzu) z podpisem „Pionek 01 · Sztandar.” itd.
+- Styl reklam Apple i Nike: czarne tło, kinowe pasy, delikatne ziarno filmowe, winieta, typografia Inter Tight (napisy wjeżdżają z rozmyciem, srebrne i złote gradienty), wielkie hasła krojem Anton (pochylone, wielkie litery, cięcia do rytmu muzyki z błyskiem).
+- **Studio produktowe:** każdy pionek pokazany osobno jak produkt (czarne tło bez krawędzi, lśniąca podłoga, reflektor z góry, niebieskie i ciepłe światła konturowe, obrót na talerzu) z podpisem i krótkim opisem dla kogo jest („Sztandar. Dla tych, którzy prowadzą.”, „Drukarka 3D. Dla tych, którzy budują.”, „Koparka. Dla tych, którzy liczą.”, „Ekspres. Dla tych, którzy nie śpią przed sesją.”).
 - **Żywa plansza:** przez cały zwiastun trwa w tle gra czterech graczy (właściciele sal, budynki, pieniądze na stole, pionki skaczą, czynsz przelatuje między graczami). Wyspa jest nocą.
 - 18 scen, ok. 1 minuty 50 sekund: „Uczelnia, jakiej jeszcze nie znasz.”, logo i nazwa, makieta z lotu ptaka („Uniwersytet z jednej strony. Wakacje z drugiej.”), 4 pionki w studiu, plansza („32 pola”), kostki w zwolnionym tempie („RZUĆ.” / „DUBLET.”), przykładowe pytanie z minutnikiem (7 × 8, nigdy z prawdziwej bazy), budowanie od telefonu do serwerowni, czynsz, monopol, wachlarz kart, manifest („UCZ SIĘ. GRAJ. KUPUJ. BUDUJ. BLOKUJ. WYGRYWAJ.”), liczby (2 mln zł, 60 s, 32 pola, 7 semestrów), „Wiedza się opłaca” z deszczem pieniędzy i finał z fajerwerkami, przyciskami „Zagraj teraz” i „Obejrzyj jeszcze raz”.
-- Muzyka jest generowana w kodzie (akordy, bas, arpeggio, perkusja, uderzenia przy cięciach), bez plików i bez cudzych nagrań. Głośność bierze z ustawienia „Muzyka”, w zwiastunie jest też przycisk wyciszenia.
+- Muzyka jest generowana w kodzie, bez plików i bez cudzych nagrań (zob. „Muzyka”). W zwiastunie utwór rośnie razem ze scenami: pad i pianino, potem bas i arpeggio, potem bit, a w finale pełny bit z melodią. Głośność bierze z ustawienia „Muzyka”, w zwiastunie jest też przycisk wyciszenia.
 - Sterowanie: pauza, poprzednia i następna scena, pasek scen (klik = skok do sceny), wyciszenie, zamknięcie. Klawisze: strzałki, spacja, Esc. Przyciski chowają się, gdy nie ruszasz myszką.
 - Kod jest w `index.html`: style z prefiksem `.pr-`, znaczniki w `<section class="promo">`, logika w bloku „Prezentacja” (studio `setStudio`, lista `SCENES`: czas sceny, ujęcie kamery, napisy i zdarzenia).
 
@@ -235,9 +235,9 @@ Do ustalenia: co z Kuchnią.
 ## Tyły kart ułatwień i utrudnień
 
 - Wzór: ukośne taśmy z małych logo uczelni, biegnące pod kątem 45° z lewego dolnego do prawego górnego rogu. Logo stoją obok siebie, każde kolejne trochę wyżej, ale samo logo się nie obraca.
-- **Ułatwienia:** białe tło, pełne i wyraziste granatowe logo w jednym kolorze, granatowa podwójna ramka.
-- **Utrudnienia:** granatowe tło, białe logo w jednym kolorze, biała podwójna ramka.
-- Zasada kolorów: na jasnym tle logo granatowe, na ciemnym białe. Bez napisów na tyle karty. Taśmy są tylko o odcień jaśniejsze albo ciemniejsze od tła.
+- **Ułatwienia:** białe tło, pełne i wyraziste zielone logo w jednym kolorze, zielona podwójna ramka.
+- **Utrudnienia:** czerwone tło, białe logo w jednym kolorze, biała podwójna ramka.
+- Kolory jak na polu „Szansa”: dobrze = zielone (ułatwienie), źle = czerwone (utrudnienie). Na jasnym tle logo kolorowe, na ciemnym białe. Bez napisów na tyle karty. Taśmy są tylko o odcień jaśniejsze albo ciemniejsze od tła.
 - Ten sam tył mają karty w stosach na planszy i karty w zakładce „Karty”, w tym karty „Wyjście z dziekanatu” (są w stosie ułatwień).
 
 ## Karty ułatwień i utrudnień: jak działają
@@ -299,7 +299,7 @@ Ilustracje kart są wektorowe (SVG), rysowane w kodzie przez asystenta AI (Claud
 ## Akty własności (od 13.10.2026)
 
 - Każde pole do kupienia ma swoją kartę: 17 sal, 2 parkingi i 4 pola specjalne, razem 23 karty. Format jak pozostałe karty (63 × 88 mm).
-- Karta ma: nagłówek w kolorze grupy (parkingi niebieskie, pola specjalne fioletowo-granatowe), numer pola, nazwę i motyw sali, **własną ilustrację** narysowaną w kodzie, złotą plakietkę z ceną, tabelę czynszów (bez budynku, z monopolem, poziomy 1–5) albo czynsze parkingu i pola specjalnego, koszt budowy i cenę sprzedaży do banku.
+- Karta ma: nagłówek w kolorze grupy (parkingi niebieskie, pola specjalne bordowe ze złotem), numer pola, nazwę i motyw sali, **własną ilustrację** narysowaną w kodzie, złotą plakietkę z ceną, tabelę czynszów (bez budynku, z monopolem, poziomy 1–5) albo czynsze parkingu i pola specjalnego, koszt budowy i cenę sprzedaży do banku.
 - Motywy sal (propozycja, do zmiany): Sala 04 laboratorium chemiczne, Sala 05 sala wykładowa, Sala 10 pracownia komputerowa, Sala 11 pracownia sieci, Sala 12 pracownia projektowa, Sala 13 sala językowa, Sala 21 laboratorium robotyki, Sala 22 pracownia VR, Sala 23 pracownia elektroniki, Sala 31 sala multimedialna, Pokój kwestora finanse uczelni, Pokój kanclerza administracja, Pokój rektora gabinet rektora, Sala 41 pracownia grafiki, Sala 42 studio nagrań, Sala 43 sala e-sportowa, Sala 44 sala konferencyjna.
 - Wszystkie akty są w zakładce „Karty”. Kupione pole odkłada się do kart gracza (panel „Twoje karty”).
 
@@ -331,20 +331,43 @@ Ilustracje kart są wektorowe (SVG), rysowane w kodzie przez asystenta AI (Claud
 
 W Ustawieniach → „Wygląd planszy” są dwie wersje (zapamiętuje się wybór):
 
-1. **Diorama nad wodą** (domyślna, w stylu makiety „Harbor Jelly”): plansza leży na granatowym stole ze złotą ramką, na placu uczelni. Całość to wycięty blok jak makieta w przekroju: na bokach warstwy ziemi, a woda jest przezroczysta, turkusowa i widoczna z boku jak galaretka. Tło jest jasne i czyste, pod blokiem miękki cień.
-   - **Wzdłuż boku planszy jest plaża i woda (klimat wakacji):** piasek tuż za stołem, parasole w kolorach graczy i uczelni, leżaki z ręcznikami, palmy, wieża ratownika, pomost z łódką, falochron z latarnią w biało-czerwone pasy, boje, pływacy z kołami, żaglówki i skuter wodny z pianą za sobą, ryby wyskakujące z wody, kaustyki (falujące światło) na dnie.
+1. **Diorama nad wodą** (domyślna, w stylu makiety „Harbor Jelly”): plansza leży prosto na placu uczelni z kostki granitowej (bez stołu; granatowy stół usunięty 13.10.2026). Całość to wycięty blok jak makieta w przekroju: na bokach warstwy ziemi, a woda jest przezroczysta, turkusowa i widoczna z boku jak galaretka. Tło jest jasne i czyste, pod blokiem miękki cień.
+   - **Realistyczny teren wokół planszy:** kostka granitowa w wiązaniu (każda kostka w innym odcieniu, z ziarnem kamienia, fugą i fazowanymi brzegami, które łapią światło), granitowa opaska na brzegach placu, krawężnik promenady nad plażą, piasek ze zmarszczkami, mokry pas piasku przy wodzie i piana, która przypływa i odpływa. Pod ludźmi, ławkami, latarniami, parasolami i palmami leżą miękkie cienie. Z tyłu placu: kosze na śmieci, stojak z rowerami i donica z kwiatami.
+   - **Przed planszą nic wysokiego nie stoi** (pusty kawałek plaży i placu od strony kamery), więc w grze nic nie jest ogromne ani ucięte przy dolnej krawędzi ekranu.
+   - **Kolory bez granatu:** dachy z dachówki (jak na starówce w Bielsku-Białej), jasne kamienne gzymsy, latarnie i ławki w grafitowym kolorze.
+   - **Wzdłuż boku planszy jest plaża i woda (klimat wakacji):** piasek tuż za placem, parasole w kolorach graczy i uczelni, leżaki z ręcznikami, palmy, wieża ratownika, pomost z łódką, falochron z latarnią w biało-czerwone pasy, sześć boi wyznaczających kąpielisko, żaglówki i skuter wodny z pianą za sobą, ryby wyskakujące z wody, kaustyki (falujące światło) na dnie.
    - **Z drugiej strony uniwersytet:** główny gmach z kolumnadą, frontonem i wieżą zegarową, wydziały i biblioteka (jedna przeszklona), dziedziniec z aleją i fontanną, boisko, parking z samochodzikami, drzewa, latarnie, ławki i flagi uczelni.
-   - Ciągle coś się dzieje: studenci chodzą dookoła stołu, plażą i aleją do gmachu, mewy krążą nad wodą, balon w barwach uczelni lata nad kampusem, chmurki płyną, fontanna tryska.
+   - Ciągle coś się dzieje: łodzie i skuter pływają i kołyszą się na falach, mewy krążą nad wodą, kolorowy balon lata nad kampusem, chmurki płyną wysoko za kampusem, fontanna tryska, ryby wyskakują z wody. Bez ludzików (usunięci 13.10.2026) i bez świetlików.
+   - **Woda z prawdziwymi falami:** suma kilku fal Gerstnera (ostre grzbiety, łagodne doliny), gładka powierzchnia z połyskiem słońca, odbiciem nieba pod małym kątem, turkusem na płyciźnie i ciemniejszym kolorem w głębi oraz pianą na najwyższych grzbietach. Te same fale liczy kod łodzi, skutera, łódki przy pomoście i boi, więc unoszą się i przechylają razem z wodą. Przy brzegu fale są mniejsze.
    - W grze, przy stałej kamerze, plaża i woda są widoczne obok planszy (lewy dolny róg ekranu). Całą makietę widać w menu, w podglądzie planszy po oddaleniu i w prezentacji (tam nocą, ze świecącymi oknami i latarnią).
 2. **Czysta tektura:** sama plansza jak gra planszowa z kartonu, na jasnym, gładkim stole. Boki planszy i pól mają fakturę falistej tektury, podstawa jest z jasnego papieru. Pieniądze i karty graczy leżą na stole obok planszy. Bez makiety i ruchu w tle.
 
 Prezentacja zawsze pokazuje dioramę, a po jej zamknięciu wraca wybrany wygląd.
 
-## Pieniądze i karty graczy na stole (od 13.10.2026)
+## Pieniądze i karty graczy obok planszy (od 13.10.2026)
 
 - Rogi „KARTY GRACZA” zniknęły ze środka planszy.
-- Każdy gracz ma swoje miejsce na stole przy boku planszy, który zaczyna się w jego rogu: paczki banknotów (każda to 100 tys. zł, w czterech stosach), monety (po 10 tys. zł) i karty ułatwień i utrudnień tyłem do góry. Każdy widzi, kto ile ma i że ktoś ma karty, ale nie widzi, jakie.
+- Każdy gracz ma swoje miejsce na placu (w tekturze: na stole) przy boku planszy, który zaczyna się w jego rogu: paczki banknotów (każda to 100 tys. zł, w czterech stosach), monety (po 10 tys. zł) i karty ułatwień i utrudnień tyłem do góry. Każdy widzi, kto ile ma i że ktoś ma karty, ale nie widzi, jakie.
 - Gdy gracz płaci, paczki lecą łukiem z jego stosu na stos właściciela pola, do puli na środku albo do banku (w górę). Pieniądze z banku spadają z nieba, za START lecą z pola START, a pula leci ze środka planszy.
+
+## Ikony, awatary i pionki w kolorach uczelni (od 13.10.2026)
+
+- **Awatar gracza:** granatowy kafel uczelni z lekkim połyskiem, biała ikona pionka i kropka w kolorze gracza w rogu (kolor gracza dalej widać też na pasku przy jego nazwie).
+- **Ikony pionków** narysowane od nowa, jedną grubością linii: sztandar z godłem, drukarka 3D z wydrukiem, koparka z wentylatorami i monetą, ekspres z filiżanką.
+- **Menu:** ikony w kafelkach w kolorach uczelni (jasny szaroniebieski kafel, granatowa linia; w ciemnym motywie jasna linia), cieńsza i równa linia ikon, przycisk „Prezentacja gry” bez niebieskiego gradientu, z granatowym kafelkiem.
+- **Pionki 3D** stoją na podeście w kolorach uczelni: lakierowany granat, pas w kolorze gracza, jasna szaroniebieska płytka ze srebrnym rantem. Główna bryła pionka jest w kolorze gracza (z połyskiem lakieru), a ciemne i jasne części w granacie i szaroniebieskim uczelni.
+
+## Płynność (od 13.10.2026)
+
+- Gra sama pilnuje płynności: gdy przez kilka sekund klatki są wolne, rysuje w trochę mniejszej rozdzielczości, a gdy znów jest płynnie, wraca do pełnej.
+- Na telefonach i słabszych komputerach mapa cieni jest mniejsza (2048 zamiast 4096).
+
+## Muzyka (od 13.10.2026)
+
+- Cała muzyka jest syntezowana w przeglądarce (Web Audio), bez plików i bez cudzych nagrań.
+- **Menu i gra:** spokojny, ciepły podkład (elektryczne pianino z akordami jazzowymi Dm9, G13, Cmaj9, Am9, Fmaj9, Em7, miękki bas, delikatna perkusja z lekkim bujaniem, cichy szum płyty winylowej, co 16 taktów krótka przerwa bez perkusji). Startuje po pierwszym kliknięciu (przeglądarki nie pozwalają grać wcześniej), cichnie na czas prezentacji i znika, gdy suwak „Muzyka” jest na zero.
+- **Prezentacja:** osobny utwór (112 uderzeń na minutę), który rośnie z energią sceny, z pogłosem, echem raz w lewo, raz w prawo, „pompowaniem” w rytm stopy, uderzeniami i szumem przy cięciach.
+- Mikser ma kompresor i limiter, więc nic nie przesterowuje (sprawdzone nagraniem offline: brak przesterowań, poziomy i proporcje basu, środka i góry zmierzone).
 
 ## Efekty w grze (od 13.10.2026)
 
