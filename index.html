@@ -1,5 +1,6 @@
 <meta charset="utf-8">
-<title>Plansza uczelniana 3D</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WSiZ Tour</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Fredoka:wght@500;600;700&display=swap">
@@ -8,51 +9,57 @@
   :root {
     --sky-top: #d5e0ef;
     --sky-bottom: #f3f6fb;
-    --ink: #17213a;
-    --ink-soft: #5a6580;
-    --panel: rgba(255, 255, 255, .86);
-    --panel-hover: rgba(255, 255, 255, .97);
-    --panel-line: rgba(23, 33, 58, .10);
-    --chip: rgba(23, 33, 58, .06);
-    --btn: #1e2a47;
+    --ink: #0f1f4b;
+    --ink-soft: #55617f;
+    --panel: rgba(255, 255, 255, .9);
+    --panel-hover: #ffffff;
+    --panel-line: rgba(0, 39, 111, .12);
+    --chip: rgba(0, 39, 111, .06);
+    --btn: #00276f;
     --btn-ink: #ffffff;
-    --btn-hover: #2c3c64;
+    --btn-hover: #0b348f;
     --focus: #2f7ff0;
-    --shadow: 0 8px 28px rgba(23, 33, 58, .12);
+    --shadow: 0 10px 30px rgba(0, 27, 80, .14);
+    --veil-top: rgba(236, 241, 250, .5);
+    --veil-bottom: rgba(204, 211, 225, .66);
     --display: "Fredoka", "Trebuchet MS", system-ui, sans-serif;
     --body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       color-scheme: dark;
-      --sky-top: #090e19;
-      --sky-bottom: #1a2640;
-      --ink: #e9eef7;
-      --ink-soft: #9ba7bf;
-      --panel: rgba(18, 25, 42, .86);
-      --panel-hover: rgba(28, 37, 60, .95);
-      --panel-line: rgba(255, 255, 255, .09);
-      --chip: rgba(255, 255, 255, .07);
-      --btn: #f2c14e;
-      --btn-ink: #17213a;
-      --btn-hover: #f6d27a;
-      --shadow: 0 8px 28px rgba(0, 0, 0, .4);
+      --sky-top: #06112e;
+      --sky-bottom: #0e2257;
+      --ink: #eef2fa;
+      --ink-soft: #a7b2cc;
+      --panel: rgba(6, 22, 62, .86);
+      --panel-hover: rgba(14, 36, 92, .96);
+      --panel-line: rgba(255, 255, 255, .12);
+      --chip: rgba(255, 255, 255, .08);
+      --btn: #ffffff;
+      --btn-ink: #00276f;
+      --btn-hover: #ccd3e1;
+      --shadow: 0 10px 30px rgba(0, 0, 0, .45);
+      --veil-top: rgba(0, 18, 56, .5);
+      --veil-bottom: rgba(0, 10, 34, .8);
     }
   }
   :root[data-theme="dark"] {
     color-scheme: dark;
-    --sky-top: #090e19;
-    --sky-bottom: #1a2640;
-    --ink: #e9eef7;
-    --ink-soft: #9ba7bf;
-    --panel: rgba(18, 25, 42, .86);
-    --panel-hover: rgba(28, 37, 60, .95);
-    --panel-line: rgba(255, 255, 255, .09);
-    --chip: rgba(255, 255, 255, .07);
-    --btn: #f2c14e;
-    --btn-ink: #17213a;
-    --btn-hover: #f6d27a;
-    --shadow: 0 8px 28px rgba(0, 0, 0, .4);
+    --sky-top: #06112e;
+    --sky-bottom: #0e2257;
+    --ink: #eef2fa;
+    --ink-soft: #a7b2cc;
+    --panel: rgba(6, 22, 62, .86);
+    --panel-hover: rgba(14, 36, 92, .96);
+    --panel-line: rgba(255, 255, 255, .12);
+    --chip: rgba(255, 255, 255, .08);
+    --btn: #ffffff;
+    --btn-ink: #00276f;
+    --btn-hover: #ccd3e1;
+    --shadow: 0 10px 30px rgba(0, 0, 0, .45);
+    --veil-top: rgba(0, 18, 56, .5);
+    --veil-bottom: rgba(0, 10, 34, .8);
   }
 
   * { box-sizing: border-box; }
@@ -205,93 +212,270 @@
   .build .btn { padding: 10px 14px; }
   @media (max-width: 720px) { .build { width: 100%; } .build-text span { display: none; } }
 
-  /* Menu: logowanie i panel gracza */
-  body.menu-open .hud, body.menu-open .field-card { display: none !important; }
-  .menu {
-    position: absolute; inset: 0; z-index: 3; overflow-y: auto;
-    background: linear-gradient(180deg, rgba(12, 18, 36, .42), rgba(12, 18, 36, .72));
-    -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
-    padding: 24px 16px 40px;
-  }
-  .scr { max-width: 1060px; margin: 0 auto; }
-  .login { min-height: 100%; display: grid; place-items: center; }
-  .login-card { width: min(420px, 100%); padding: 28px 26px 24px; text-align: center; }
-  .title { margin: 0; font: 700 34px/1.1 var(--display); letter-spacing: .01em; }
-  .muted { margin: 6px 0 0; color: var(--ink-soft); font-size: 14px; }
-  .wide { width: 100%; justify-content: center; }
-  .login-card .btn.wide { margin-top: 22px; }
-  .note { margin: 10px 0 0; padding: 10px 12px; border-radius: 10px; background: var(--chip); font-size: 13px; color: var(--ink-soft); text-align: left; }
-  .or { display: flex; align-items: center; gap: 10px; margin: 18px 0 14px; color: var(--ink-soft); font-size: 12.5px; }
-  .or::before, .or::after { content: ""; flex: 1; height: 1px; background: var(--panel-line); }
-  .guest { display: grid; gap: 8px; text-align: left; }
-  .guest label, .field-label { font-weight: 600; font-size: 13px; }
-  .input {
-    font: 500 15px var(--body); color: var(--ink); background: var(--panel-hover);
-    border: 1px solid var(--panel-line); border-radius: 11px; padding: 11px 12px; width: 100%;
-  }
-  .input:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
-  .err { margin: 0; color: #D6534F; font-size: 12.5px; }
-
-  .dash-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
-  .me { display: flex; align-items: center; gap: 10px; padding: 8px 14px 8px 8px; }
-  .me b { display: block; font: 600 16px/1.2 var(--display); }
-  .me span { font-size: 12.5px; color: var(--ink-soft); }
-  .avatar { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; background: var(--c); flex: none; box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .18); }
-  .avatar svg { width: 26px; height: 26px; }
-  .top-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-  .dash-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-  .card { padding: 18px 18px 20px; min-width: 0; }
-  .span2 { grid-column: span 2; grid-row: span 2; }
-  .span3 { grid-column: 1 / -1; }
-  .card h2 { margin: 0 0 12px; font: 600 20px/1.2 var(--display); }
-  .card h3 { margin: 18px 0 8px; font: 600 14px/1.2 var(--body); color: var(--ink-soft); text-transform: uppercase; letter-spacing: .06em; }
-  .card p { margin: 0; color: var(--ink-soft); font-size: 13.5px; }
-  .modes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-  .mode {
-    all: unset; box-sizing: border-box; cursor: pointer; display: grid; gap: 6px; align-content: start;
-    padding: 14px; border-radius: 14px; border: 2px solid var(--panel-line); background: var(--chip);
-  }
-  .mode svg { width: 30px; height: 30px; color: var(--ink); }
-  .mode b { font: 600 15px/1.2 var(--display); }
-  .mode span { font-size: 12.5px; color: var(--ink-soft); }
-  .mode[aria-checked="true"] { border-color: var(--focus); background: var(--panel-hover); }
-  .mode:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
-  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-  .chip {
-    font: 600 13px var(--body); color: var(--ink); background: var(--chip);
-    border: 1px solid var(--panel-line); border-radius: 10px; padding: 8px 12px; cursor: pointer;
-  }
-  .chip[aria-pressed="true"] { background: var(--btn); color: var(--btn-ink); border-color: transparent; }
-  .chip:disabled { opacity: .45; cursor: default; }
+  /* Menu gry: kolory uczelni (granat, biel, szarość), w tle obracająca się, rozmyta plansza */
+  body.menu-open .hud, body.menu-open .field-card, body.menu-open .vignette { display: none !important; }
   .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-  .code { font: 700 24px var(--display); letter-spacing: .18em; padding: 6px 14px; border-radius: 10px; background: var(--chip); }
-  .start-row { display: flex; justify-content: flex-end; margin-top: 22px; }
-  .btn.big { font-size: 16px; padding: 14px 26px; }
-  .pawn-pick { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-  .pawn-pick .chip { display: grid; justify-items: center; gap: 4px; padding: 10px 4px; font-size: 12px; }
-  .pawn-pick svg { width: 28px; height: 28px; }
   .swatch { width: 30px; height: 30px; border-radius: 50%; border: 3px solid transparent; background: var(--c); cursor: pointer; box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .18); }
   .swatch[aria-pressed="true"] { border-color: var(--ink); }
   .swatch:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
-  .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
-  .stat { padding: 10px; border-radius: 12px; background: var(--chip); text-align: center; }
-  .stat b { display: block; font: 700 22px var(--display); }
-  .stat span { font-size: 11.5px; color: var(--ink-soft); }
-  .steps { margin: 10px 0 0; padding-left: 20px; color: var(--ink-soft); font-size: 13.5px; }
-  .steps li { margin: 3px 0; }
-  .toggle-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 0; font-size: 14px; }
   .toast {
-    position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%); z-index: 2;
+    position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%); z-index: 4;
     padding: 12px 16px; max-width: min(460px, calc(100% - 32px)); font-size: 13.5px;
   }
-  @media (max-width: 900px) {
-    .dash-grid { grid-template-columns: minmax(0, 1fr); }
-    .span2, .span3 { grid-column: auto; grid-row: auto; }
+  .hud, .field-card, .m-shell, .m-login, .m-bye { zoom: var(--ui-scale, 1); }
+
+  .menu {
+    position: absolute; inset: 0; z-index: 3; overflow-y: auto;
+    background:
+      radial-gradient(110% 80% at 50% 0%, rgba(0, 39, 111, .16), transparent 62%),
+      linear-gradient(180deg, var(--veil-top), var(--veil-bottom));
+    -webkit-backdrop-filter: blur(9px) saturate(1.1);
+    backdrop-filter: blur(9px) saturate(1.1);
+    color: var(--ink);
   }
-  @media (max-width: 560px) {
-    .modes { grid-template-columns: minmax(0, 1fr); }
-    .card { padding: 16px 14px 18px; }
+  .m-card {
+    background: var(--panel); border: 1px solid var(--panel-line); border-radius: 22px;
+    box-shadow: var(--shadow); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
   }
+  .m-logo {
+    display: block; width: 112px; height: 112px; margin: 0 auto 16px; border-radius: 50%; background: #fff;
+    box-shadow: 0 0 0 5px rgba(255, 255, 255, .75), 0 14px 34px rgba(0, 27, 80, .28);
+  }
+  .m-logo-lg { width: 150px; height: 150px; }
+  .m-title { margin: 0; font: 700 42px/1.05 var(--display); letter-spacing: .01em; color: var(--ink); text-wrap: balance; }
+  .m-sub { margin: 8px auto 0; max-width: 36ch; color: var(--ink-soft); font-size: 15px; line-height: 1.45; text-wrap: balance; }
+
+  .m-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    font: 600 15px var(--body); border-radius: 14px; padding: 13px 18px; cursor: pointer;
+    border: 1px solid transparent; text-decoration: none;
+    transition: background .15s, transform .12s, box-shadow .15s, border-color .15s;
+  }
+  .m-btn svg { width: 20px; height: 20px; flex: none; }
+  .m-btn:active { transform: translateY(1px); }
+  .m-btn:disabled { opacity: .5; cursor: default; }
+  .m-btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .m-primary { background: var(--btn); color: var(--btn-ink); box-shadow: 0 8px 20px rgba(0, 27, 80, .22); }
+  .m-primary:hover { background: var(--btn-hover); }
+  .m-secondary { background: var(--panel-hover); color: var(--ink); border-color: var(--panel-line); }
+  .m-secondary:hover { border-color: var(--ink-soft); }
+  .m-wide { width: 100%; }
+  .m-big { font-size: 17px; padding: 16px 24px; }
+
+  /* logowanie i wyjście */
+  .m-login, .m-bye { min-height: 100%; display: grid; place-items: center; padding: 32px 16px; }
+  .m-login-card { width: min(440px, 100%); padding: 32px 28px 26px; text-align: center; }
+  .m-login-card .m-primary { margin-top: 24px; }
+  .m-note { margin: 10px 0 0; padding: 10px 12px; border-radius: 10px; background: var(--chip); font-size: 13px; line-height: 1.45; color: var(--ink-soft); text-align: left; }
+  .m-or { display: flex; align-items: center; gap: 10px; margin: 18px 0 14px; color: var(--ink-soft); font-size: 12.5px; }
+  .m-or::before, .m-or::after { content: ""; flex: 1; height: 1px; background: var(--panel-line); }
+  .m-guest { display: grid; gap: 8px; text-align: left; }
+  .m-label { font-weight: 600; font-size: 13px; color: var(--ink); }
+  .m-input {
+    font: 500 15px var(--body); color: var(--ink); background: var(--panel-hover);
+    border: 1px solid var(--panel-line); border-radius: 12px; padding: 12px 13px; width: 100%;
+  }
+  .m-input:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
+  .m-err { margin: 0; color: #C2412F; font-size: 12.5px; }
+
+  /* ekran główny */
+  .m-shell { min-height: 100%; display: flex; flex-direction: column; padding: 16px 16px 32px; }
+  .m-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; position: relative; z-index: 2; }
+  .m-profile { position: relative; }
+  .m-me {
+    all: unset; box-sizing: border-box; cursor: pointer;
+    display: flex; align-items: center; gap: 10px; padding: 7px 14px 7px 7px; border-radius: 18px;
+    background: var(--panel); border: 1px solid var(--panel-line); box-shadow: var(--shadow);
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  }
+  .m-me:hover { background: var(--panel-hover); }
+  .m-me:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .m-avatar { width: 44px; height: 44px; border-radius: 13px; display: grid; place-items: center; background: var(--c); flex: none; color: #fff; box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .18); }
+  .m-avatar svg { width: 26px; height: 26px; }
+  .m-me-text { display: grid; text-align: left; }
+  .m-me-text b { font: 600 16px/1.2 var(--display); color: var(--ink); }
+  .m-me-text small { font-size: 12px; color: var(--ink-soft); }
+  .m-chev { width: 16px; height: 16px; color: var(--ink-soft); transition: transform .15s; }
+  .m-me[aria-expanded="true"] .m-chev { transform: rotate(180deg); }
+  .m-dropdown { position: absolute; left: 0; top: calc(100% + 8px); min-width: 230px; padding: 6px; display: grid; gap: 2px; }
+  .m-dropdown button {
+    all: unset; box-sizing: border-box; cursor: pointer;
+    display: flex; align-items: center; gap: 10px; padding: 11px 12px; border-radius: 11px;
+    font: 600 14px var(--body); color: var(--ink);
+  }
+  .m-dropdown button:hover, .m-dropdown button:focus-visible { background: var(--chip); }
+  .m-dropdown svg { width: 18px; height: 18px; color: var(--ink-soft); }
+  .m-dropdown hr { border: 0; height: 1px; background: var(--panel-line); margin: 4px 6px; }
+  .m-dropdown .m-danger, .m-dropdown .m-danger svg { color: #C2412F; }
+  .m-top-actions { display: flex; gap: 8px; }
+  .m-icon {
+    all: unset; box-sizing: border-box; cursor: pointer; width: 48px; height: 48px; border-radius: 15px;
+    display: grid; place-items: center; color: var(--ink);
+    background: var(--panel); border: 1px solid var(--panel-line); box-shadow: var(--shadow);
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  }
+  .m-icon svg { width: 22px; height: 22px; }
+  .m-icon:hover { background: var(--panel-hover); }
+  .m-icon:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+  .m-page { flex: 1; width: min(1000px, 100%); margin: 0 auto; padding-top: 18px; }
+  .m-home { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding-bottom: 5vh; }
+  .m-nav { display: grid; gap: 10px; width: min(370px, 100%); margin-top: 28px; }
+  .m-nav .m-secondary { justify-content: flex-start; padding-left: 20px; }
+  .m-link { all: unset; cursor: pointer; margin-top: 16px; display: inline-flex; align-items: center; gap: 8px; font: 600 14px var(--body); color: var(--ink); padding: 8px 14px; border-radius: 999px; background: var(--chip); }
+  .m-link svg { width: 18px; height: 18px; }
+  .m-link:hover { background: var(--panel); }
+  .m-link:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+  /* podstrony */
+  .m-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .m-head h2 { margin: 0; font: 700 30px/1.1 var(--display); color: var(--ink); }
+  .m-pill { font: 700 11.5px var(--body); letter-spacing: .06em; text-transform: uppercase; padding: 5px 10px; border-radius: 999px; background: var(--chip); color: var(--ink-soft); }
+  .m-back {
+    all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+    padding: 10px 15px 10px 10px; border-radius: 13px; font: 600 14px var(--body); color: var(--ink);
+    background: var(--panel); border: 1px solid var(--panel-line); box-shadow: var(--shadow);
+  }
+  .m-back svg { width: 18px; height: 18px; }
+  .m-back:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .m-section { padding: 20px 22px; }
+  .m-section + .m-section { margin-top: 14px; }
+  .m-section h3 { margin: 0 0 12px; font: 700 12.5px/1.2 var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
+  .m-desc { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.55; max-width: 70ch; }
+  .m-grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .m-actions { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+  .m-hint { margin: 0; font-size: 13px; color: var(--ink-soft); }
+
+  .m-tabs { display: inline-flex; flex-wrap: wrap; padding: 4px; gap: 4px; border-radius: 15px; background: var(--chip); }
+  .m-tabs button {
+    all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 18px; border-radius: 11px; font: 600 14.5px var(--body); color: var(--ink);
+  }
+  .m-tabs button svg { width: 18px; height: 18px; }
+  .m-tabs button[aria-selected="true"] { background: var(--btn); color: var(--btn-ink); box-shadow: 0 4px 12px rgba(0, 27, 80, .2); }
+  .m-tabs button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    font: 600 13.5px var(--body); color: var(--ink); background: var(--chip);
+    border: 1px solid var(--panel-line); border-radius: 11px; padding: 9px 13px; cursor: pointer;
+  }
+  .chip[aria-pressed="true"] { background: var(--btn); color: var(--btn-ink); border-color: transparent; }
+  .chip:disabled { opacity: .45; cursor: default; }
+  .chip:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+  /* miejsca graczy */
+  .m-slots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .m-slot { padding: 14px; border-radius: 16px; background: var(--chip); border: 1px solid var(--panel-line); display: grid; gap: 12px; align-content: start; }
+  .m-slot.is-empty .m-avatar { background: var(--panel-line); }
+  .m-slot-top { display: flex; align-items: center; gap: 10px; }
+  .m-slot-top .m-avatar { width: 40px; height: 40px; border-radius: 12px; }
+  .m-slot-name { flex: 1; min-width: 0; display: grid; }
+  .m-slot-name b { font: 600 15px/1.2 var(--display); color: var(--ink); }
+  .m-slot-name small { font-size: 12px; color: var(--ink-soft); }
+  .m-team { font: 700 11px var(--body); letter-spacing: .05em; padding: 4px 9px; border-radius: 999px; color: #fff; background: var(--t); white-space: nowrap; }
+  .m-select { font: 600 13.5px var(--body); color: var(--ink); background: var(--panel-hover); border: 1px solid var(--panel-line); border-radius: 11px; padding: 9px 10px; }
+  .m-select:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
+  .m-pawns { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .m-pawn {
+    all: unset; box-sizing: border-box; cursor: pointer; width: 40px; height: 40px; border-radius: 11px;
+    display: grid; place-items: center; background: var(--panel-hover); border: 2px solid transparent; color: var(--ink-soft);
+  }
+  .m-pawn svg { width: 22px; height: 22px; }
+  .m-pawn[aria-pressed="true"] { border-color: var(--ink); color: var(--ink); }
+  .m-pawn:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .m-slot .swatch { width: 26px; height: 26px; }
+  .m-code { font: 700 26px var(--display); letter-spacing: .2em; padding: 6px 16px; border-radius: 12px; background: var(--chip); color: var(--ink); }
+
+  /* ranking */
+  .m-podium { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+  .m-podium-card { padding: 16px; display: grid; justify-items: center; gap: 6px; text-align: center; }
+  .m-podium-card .m-avatar { width: 52px; height: 52px; border-radius: 15px; }
+  .m-podium-card b { font: 600 17px/1.2 var(--display); color: var(--ink); }
+  .m-podium-card .m-big-num { font: 700 26px/1 var(--display); color: var(--ink); font-variant-numeric: tabular-nums; }
+  .m-podium-card small { font-size: 12px; color: var(--ink-soft); }
+  .m-medal { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font: 700 14px var(--display); }
+  .m-medal.r1 { background: #E0B04A; color: #2A1E00; }
+  .m-medal.r2 { background: #C9CFDA; color: #1E2A47; }
+  .m-medal.r3 { background: #D19A6A; color: #2B1606; }
+  .m-table-wrap { overflow-x: auto; }
+  .m-table { width: 100%; min-width: 680px; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+  .m-table th { text-align: right; font: 700 11.5px var(--body); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft); padding: 10px; border-bottom: 1px solid var(--panel-line); white-space: nowrap; }
+  .m-table td { text-align: right; padding: 10px; border-bottom: 1px solid var(--panel-line); color: var(--ink); white-space: nowrap; }
+  .m-table th:nth-child(-n+2), .m-table td:nth-child(-n+2) { text-align: left; }
+  .m-table th.is-sorted { color: var(--ink); }
+  .m-table tr.is-me td { background: var(--chip); font-weight: 600; }
+  .m-table tr:last-child td { border-bottom: 0; }
+  .m-pos { width: 28px; height: 28px; border-radius: 50%; display: inline-grid; place-items: center; font: 700 13px var(--display); background: var(--chip); }
+  .m-player { display: flex; align-items: center; gap: 10px; }
+  .m-player .m-avatar { width: 32px; height: 32px; border-radius: 9px; }
+  .m-player .m-avatar svg { width: 19px; height: 19px; }
+  .m-bar { display: inline-block; vertical-align: middle; width: 54px; height: 6px; border-radius: 3px; background: var(--panel-line); margin-right: 8px; overflow: hidden; }
+  .m-bar i { display: block; height: 100%; background: var(--btn); }
+
+  /* zasady */
+  .m-rules { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .m-rule { padding: 18px 20px; }
+  .m-rule h3 { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; font: 600 18px/1.2 var(--display); color: var(--ink); text-transform: none; letter-spacing: 0; }
+  .m-rule h3 span { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: var(--btn); color: var(--btn-ink); font: 700 14px var(--display); flex: none; }
+  .m-rule p, .m-rule li { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
+  .m-rule ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; }
+  .m-rule-wide { grid-column: 1 / -1; }
+  .m-q { margin-top: 12px; padding: 16px; border-radius: 16px; background: var(--chip); border: 1px solid var(--panel-line); }
+  .m-q-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; font: 700 12px var(--body); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft); }
+  .m-q-time { display: inline-flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; }
+  .m-q-time i { width: 70px; height: 6px; border-radius: 3px; background: var(--panel-line); overflow: hidden; display: block; }
+  .m-q-time i::after { content: ""; display: block; height: 100%; width: var(--left, 100%); background: var(--btn); transition: width .3s linear; }
+  .m-q .m-q-text { margin: 10px 0 12px; font: 600 20px/1.3 var(--display); color: var(--ink); }
+  .m-q-ans { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .m-q-ans button {
+    all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px; border-radius: 12px; background: var(--panel-hover); border: 2px solid var(--panel-line);
+    font: 600 15px var(--body); color: var(--ink);
+  }
+  .m-q-ans button b { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; background: var(--chip); font: 700 14px var(--display); flex: none; }
+  .m-q-ans button:hover:not(:disabled) { border-color: var(--ink-soft); }
+  .m-q-ans button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .m-q-ans button.is-good { border-color: #1FA463; background: rgba(31, 164, 99, .12); }
+  .m-q-ans button.is-bad { border-color: #D6534F; background: rgba(214, 83, 79, .12); }
+  .m-q-ans button:disabled { cursor: default; }
+  .m-q .m-q-res { margin: 10px 0 0; min-height: 1.4em; font-size: 14px; color: var(--ink-soft); }
+
+  /* profil i ustawienia */
+  .m-pawn-pick { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  .m-pawn-pick button {
+    all: unset; box-sizing: border-box; cursor: pointer; display: grid; justify-items: center; gap: 8px;
+    padding: 14px 8px; border-radius: 16px; background: var(--chip); border: 2px solid transparent;
+    font: 600 13px var(--body); color: var(--ink); text-align: center;
+  }
+  .m-pawn-pick button .m-avatar { width: 50px; height: 50px; border-radius: 14px; }
+  .m-pawn-pick button[aria-pressed="true"] { border-color: var(--ink); background: var(--panel-hover); }
+  .m-pawn-pick button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .m-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .m-stat { padding: 14px; border-radius: 14px; background: var(--chip); text-align: center; }
+  .m-stat b { display: block; font: 700 26px/1.1 var(--display); color: var(--ink); font-variant-numeric: tabular-nums; }
+  .m-stat span { font-size: 12px; color: var(--ink-soft); }
+  .m-set { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr); gap: 12px 18px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--panel-line); }
+  .m-set:last-child { border-bottom: 0; }
+  .m-set > span { font-weight: 600; font-size: 14.5px; color: var(--ink); }
+  .m-set > span small { display: block; font-weight: 500; font-size: 12.5px; color: var(--ink-soft); }
+  .m-range { display: flex; align-items: center; gap: 12px; }
+  .m-range input { flex: 1; accent-color: var(--btn); }
+  .m-range output { min-width: 44px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; color: var(--ink); }
+  .m-bye-card { width: min(440px, 100%); padding: 32px 28px 28px; text-align: center; }
+
+  @media (max-width: 760px) {
+    .m-slots, .m-grid2, .m-rules { grid-template-columns: minmax(0, 1fr); }
+    .m-podium { grid-template-columns: minmax(0, 1fr); }
+    .m-set { grid-template-columns: minmax(0, 1fr); }
+    .m-title { font-size: 34px; }
+    .m-me-text small { display: none; }
+  }
+  @media (max-width: 480px) {
+    .m-pawn-pick { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .m-q-ans { grid-template-columns: minmax(0, 1fr); }
+    .m-stats { grid-template-columns: minmax(0, 1fr); }
+  }
+
 
   .loader {
     position: absolute; inset: 0; display: grid; place-items: center;
@@ -310,8 +494,120 @@
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; }
   }
+  /* ---------- Rozgrywka ---------- */
+  .g-hud, .g-layer { display: none; }
+  body.in-game .g-hud, body.in-game .g-layer { display: block; }
+  body.in-game .hud { display: none !important; }
+  .g-hud { position: absolute; inset: 0; pointer-events: none; z-index: 2; zoom: var(--ui-scale, 1); }
+  .g-hud > * { pointer-events: auto; }
+  .g-players { position: absolute; left: 16px; top: 16px; width: 290px; padding: 8px; display: grid; gap: 4px; }
+  .g-player { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 8px 10px 8px 8px; border-radius: 14px; border: 2px solid transparent; transition: background .2s, border-color .2s; }
+  .g-player.is-turn { border-color: var(--c); background: var(--chip); }
+  .g-player.is-out { opacity: .45; }
+  .g-player .m-avatar { width: 40px; height: 40px; border-radius: 12px; }
+  .g-pname { min-width: 0; display: grid; }
+  .g-pname b { font: 600 15px/1.2 var(--display); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .g-pname small { font-size: 11.5px; color: var(--ink-soft); }
+  .g-cash { font: 700 15px var(--display); font-variant-numeric: tabular-nums; color: var(--ink); text-align: right; white-space: nowrap; }
+  .g-badges { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+  .g-badge { font: 700 10.5px/1.3 var(--body); padding: 2px 7px; border-radius: 999px; background: var(--chip); color: var(--ink); border: 1px solid var(--panel-line); }
+  .g-tr { position: absolute; right: 16px; top: 16px; display: flex; gap: 8px; align-items: center; }
+  .g-chip {
+    display: inline-flex; align-items: baseline; gap: 6px; padding: 11px 14px; border-radius: 14px;
+    background: var(--panel); border: 1px solid var(--panel-line); box-shadow: var(--shadow);
+    font: 700 15px var(--display); color: var(--ink); font-variant-numeric: tabular-nums;
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  }
+  .g-chip small { font: 600 12px var(--body); color: var(--ink-soft); }
+  .g-bottom { position: absolute; inset: 0; pointer-events: none; }
+  .g-bottom > * { pointer-events: auto; }
+  .g-status { position: absolute; left: 50%; bottom: 18px; translate: -50% 0; max-width: calc(100% - 32px); text-align: center; margin: 0; padding: 9px 16px; border-radius: 999px; background: var(--panel); border: 1px solid var(--panel-line); font-size: 14px; color: var(--ink); box-shadow: var(--shadow); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+  .g-roll { position: absolute; left: 50%; top: 46%; translate: -50% -50%; white-space: nowrap; font-size: 19px; padding: 18px 34px; border-radius: 18px; animation: g-pulse 1.6s ease-in-out infinite; }
+  @keyframes g-pulse { 50% { transform: translateY(-3px); box-shadow: 0 14px 32px rgba(0, 27, 80, .35); } }
+
+  .g-layer { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+  .g-banner-wrap { position: absolute; left: 0; right: 0; top: 30%; display: grid; place-items: center; pointer-events: none; padding-inline: 16px; }
+  .g-banner {
+    text-align: center; padding: 18px 30px 20px; border-radius: 22px; max-width: 560px;
+    background: var(--btn); color: var(--btn-ink); border: 4px solid var(--bc, transparent);
+    box-shadow: 0 18px 50px rgba(0, 20, 60, .35); animation: g-pop .32s cubic-bezier(.2, 1.4, .4, 1) both;
+  }
+  .g-banner b { display: block; font: 700 32px/1.12 var(--display); text-wrap: balance; }
+  .g-banner span { display: block; margin-top: 6px; font-size: 15.5px; line-height: 1.4; opacity: .88; text-wrap: balance; }
+  .g-banner.out { animation: g-out .25s ease-in both; }
+  @keyframes g-pop { from { transform: scale(.6); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes g-out { to { transform: scale(.92) translateY(-10px); opacity: 0; } }
+  .g-backdrop { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; background: rgba(0, 12, 40, .32); pointer-events: auto; animation: g-fade .2s both; overflow-y: auto; }
+  @keyframes g-fade { from { opacity: 0; } }
+  .g-modal { width: min(580px, 100%); padding: 22px; animation: g-pop .3s cubic-bezier(.2, 1.3, .4, 1) both; zoom: var(--ui-scale, 1); }
+  .g-modal.wide { width: min(780px, 100%); }
+  .g-modal h2 { margin: 0 0 6px; font: 700 24px/1.2 var(--display); color: var(--ink); text-wrap: balance; }
+  .g-modal p { margin: 0; color: var(--ink-soft); font-size: 15px; line-height: 1.5; }
+  .g-modal p b { color: var(--ink); }
+  .g-opts { display: grid; gap: 8px; margin-top: 16px; }
+  .g-opts .m-btn { justify-content: flex-start; text-align: left; }
+  .g-opts.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .g-opts.two .m-btn { justify-content: center; }
+  .g-q-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .g-cat { font: 700 12px var(--body); letter-spacing: .05em; text-transform: uppercase; padding: 6px 11px; border-radius: 999px; background: var(--c); color: #fff; }
+  .g-time { display: inline-flex; align-items: center; gap: 8px; font: 700 15px var(--display); color: var(--ink); font-variant-numeric: tabular-nums; }
+  .g-time i { width: 96px; height: 7px; border-radius: 4px; background: var(--panel-line); overflow: hidden; display: block; }
+  .g-time i::after { content: ""; display: block; height: 100%; width: var(--left, 100%); background: var(--btn); transition: width .25s linear; }
+  .g-time.is-low i::after { background: #D6534F; }
+  .g-modal .g-ctx { margin-top: 12px; font-size: 13px; }
+  .g-modal .g-qtext { margin: 6px 0 14px; font: 600 22px/1.3 var(--display); color: var(--ink); text-wrap: balance; }
+  .g-ans { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .g-ans button {
+    all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 10px;
+    padding: 13px 14px; border-radius: 13px; background: var(--panel-hover); border: 2px solid var(--panel-line);
+    font: 600 15.5px/1.3 var(--body); color: var(--ink);
+  }
+  .g-ans button b { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: var(--chip); font: 700 15px var(--display); flex: none; }
+  .g-ans button:hover:not(:disabled) { border-color: var(--ink-soft); }
+  .g-ans button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .g-ans button:disabled { cursor: default; }
+  .g-ans button.is-gone { opacity: .25; text-decoration: line-through; }
+  .g-ans button.is-good { border-color: #1FA463; background: rgba(31, 164, 99, .14); }
+  .g-ans button.is-bad { border-color: #D6534F; background: rgba(214, 83, 79, .14); }
+  .g-modal .g-res { margin-top: 12px; min-height: 1.5em; font-weight: 700; color: var(--ink); }
+  .g-card-show { width: min(270px, 62vw, calc(52vh * 630 / 880)); margin: 14px auto 4px; }
+  .g-opts .m-btn[data-ok] { justify-content: center; }
+  .g-card-show .flip-inner { transition: transform .75s cubic-bezier(.2, .7, .2, 1); }
+  .g-shuffle { position: relative; width: 220px; height: 230px; margin: 10px auto 0; }
+  .g-shuffle img { position: absolute; left: 50%; top: 50%; width: 140px; margin: -98px 0 0 -70px; border-radius: 10px; box-shadow: 0 8px 20px rgba(0, 0, 0, .25); animation: g-shuf 1.1s ease-in-out infinite; }
+  .g-shuffle img:nth-child(2) { animation-delay: .14s; }
+  .g-shuffle img:nth-child(3) { animation-delay: .28s; }
+  .g-shuffle img:nth-child(4) { animation-delay: .42s; }
+  @keyframes g-shuf { 0%, 100% { transform: none; } 25% { transform: translateX(-74px) rotate(-12deg); } 75% { transform: translateX(74px) rotate(12deg); } }
+  .g-title { display: inline-block; margin-left: 6px; font: 700 10.5px var(--body); letter-spacing: .06em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; background: #E0B04A; color: #2A1E00; vertical-align: middle; }
+  .g-title.prymus { background: #CCD3E1; color: #00276F; }
+  @media (max-width: 760px) {
+    .g-players { width: auto; right: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .g-player { grid-template-columns: 32px minmax(0, 1fr); }
+    .g-player .m-avatar { width: 32px; height: 32px; }
+    .g-player .g-cash { grid-column: 2; text-align: left; font-size: 13px; }
+    .g-pname small, .g-badges { display: none; }
+    .g-tr { top: auto; bottom: 110px; right: 16px; }
+    .g-ans, .g-opts.two { grid-template-columns: minmax(0, 1fr); }
+    .g-banner b { font-size: 26px; }
+    .g-roll { font-size: 16px; padding: 14px 22px; }
+    .g-modal { padding: 16px; }
+    .g-modal .g-qtext { font-size: 19px; }
+  }
+  .g-ctx .m-avatar.g-mini { display: inline-grid; width: 24px; height: 24px; border-radius: 7px; vertical-align: middle; margin-right: 4px; box-shadow: none; }
+  .g-ctx .m-avatar.g-mini svg { width: 15px; height: 15px; }
+  .g-modal .g-note { margin: 0 0 10px; font-size: 13.5px; font-weight: 600; color: #B8862B; }
+  .g-opts .m-btn small { font-weight: 500; color: inherit; opacity: .75; }
+  .g-end-head { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .g-end-head .m-avatar { width: 56px; height: 56px; border-radius: 16px; }
+  .g-end-head .m-avatar svg { width: 32px; height: 32px; }
+  .g-end-head .m-avatar + .m-avatar { margin-left: -24px; box-shadow: 0 0 0 3px var(--panel-hover); }
+  .m-table.g-end { min-width: 0; }
+  .m-table.g-end .m-player { flex-wrap: wrap; row-gap: 4px; }
+  body.menu-open .g-hud, body.menu-open .g-layer { display: none !important; }
 </style>
 <script src="druk/karty-pytan.js"></script>
+<script src="pytania/baza-pytan.js"></script>
 <script type="importmap">
 {
   "imports": {
@@ -365,72 +661,133 @@
 
   <div class="toast panel" id="toast" hidden role="status"></div>
 
+  <div class="g-hud" id="gHud" aria-label="Rozgrywka">
+    <aside class="m-card g-players" id="gPlayers" aria-label="Gracze"></aside>
+    <div class="g-tr">
+      <span class="g-chip" id="gTimer" hidden></span>
+      <span class="g-chip" id="gPool"></span>
+      <button class="m-btn m-secondary" id="gMenuBtn" type="button">Menu</button>
+    </div>
+    <div class="g-bottom">
+      <button class="m-btn m-primary g-roll" id="gRoll" type="button" hidden></button>
+      <p class="g-status" id="gStatus" hidden></p>
+    </div>
+  </div>
+  <div class="g-layer" id="gLayer"></div>
+
+
   <section class="menu" id="menu" aria-label="Menu gry" hidden>
-    <div class="scr login" id="scrLogin" hidden>
-      <div class="login-card panel">
-        <img class="logo-img" src="assets/logo-wsiz.png" width="104" height="104" alt="Logo Wyższej Szkoły Informatyki i Zarządzania w Bielsku-Białej">
-        <h1 class="title">WSiZ Tour</h1>
-        <p class="muted">Gra planszowa o naszej uczelni</p>
-        <button class="btn wide" id="btnSso" type="button">Zaloguj przez wirtualny dziekanat</button>
-        <p class="note" id="ssoNote" hidden>Logowanie przez uczelnię włączymy po ustaleniach z działem IT. Na razie zagraj jako gość.</p>
-        <div class="or">albo</div>
-        <form class="guest" id="guestForm" novalidate>
-          <label for="nick">Twój nick</label>
-          <input class="input" id="nick" maxlength="20" autocomplete="nickname" placeholder="np. Patryk">
-          <p class="err" id="nickErr" hidden>Nick musi mieć od 3 do 20 znaków.</p>
-          <button class="btn ghost wide" type="submit">Graj jako gość</button>
+    <!-- Logowanie -->
+    <div class="m-login" id="scrLogin" hidden>
+      <div class="m-card m-login-card">
+        <img class="m-logo" src="assets/logo-wsiz.png" width="112" height="112" alt="Logo Wyższej Szkoły Informatyki i Zarządzania w Bielsku-Białej">
+        <h1 class="m-title">WSiZ Tour</h1>
+        <p class="m-sub">Gra planszowa Wyższej Szkoły Informatyki i Zarządzania w Bielsku-Białej</p>
+        <button class="m-btn m-primary m-wide" id="btnSso" type="button"></button>
+        <p class="m-note" id="ssoNote" hidden>Logowanie przez wirtualny dziekanat włączymy po ustaleniach z działem IT uczelni. Na razie zagraj jako gość.</p>
+        <div class="m-or">albo</div>
+        <form class="m-guest" id="guestForm" novalidate>
+          <label class="m-label" for="nick">Twój nick</label>
+          <input class="m-input" id="nick" maxlength="20" autocomplete="nickname" placeholder="np. Patryk">
+          <p class="m-err" id="nickErr" hidden>Nick musi mieć od 3 do 20 znaków.</p>
+          <button class="m-btn m-secondary m-wide" type="submit">Graj jako gość</button>
         </form>
       </div>
     </div>
 
-    <div class="scr" id="scrPanel" hidden>
-      <header class="dash-top">
-        <div class="me panel"><span class="avatar" id="meAvatar"></span><div><b id="meNick"></b><span id="meSub">Gość</span></div></div>
-        <div class="top-actions">
-          <button class="btn ghost" id="btnPreview" type="button">Obejrzyj planszę</button>
-          <button class="btn ghost" id="btnLogout" type="button">Wyloguj</button>
+    <!-- Wyjście z gry -->
+    <div class="m-bye" id="scrBye" hidden>
+      <div class="m-card m-bye-card">
+        <img class="m-logo" src="assets/logo-wsiz.png" width="112" height="112" alt="">
+        <h1 class="m-title" id="byeTitle">Do zobaczenia!</h1>
+        <p class="m-sub">Wyszedłeś z gry. Możesz już zamknąć kartę przeglądarki.</p>
+        <button class="m-btn m-primary m-wide" id="btnBack" type="button" style="margin-top: 24px">Wróć do gry</button>
+      </div>
+    </div>
+
+    <!-- Po zalogowaniu -->
+    <div class="m-shell" id="scrMain" hidden>
+      <header class="m-top">
+        <div class="m-profile">
+          <button class="m-me" id="meBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="meMenu">
+            <span class="m-avatar" id="meAvatar"></span>
+            <span class="m-me-text"><b id="meNick"></b><small id="meSub"></small></span>
+            <span id="meChev"></span>
+          </button>
+          <div class="m-card m-dropdown" id="meMenu" role="menu" hidden>
+            <button type="button" role="menuitem" data-go="profile"></button>
+            <button type="button" role="menuitem" data-go="settings"></button>
+            <hr>
+            <button type="button" role="menuitem" id="btnExit"></button>
+            <button type="button" role="menuitem" class="m-danger" id="btnLogout"></button>
+          </div>
+        </div>
+        <div class="m-top-actions">
+          <button class="m-icon" id="btnTheme" type="button"></button>
+          <button class="m-icon" type="button" data-go="settings" aria-label="Ustawienia" id="btnGear"></button>
         </div>
       </header>
-      <div class="dash-grid">
-        <section class="card panel span2" aria-labelledby="hNew">
-          <h2 id="hNew">Nowa gra</h2>
-          <div class="modes" id="modes" role="radiogroup" aria-label="Tryb gry"></div>
-          <div id="modeOpts"></div>
-          <h3>Pytania</h3>
-          <p>Z którego semestru mają być pytania?</p>
-          <div class="chips" id="semesters" style="margin-top: 8px"></div>
-          <div class="start-row"><button class="btn big" id="btnStart" type="button">Rozpocznij grę</button></div>
-        </section>
-        <section class="card panel" aria-labelledby="hProfile">
-          <h2 id="hProfile">Profil</h2>
-          <label class="field-label" for="profNick">Nick</label>
-          <input class="input" id="profNick" maxlength="20" style="margin-top: 6px">
-          <h3>Pionek</h3>
-          <div class="pawn-pick" id="pawnPick"></div>
-          <h3>Kolor</h3>
-          <div class="row" id="colorPick"></div>
-          <div class="stats">
-            <div class="stat"><b>0</b><span>rozegrane</span></div>
-            <div class="stat"><b>0</b><span>wygrane</span></div>
-            <div class="stat"><b>–</b><span>dobre odp.</span></div>
-          </div>
-        </section>
-        <section class="card panel" aria-labelledby="hSettings">
-          <h2 id="hSettings">Ustawienia</h2>
-          <span class="field-label">Wygląd planszy</span>
-          <div class="chips" id="lookPick" style="margin-top: 8px"></div>
-          <div class="toggle-row" style="margin-top: 10px"><span>Dźwięk</span><button class="chip" id="optSound" type="button"></button></div>
-          <div class="toggle-row"><span>Obracanie planszy w menu</span><button class="chip" id="optSpin" type="button"></button></div>
-        </section>
-        <section class="card panel span3" aria-labelledby="hRules">
-          <h2 id="hRules">Zasady</h2>
-          <p>Zasady gry rozpisujemy od nowa, etap po etapie. Tu pojawi się instrukcja.</p>
-          <ol class="steps">
-            <li>Plansza i pola</li>
-            <li>Pytania</li>
-            <li>Rozgrywka</li>
-          </ol>
-        </section>
+
+      <div class="m-page m-home" id="pgHome">
+        <img class="m-logo m-logo-lg" src="assets/logo-wsiz.png" width="150" height="150" alt="Logo Wyższej Szkoły Informatyki i Zarządzania w Bielsku-Białej">
+        <h1 class="m-title">WSiZ Tour</h1>
+        <p class="m-sub">Gra planszowa o naszej uczelni. Odpowiadaj na pytania, kupuj sale i buduj swoją serwerownię.</p>
+        <nav class="m-nav" id="homeNav" aria-label="Menu główne"></nav>
+        <button class="m-link" id="btnPreview" type="button"></button>
+      </div>
+
+      <div class="m-page" id="pgPlay" hidden>
+        <div class="m-head"><button class="m-back" type="button" data-go="home"></button><h2>Nowa gra</h2></div>
+        <div class="m-card m-section">
+          <div class="m-tabs" role="tablist" aria-label="Tryb gry" id="modeTabs"></div>
+          <p class="m-desc" id="modeDesc" style="margin-top: 12px"></p>
+          <div id="onlineBox" style="margin-top: 14px"></div>
+        </div>
+        <div class="m-card m-section">
+          <h3>Gracze</h3>
+          <div class="chips" id="teamChips" style="margin-bottom: 12px"></div>
+          <div class="m-slots" id="slots"></div>
+        </div>
+        <div class="m-grid2" style="margin-top: 14px">
+          <div class="m-card m-section"><h3>Semestr pytań</h3><div class="chips" id="semChips"></div></div>
+          <div class="m-card m-section"><h3>Czas gry</h3><div class="chips" id="timeChips"></div></div>
+        </div>
+        <div class="m-actions">
+          <p class="m-hint" id="playHint" aria-live="polite"></p>
+          <button class="m-btn m-primary m-big" id="btnStart" type="button"></button>
+        </div>
+      </div>
+
+      <div class="m-page" id="pgRanking" hidden>
+        <div class="m-head"><button class="m-back" type="button" data-go="home"></button><h2>Ranking</h2><span class="m-pill">Dane przykładowe</span></div>
+        <div class="m-podium" id="podium"></div>
+        <div class="m-card m-section">
+          <div class="m-tabs" role="tablist" aria-label="Sortuj według" id="rankTabs"></div>
+          <div class="m-table-wrap" style="margin-top: 14px"><table class="m-table" id="rankTable"></table></div>
+          <p class="m-hint" style="margin-top: 12px">Prawdziwy ranking pojawi się, gdy uruchomimy serwer gry. Twoje wyniki będą liczone po każdej rozegranej grze.</p>
+        </div>
+      </div>
+
+      <div class="m-page" id="pgRules" hidden>
+        <div class="m-head"><button class="m-back" type="button" data-go="home"></button><h2>Zasady</h2><span class="m-pill">Wersja robocza</span></div>
+        <div class="m-rules" id="rules"></div>
+      </div>
+
+      <div class="m-page" id="pgProfile" hidden>
+        <div class="m-head"><button class="m-back" type="button" data-go="home"></button><h2>Profil</h2></div>
+        <div class="m-card m-section">
+          <h3>Nick</h3>
+          <input class="m-input" id="profNick" maxlength="20" autocomplete="nickname" style="max-width: 360px">
+          <p class="m-err" id="profErr" hidden style="margin-top: 6px">Nick musi mieć od 3 do 20 znaków.</p>
+        </div>
+        <div class="m-card m-section"><h3>Pionek</h3><div class="m-pawn-pick" id="pawnPick"></div></div>
+        <div class="m-card m-section"><h3>Kolor</h3><div class="row" id="colorPick"></div></div>
+        <div class="m-card m-section"><h3>Statystyki</h3><div class="m-stats" id="profStats"></div></div>
+      </div>
+
+      <div class="m-page" id="pgSettings" hidden>
+        <div class="m-head"><button class="m-back" type="button" data-go="home"></button><h2>Ustawienia</h2></div>
+        <div class="m-card m-section" id="settingsBox"></div>
       </div>
     </div>
   </section>
@@ -1870,6 +2227,7 @@ function showCard(badge, badgeBg, badgeInk, title, sub) {
   $('fieldCard').hidden = false;
 }
 let selectedCell = null;
+let gameInfo = null;   // w trakcie gry: właściciel, budynek i czynsz pola
 function selectCell(i) {
   selectedCell = i;
   updateBuildBtn();
@@ -1887,6 +2245,7 @@ function selectCell(i) {
     }
   }
   else { title = `Pole ${i + 1}`; sub = 'Funkcję pola dopiszemy, gdy je rozpiszesz'; }
+  if (gameInfo) sub = gameInfo(i) || sub;
   showCard(i + 1, i % SIDE === 0 ? '#E6EAF2' : (field && field.group ? GROUPS[field.group].color : NO_GROUP), field && field.group ? '#ffffff' : '#1e2a47', title, sub);
 }
 function selectDeck(face) {
@@ -2046,7 +2405,7 @@ $('btnBuild').addEventListener('click', buildOnSelected);
 $('btnDemolish').addEventListener('click', demolishSelected);
 
 // ---------------------------------------------------------------------------
-// Menu: logowanie i panel gracza
+// Menu gry: logowanie, ekran główny, nowa gra, ranking, zasady, profil, ustawienia
 // ---------------------------------------------------------------------------
 const store = {
   get(k, d) { try { const v = localStorage.getItem('wsiz-tour-' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
@@ -2064,149 +2423,420 @@ const PAWN_COLORS = [
   { name: 'Czerwony', hex: '#E5484D' }, { name: 'Niebieski', hex: '#2F7FF0' },
   { name: 'Zielony', hex: '#1FA463' }, { name: 'Żółty', hex: '#F2B72E' },
 ];
-const MODES = [
-  { id: 'local', name: 'Na jednym urządzeniu', sub: '2–4 graczy przy jednym ekranie',
-    icon: '<rect x="3" y="4" width="18" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 20h8M12 16v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>' },
-  { id: 'bots', name: 'Z botami', sub: 'Poziom łatwy, średni albo trudny',
-    icon: '<rect x="5" y="8" width="14" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="9.5" cy="13" r="1.5" fill="currentColor"/><circle cx="14.5" cy="13" r="1.5" fill="currentColor"/><path d="M12 4v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>' },
-  { id: 'online', name: 'Online', sub: 'Party z kodem zaproszenia',
-    icon: '<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18" fill="none" stroke="currentColor" stroke-width="1.6"/>' },
-];
-const SEMESTERS = [1, 2, 3, 4, 5, 6, 7, 8];
-
-let profile = store.get('profil', null);
-const game = Object.assign({ mode: 'local', players: 4, teams: false, bots: 3, level: 'średni', online: 'create', code: '', semester: 8 }, store.get('nowa-gra', {}));
-const prefs = Object.assign({ sound: true, spin: true }, store.get('preferencje', {}));
-const saveGame = () => store.set('nowa-gra', game);
-
-function chipGroup(el, items, current, onPick) {
-  el.replaceChildren();
-  for (const it of items) {
-    const b = document.createElement('button');
-    b.type = 'button'; b.className = 'chip';
-    b.textContent = it.label;
-    b.disabled = !!it.disabled;
-    b.setAttribute('aria-pressed', String(it.value === current));
-    b.addEventListener('click', () => onPick(it.value));
-    el.append(b);
-  }
-}
+// Ikony menu (rysowane w kodzie, linią)
+const ICONS = {
+  play: '<path d="M8 5.5v13l10.5-6.5z" fill="currentColor" stroke="none"/>',
+  trophy: '<path d="M8 4h8v4a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4"/><path d="M12 12v4M9 20h6M10 16h4"/>',
+  book: '<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 21.5v-16M8 7h8"/>',
+  cards: '<rect x="3" y="6" width="11" height="15" rx="2"/><path d="M9 3h10a2 2 0 0 1 2 2v12"/>',
+  gear: '<circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="7.2"/><path d="M12 2v2.6M12 19.4V22M2 12h2.6M19.4 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>',
+  door: '<path d="M5 21V4a1 1 0 0 1 1-1h9v18"/><path d="M15 21h4"/><circle cx="12" cy="12" r="1" fill="currentColor"/>',
+  logout: '<path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/><path d="M15 8l4 4-4 4M19 12H9"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  moon: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
+  back: '<path d="M15 5l-7 7 7 7"/>',
+  monitor: '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',
+  globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/>',
+  chev: '<path d="M6 9l6 6 6-6"/>',
+  eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  key: '<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M15 8l2 2"/>',
+};
+const ico = (n, cls = '') => `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]}</svg>`;
+const escHtml = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const avatar = (pawn, color) => `<span class="m-avatar" style="--c:${PAWN_COLORS[color].hex}">${pawnSvg(PLAYERS[pawn].pawn, '#ffffff')}</span>`;
+const chipHtml = (label, attrs, pressed, disabled = false) =>
+  `<button type="button" class="chip" ${attrs} aria-pressed="${pressed}"${disabled ? ' disabled' : ''}>${label}</button>`;
 const randomCode = () => Array.from({ length: 6 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)]).join('');
 
-function renderModes() {
-  const el = $('modes');
-  el.replaceChildren();
-  for (const m of MODES) {
-    const b = document.createElement('button');
-    b.type = 'button'; b.className = 'mode'; b.setAttribute('role', 'radio');
-    b.setAttribute('aria-checked', String(game.mode === m.id));
-    b.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${m.icon}</svg><b>${m.name}</b><span>${m.sub}</span>`;
-    b.addEventListener('click', () => { game.mode = m.id; saveGame(); renderModes(); renderModeOpts(); });
-    el.append(b);
-  }
+let profile = store.get('profil', null);
+const prefs = Object.assign({ theme: 'system', music: 60, effects: 80, scale: 1, spin: true }, store.get('preferencje', {}));
+const savePrefs = () => store.set('preferencje', prefs);
+const defaultSlots = () => [
+  { kind: 'me' },
+  { kind: 'bot', level: 'średni', pawn: 1, color: 1 },
+  { kind: 'bot', level: 'średni', pawn: 2, color: 2 },
+  { kind: 'empty', pawn: 3, color: 3 },
+];
+const setup = Object.assign({ mode: 'solo', teams: false, online: 'create', code: '', joinCode: '', semester: 8, timer: 0 }, store.get('nowa-gra-2', {}));
+if (!Array.isArray(setup.slots) || setup.slots.length !== 4) setup.slots = defaultSlots();
+const saveSetup = () => store.set('nowa-gra-2', setup);
+
+// Motyw i rozmiar elementów
+const darkMQ = matchMedia('(prefers-color-scheme: dark)');
+const effectiveTheme = () => (prefs.theme === 'system' ? (darkMQ.matches ? 'dark' : 'light') : prefs.theme);
+function applyTheme() {
+  if (prefs.theme === 'system') delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme = prefs.theme;
+  const dark = effectiveTheme() === 'dark';
+  $('btnTheme').innerHTML = ico(dark ? 'sun' : 'moon');
+  $('btnTheme').setAttribute('aria-label', dark ? 'Włącz jasny motyw' : 'Włącz ciemny motyw');
 }
-function optBlock(title, build) {
-  const wrap = document.createElement('div');
-  const h = document.createElement('h3'); h.textContent = title;
-  const box = document.createElement('div'); box.className = 'chips';
-  wrap.append(h, box);
-  build(box, wrap);
-  return wrap;
+darkMQ.addEventListener?.('change', applyTheme);
+const applyScale = () => document.documentElement.style.setProperty('--ui-scale', String(prefs.scale));
+
+// Stałe elementy z ikonami
+$('btnSso').innerHTML = `${ico('key')}Zaloguj przez wirtualny dziekanat`;
+$('meChev').innerHTML = ico('chev', 'm-chev');
+{
+  const [p, s] = $('meMenu').querySelectorAll('[data-go]');
+  p.innerHTML = `${ico('user')}Profil`;
+  s.innerHTML = `${ico('gear')}Ustawienia`;
 }
-function renderModeOpts() {
-  const el = $('modeOpts');
-  el.replaceChildren();
-  const rerender = () => { saveGame(); renderModeOpts(); };
-  if (game.mode === 'local') {
-    el.append(optBlock('Liczba graczy', box => chipGroup(box, [2, 3, 4].map(n => ({ label: `${n} graczy`, value: n })), game.players,
-      v => { game.players = v; if (v !== 4) game.teams = false; rerender(); })));
-  } else if (game.mode === 'bots') {
-    el.append(optBlock('Liczba botów', box => chipGroup(box, [1, 2, 3].map(n => ({ label: n === 1 ? '1 bot' : `${n} boty`, value: n })), game.bots,
-      v => { game.bots = v; if (v !== 3) game.teams = false; rerender(); })));
-    el.append(optBlock('Poziom botów', box => chipGroup(box, ['łatwy', 'średni', 'trudny'].map(l => ({ label: l, value: l })), game.level,
-      v => { game.level = v; rerender(); })));
-  } else {
-    el.append(optBlock('Party', (box, wrap) => {
-      chipGroup(box, [{ label: 'Stwórz party', value: 'create' }, { label: 'Dołącz kodem', value: 'join' }], game.online,
-        v => { game.online = v; rerender(); });
-      const row = document.createElement('div');
-      row.className = 'row'; row.style.marginTop = '12px';
-      if (game.online === 'create') {
-        if (!game.code) { game.code = randomCode(); saveGame(); }
-        row.innerHTML = '<span class="code"></span><span class="muted" style="margin:0">Podaj ten kod znajomym, żeby dołączyli.</span>';
-        row.querySelector('.code').textContent = game.code;
-      } else {
-        const inp = document.createElement('input');
-        inp.className = 'input'; inp.maxLength = 6; inp.placeholder = 'Kod party, np. K7P3QX';
-        inp.setAttribute('aria-label', 'Kod party'); inp.style.maxWidth = '260px'; inp.style.textTransform = 'uppercase';
-        row.append(inp);
-      }
-      const note = document.createElement('p');
-      note.className = 'note'; note.textContent = 'Gra online zadziała po uruchomieniu serwera gry (etap 9).';
-      wrap.append(row, note);
-    }));
-  }
-  const total = game.mode === 'local' ? game.players : game.mode === 'bots' ? game.bots + 1 : 4;
-  el.append(optBlock('Drużyny', box => chipGroup(box, [
-    { label: 'Każdy na siebie', value: false },
-    { label: '2 na 2', value: true, disabled: total !== 4 },
-  ], game.teams, v => { game.teams = v; rerender(); })));
-}
-function renderSemesters() {
-  chipGroup($('semesters'), SEMESTERS.map(n => ({ label: n === 8 ? '8 · mieszane' : `Semestr ${n}`, value: n })), game.semester,
-    v => { game.semester = v; saveGame(); renderSemesters(); });
-}
-function renderProfile() {
-  const color = PAWN_COLORS[profile.color].hex;
-  const pawn = PLAYERS[profile.pawn].pawn;
-  $('meAvatar').style.setProperty('--c', color);
-  $('meAvatar').innerHTML = pawnSvg(pawn, '#ffffff');
+$('btnExit').innerHTML = `${ico('door')}Wyjdź z gry`;
+$('btnLogout').innerHTML = `${ico('logout')}Wyloguj się`;
+$('btnGear').innerHTML = ico('gear');
+$('btnPreview').innerHTML = `${ico('eye')}Obejrzyj planszę`;
+$('btnStart').innerHTML = `${ico('play')}Rozpocznij grę`;
+document.querySelectorAll('.m-back').forEach(b => { b.innerHTML = `${ico('back')}Wróć`; });
+$('homeNav').innerHTML = [
+  { go: 'play', label: 'Graj', icon: 'play', main: true },
+  { go: 'ranking', label: 'Ranking', icon: 'trophy' },
+  { go: 'rules', label: 'Zasady', icon: 'book' },
+  { go: 'cards', label: 'Karty', icon: 'cards' },
+  { go: 'settings', label: 'Ustawienia', icon: 'gear' },
+].map(n => `<button class="m-btn ${n.main ? 'm-primary m-big' : 'm-secondary'}" type="button" data-go="${n.go}">${ico(n.icon)}${n.label}</button>`).join('');
+
+// Profil w lewym górnym rogu
+function renderMe() {
+  $('meAvatar').style.setProperty('--c', PAWN_COLORS[profile.color].hex);
+  $('meAvatar').innerHTML = pawnSvg(PLAYERS[profile.pawn].pawn, '#ffffff');
   $('meNick').textContent = profile.nick;
-  $('meSub').textContent = `${profile.guest ? 'Gość' : 'Student'} · ${pawn}`;
-  $('profNick').value = profile.nick;
-  const pp = $('pawnPick');
-  pp.replaceChildren();
-  PLAYERS.forEach((p, i) => {
-    const b = document.createElement('button');
-    b.type = 'button'; b.className = 'chip';
-    b.setAttribute('aria-pressed', String(i === profile.pawn));
-    b.innerHTML = `${pawnSvg(p.pawn, i === profile.pawn ? 'currentColor' : color)}<span>${p.pawn}</span>`;
-    b.addEventListener('click', () => { profile.pawn = i; store.set('profil', profile); renderProfile(); });
-    pp.append(b);
-  });
-  const cp = $('colorPick');
-  cp.replaceChildren();
-  PAWN_COLORS.forEach((c, i) => {
-    const b = document.createElement('button');
-    b.type = 'button'; b.className = 'swatch';
-    b.style.setProperty('--c', c.hex);
-    b.setAttribute('aria-label', c.name);
-    b.setAttribute('aria-pressed', String(i === profile.color));
-    b.addEventListener('click', () => { profile.color = i; store.set('profil', profile); renderProfile(); });
-    cp.append(b);
-  });
+  $('meSub').textContent = profile.guest ? 'Gość' : 'Student';
 }
-function renderSettings() {
-  chipGroup($('lookPick'), LOOKS.map((lk, i) => ({ label: `${i + 1}. ${lk.name}`, value: i })), lookIdx, i => switchLook(i));
-  $('optSound').textContent = prefs.sound ? 'Włączony' : 'Wyłączony';
-  $('optSound').setAttribute('aria-pressed', String(prefs.sound));
-  $('optSpin').textContent = prefs.spin ? 'Włączone' : 'Wyłączone';
-  $('optSpin').setAttribute('aria-pressed', String(prefs.spin));
-  controls.autoRotate = menuOpen && prefs.spin && !reduceMotion;
+function closeDropdown() {
+  $('meMenu').hidden = true;
+  $('meBtn').setAttribute('aria-expanded', 'false');
 }
-$('optSound').addEventListener('click', () => { prefs.sound = !prefs.sound; store.set('preferencje', prefs); renderSettings(); });
-$('optSpin').addEventListener('click', () => { prefs.spin = !prefs.spin; store.set('preferencje', prefs); renderSettings(); });
-$('profNick').addEventListener('change', e => {
-  const v = e.target.value.trim();
-  if (v.length >= 3) { profile.nick = v; store.set('profil', profile); }
-  renderProfile();
+$('meBtn').addEventListener('click', () => {
+  const open = $('meMenu').hidden;
+  $('meMenu').hidden = !open;
+  $('meBtn').setAttribute('aria-expanded', String(open));
+});
+document.addEventListener('click', e => { if (!e.target.closest('.m-profile')) closeDropdown(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDropdown(); });
+
+// Przechodzenie między stronami menu
+const PAGES = { home: 'pgHome', play: 'pgPlay', ranking: 'pgRanking', rules: 'pgRules', profile: 'pgProfile', settings: 'pgSettings' };
+let exampleTimer = null;
+function go(page) {
+  closeDropdown();
+  clearInterval(exampleTimer);
+  if (page === 'cards') { closeMenu(); setView('cards'); return; }
+  for (const [k, id] of Object.entries(PAGES)) $(id).hidden = k !== page;
+  if (page === 'play') renderPlay();
+  if (page === 'ranking') renderRanking();
+  if (page === 'rules') renderRules();
+  if (page === 'profile') renderProfilePage();
+  if (page === 'settings') renderSettingsPage();
+  $('menu').scrollTop = 0;
+}
+$('menu').addEventListener('click', e => {
+  const b = e.target.closest('[data-go]');
+  if (b) go(b.dataset.go);
 });
 
+// Nowa gra: tryb, miejsca graczy, semestr, czas
+const KIND_LABEL = { me: 'Ty', local: 'Gracz na tym komputerze', online: 'Gracz online', bot: 'Bot', empty: 'Puste miejsce' };
+const KINDS = { solo: ['local', 'bot', 'empty'], online: ['online', 'local', 'bot', 'empty'] };
+const TEAMS = [{ name: 'Drużyna A', color: '#00276F' }, { name: 'Drużyna B', color: '#5B6B8C' }];
+const BOT_LEVELS = ['łatwy', 'średni', 'trudny'];
+const TIMERS = [[0, 'Bez limitu'], [30, '30 min'], [45, '45 min'], [60, '60 min'], [90, '90 min']];
+const slotPawn = s => (s.kind === 'me' ? profile.pawn : s.pawn);
+const slotColor = s => (s.kind === 'me' ? profile.color : s.color);
+const filledSlots = () => setup.slots.filter(s => s.kind !== 'empty');
+function setSlotColor(s, c) {
+  if (s.kind === 'me') { profile.color = c; store.set('profil', profile); renderMe(); } else s.color = c;
+}
+// Każdy gracz ma inny kolor; pionki mogą się powtarzać
+function fixColors() {
+  const used = new Set();
+  for (const s of filledSlots()) {
+    let c = slotColor(s);
+    if (used.has(c)) { c = [0, 1, 2, 3].find(k => !used.has(k)); setSlotColor(s, c); }
+    used.add(c);
+  }
+}
+function pickColor(i, c) {
+  const s = setup.slots[i];
+  const other = setup.slots.find(o => o !== s && o.kind !== 'empty' && slotColor(o) === c);
+  if (other) setSlotColor(other, slotColor(s));   // zamiana kolorów
+  setSlotColor(s, c);
+}
+function slotHtml(s, i) {
+  const empty = s.kind === 'empty';
+  const pawn = slotPawn(s), color = slotColor(s);
+  const name = { me: profile.nick, bot: `Bot ${i + 1}`, local: `Gracz ${i + 1}`, online: `Miejsce ${i + 1}`, empty: `Miejsce ${i + 1}` }[s.kind];
+  const sub = { me: 'Ty', bot: `Bot · poziom ${s.level}`, local: 'Gra przy tym komputerze', online: 'Czeka na dołączenie kodem party', empty: 'Nikt tu nie gra' }[s.kind];
+  const team = setup.teams && !empty ? TEAMS[i % 2] : null;
+  const kindSel = s.kind === 'me' ? '' :
+    `<select class="m-select" data-kind="${i}" aria-label="Kto gra na miejscu ${i + 1}">${KINDS[setup.mode]
+      .map(k => `<option value="${k}"${k === s.kind ? ' selected' : ''}>${KIND_LABEL[k]}</option>`).join('')}</select>`;
+  const levels = s.kind === 'bot'
+    ? `<div class="chips">${BOT_LEVELS.map(l => chipHtml(l, `data-level="${i}" data-v="${l}"`, s.level === l)).join('')}</div>` : '';
+  const looks = empty ? '' : `
+    <div class="m-pawns" role="group" aria-label="Pionek">${PLAYERS.map((p, k) =>
+      `<button type="button" class="m-pawn" data-pawn="${i}" data-v="${k}" aria-pressed="${k === pawn}" aria-label="${p.pawn}" title="${p.pawn}">${pawnSvg(p.pawn, 'currentColor')}</button>`).join('')}</div>
+    <div class="row" role="group" aria-label="Kolor">${PAWN_COLORS.map((c, k) =>
+      `<button type="button" class="swatch" style="--c:${c.hex}" data-color="${i}" data-v="${k}" aria-pressed="${k === color}" aria-label="${c.name}"></button>`).join('')}</div>`;
+  return `<div class="m-slot${empty ? ' is-empty' : ''}">
+    <div class="m-slot-top">${empty ? '<span class="m-avatar"></span>' : avatar(pawn, color)}<span class="m-slot-name"><b>${escHtml(name)}</b><small>${sub}</small></span>${team ? `<span class="m-team" style="--t:${team.color}">${team.name}</span>` : ''}</div>
+    ${kindSel}${levels}${looks}
+  </div>`;
+}
+function renderPlay() {
+  const online = setup.mode === 'online';
+  if (!online) for (const s of setup.slots) if (s.kind === 'online') s.kind = 'local';
+  for (const s of setup.slots) if (s.kind === 'bot' && !s.level) s.level = 'średni';
+  fixColors();
+  const n = filledSlots().length;
+  if (n !== 4) setup.teams = false;
+  $('modeTabs').innerHTML = [['solo', 'Solo', 'monitor'], ['online', 'Online', 'globe']].map(([id, label, icon]) =>
+    `<button type="button" role="tab" aria-selected="${setup.mode === id}" data-mode="${id}">${ico(icon)}${label}</button>`).join('');
+  $('modeDesc').textContent = online
+    ? 'Gra przez internet: 1 na 1 na 1 na 1 albo 2 na 2. Na każde miejsce możesz zaprosić gracza online, posadzić kogoś przy tym komputerze albo dodać bota.'
+    : 'Gra na jednym komputerze, bez internetu. Gracze rzucają po kolei przy tym samym ekranie, a puste miejsca możesz zająć botami. Nikt z zewnątrz nie dołączy.';
+  if (online) {
+    if (!setup.code) setup.code = randomCode();
+    $('onlineBox').innerHTML = `
+      <div class="chips">${chipHtml('Stwórz party', 'data-online="create"', setup.online === 'create')}${chipHtml('Dołącz kodem', 'data-online="join"', setup.online === 'join')}</div>
+      <div class="row" style="margin-top: 12px">${setup.online === 'create'
+        ? `<span class="m-code">${setup.code}</span><span class="m-hint">Podaj ten kod znajomym, żeby dołączyli.</span>`
+        : `<input class="m-input" id="joinCode" maxlength="6" placeholder="Kod party, np. K7P3QX" aria-label="Kod party" style="max-width: 240px; text-transform: uppercase" value="${escHtml(setup.joinCode)}">`}</div>
+      <p class="m-note">Gra online zadziała, gdy uruchomimy serwer gry. Na razie możesz przygotować ustawienia.</p>`;
+  } else $('onlineBox').innerHTML = '';
+  $('teamChips').innerHTML = chipHtml(online ? '1 na 1 na 1 na 1' : 'Każdy na siebie', 'data-team="0"', !setup.teams)
+    + chipHtml('2 na 2', 'data-team="1"', setup.teams, n !== 4);
+  $('slots').innerHTML = setup.slots.map(slotHtml).join('');
+  $('semChips').innerHTML = [1, 2, 3, 4, 5, 6, 7, 8].map(k =>
+    chipHtml(k === 8 ? 'Mieszane (1–7)' : `Semestr ${k}`, `data-sem="${k}"`, setup.semester === k)).join('');
+  $('timeChips').innerHTML = TIMERS.map(([v, l]) => chipHtml(l, `data-time="${v}"`, setup.timer === v)).join('');
+  const ok = online ? n === 4 : n >= 2;
+  $('btnStart').disabled = !ok;
+  const sem = setup.semester === 8 ? 'pytania mieszane' : `semestr ${setup.semester}`;
+  const time = TIMERS.find(([v]) => v === setup.timer)[1].toLowerCase();
+  $('playHint').textContent = ok
+    ? `Graczy: ${n}${setup.teams ? ' (2 na 2)' : ''} · ${sem} · ${time}`
+    : online ? 'W grze online potrzebne są 4 miejsca: gracze albo boty.' : 'Dodaj co najmniej jednego gracza albo bota.';
+  saveSetup();
+}
+$('pgPlay').addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  const d = b.dataset;
+  if (d.mode) setup.mode = d.mode;
+  else if (d.team) setup.teams = d.team === '1';
+  else if (d.sem) setup.semester = +d.sem;
+  else if (d.time) setup.timer = +d.time;
+  else if (d.level) setup.slots[+d.level].level = d.v;
+  else if (d.pawn) {
+    const s = setup.slots[+d.pawn];
+    if (s.kind === 'me') { profile.pawn = +d.v; store.set('profil', profile); renderMe(); } else s.pawn = +d.v;
+  } else if (d.color) pickColor(+d.color, +d.v);
+  else if (d.online) setup.online = d.online;
+  else return;
+  renderPlay();
+});
+$('pgPlay').addEventListener('change', e => {
+  const sel = e.target.closest('[data-kind]');
+  if (!sel) return;
+  setup.slots[+sel.dataset.kind].kind = sel.value;
+  renderPlay();
+});
+$('pgPlay').addEventListener('input', e => {
+  if (e.target.id !== 'joinCode') return;
+  setup.joinCode = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+  e.target.value = setup.joinCode;
+  saveSetup();
+});
+$('btnStart').addEventListener('click', () => startGame());
+
+// Ranking (do czasu serwera gry dane są przykładowe)
+const RANKING_SAMPLE = [
+  { nick: 'Ola_K', pawn: 3, color: 0, games: 42, wins: 19, acc: 81, best: 96, wealth: 14850 },
+  { nick: 'Kuba.dev', pawn: 2, color: 2, games: 37, wins: 15, acc: 74, best: 92, wealth: 16200 },
+  { nick: 'Marta', pawn: 0, color: 1, games: 51, wins: 17, acc: 69, best: 88, wealth: 12900 },
+  { nick: 'Szymon', pawn: 1, color: 3, games: 18, wins: 8, acc: 77, best: 94, wealth: 11350 },
+  { nick: 'Natalia', pawn: 3, color: 1, games: 25, wins: 7, acc: 83, best: 100, wealth: 9800 },
+  { nick: 'Bartek', pawn: 0, color: 2, games: 33, wins: 6, acc: 58, best: 79, wealth: 13400 },
+  { nick: 'Igor', pawn: 2, color: 0, games: 12, wins: 3, acc: 64, best: 85, wealth: 8700 },
+];
+const RANK_SORTS = [['wins', 'Wygrane', 'wygranych'], ['acc', 'Skuteczność', 'dobrych odpowiedzi'], ['games', 'Rozegrane', 'rozegranych gier'], ['wealth', 'Majątek', 'najwyższy majątek']];
+let rankSort = 'wins';
+const fmtNum = v => (v == null ? '–' : v.toLocaleString('pl-PL'));
+function renderRanking() {
+  const rows = RANKING_SAMPLE.map(r => ({ ...r, rate: Math.round((100 * r.wins) / r.games) }));
+  if (profile) {   // Twoje wyniki z gier na tym komputerze
+    const st = profile.stats || {};
+    const games = st.games || 0, wins = st.wins || 0;
+    rows.push({ nick: profile.nick, pawn: profile.pawn, color: profile.color, games, wins, acc: st.q ? Math.round((100 * st.ok) / st.q) : null,
+      best: st.best ?? null, wealth: st.wealth ?? null, rate: games ? Math.round((100 * wins) / games) : null, me: true });
+  }
+  const by = r => r[rankSort] ?? -1;
+  rows.sort((a, b) => by(b) - by(a) || (b.acc ?? -1) - (a.acc ?? -1));
+  const [, , unit] = RANK_SORTS.find(([k]) => k === rankSort);
+  const val = r => (rankSort === 'acc' ? `${r.acc}%` : fmtNum(r[rankSort]));
+  $('podium').innerHTML = rows.filter(r => !r.me).slice(0, 3).map((r, i) => `
+    <div class="m-card m-podium-card"><span class="m-medal r${i + 1}">${i + 1}</span>${avatar(r.pawn, r.color)}<b>${escHtml(r.nick)}</b><span class="m-big-num">${val(r)}</span><small>${unit}</small></div>`).join('');
+  $('rankTabs').innerHTML = RANK_SORTS.map(([k, l]) => `<button type="button" role="tab" aria-selected="${k === rankSort}" data-sort="${k}">${l}</button>`).join('');
+  const th = (label, key) => `<th${key === rankSort ? ' class="is-sorted"' : ''}>${label}</th>`;
+  const bar = p => (p == null ? '–' : `<span class="m-bar"><i style="width:${p}%"></i></span>${p}%`);
+  $('rankTable').innerHTML = `
+    <thead><tr><th>#</th><th>Gracz</th>${th('Rozegrane', 'games')}${th('Wygrane', 'wins')}<th>% wygranych</th>${th('Dobre odpowiedzi', 'acc')}<th>Najlepsza gra</th>${th('Najwyższy majątek', 'wealth')}</tr></thead>
+    <tbody>${rows.map((r, i) => `<tr${r.me ? ' class="is-me"' : ''}>
+      <td><span class="m-pos">${i + 1}</span></td>
+      <td><span class="m-player">${avatar(r.pawn, r.color)}${escHtml(r.nick)}${r.me ? ' (Ty)' : ''}</span></td>
+      <td>${fmtNum(r.games)}</td><td>${fmtNum(r.wins)}</td><td>${r.rate == null ? '–' : `${r.rate}%`}</td>
+      <td>${bar(r.acc)}</td><td>${r.best == null ? '–' : `${r.best}%`}</td><td>${fmtNum(r.wealth)}</td></tr>`).join('')}</tbody>`;
+}
+$('rankTabs').addEventListener('click', e => {
+  const b = e.target.closest('[data-sort]');
+  if (!b) return;
+  rankSort = b.dataset.sort;
+  renderRanking();
+});
+
+// Zasady (wersja robocza) z przykładowym pytaniem, które nigdy nie padnie w grze
+const EXAMPLE = { q: 'Ile to jest 7 × 8?', a: ['54', '56', '64', '48'], ok: 1 };
+const RULES = [
+  { t: 'Cel gry', b: '<p>Zbierz największy majątek: kupuj sale, buduj na nich i pobieraj czynsz od innych graczy. Wiedza się opłaca, bo dobre odpowiedzi pozwalają kupować i budować, a na polu START dają premię.</p>' },
+  { t: 'Tura i kostki', b: '<ul><li>Rzucasz dwiema kostkami i idziesz o sumę oczek.</li><li>Dublet: rzucasz jeszcze raz.</li><li>Trzeci dublet z rzędu: idziesz do dziekanatu.</li></ul>' },
+  { t: 'Pytania', wide: true, q: true, b: '<p>Przed grą wybierasz semestr od 1 do 7 albo pytania mieszane. Na każde pytanie masz minutę i 4 odpowiedzi do wyboru. Pytania przygotowują wykładowcy. Tutaj pokazujemy tylko przykład, który nie pada w grze:</p>' },
+  { t: 'Kupowanie i budowanie', b: '<ul><li>Pierwsza wizyta na wolnej sali: po dobrej odpowiedzi kupujesz salę.</li><li>Każda kolejna wizyta na Twojej sali: po dobrej odpowiedzi budujesz najwyżej 2 poziomy. Kolejno: telefon, laptop, komputer, szafa rack i serwerownia.</li><li>Zła odpowiedź: kupisz albo zbudujesz na początku następnej tury, chyba że ktoś inny Cię uprzedzi.</li><li>Serwerownia chroni salę: nie da się jej zburzyć, odebrać ani wyłączyć.</li></ul>' },
+  { t: 'Premia za START', b: '<p>Gra liczy Twoje odpowiedzi w każdym okrążeniu. Na polu START dostajesz zwykłą kwotę i premię równą procentowi dobrych odpowiedzi z tego okrążenia. Przykład: 200 i 50% dobrych odpowiedzi to razem 300.</p>' },
+  { t: 'Pieniądze i pola', b: '<ul><li>Na start masz 1500 zł.</li><li>Na cudzej sali płacisz czynsz. Monopol, czyli cała grupa sal w jednych rękach, podwaja czynsz za salę bez budynku.</li><li>Parkingi i pola specjalne kupujesz tak jak sale. Im więcej takich pól masz, tym wyższy czynsz.</li><li>Czesne i kary trafiają do puli na środku. Kto stanie na Stypendium rektorskim, zabiera całą pulę.</li></ul>' },
+  { t: 'Dziekanat', b: '<ul><li>Stajesz na polu Dziekanat: dostajesz pytanie dziekanatu. Zła odpowiedź to 1 kolejka postoju.</li><li>Pole „Udaj się do dziekanatu” albo trzeci dublet: 2 kolejki. Wcześniej wyjdziesz, płacąc za warunek, rzucając dubletem po dobrej odpowiedzi albo kartą „Wyjście z dziekanatu”.</li></ul>' },
+  { t: 'Szansa i karty', b: '<p>Na polu Szansa odpowiadasz na pytanie. Dobra odpowiedź daje kartę ułatwienia, zła kartę utrudnienia. Drugie pytanie może podwoić działanie karty.</p>' },
+  { t: '2 na 2 i boty', b: '<ul><li>W drużynie nie płacisz czynszu partnerowi. Możesz rozbudować jego salę, ale sala i czynsz zostają jego.</li><li>Boty mają 3 poziomy: łatwy, średni i trudny. Im trudniejszy bot, tym częściej odpowiada dobrze i rozsądniej wydaje pieniądze.</li></ul>' },
+  { t: 'Koniec gry', b: '<p>Gra trwa do końca albo do upływu ustawionego czasu. Liczy się majątek: gotówka, sale i budynki. Przy remisie wygrywa lepsza skuteczność, a gracz z najlepszą skutecznością dostaje tytuł „Prymus”. Wygrywasz od razu, gdy zbierzesz 4 monopole albo wszystkie 4 pola specjalne. Na koniec zobaczysz swoją skuteczność, ale nie pytania ani dobre odpowiedzi.</p>' },
+];
+const exampleHtml = () => `
+  <div class="m-q">
+    <div class="m-q-head"><span>Przykładowe pytanie · matematyka</span><span class="m-q-time"><i id="exBar"></i><span id="exTime">1:00</span></span></div>
+    <p class="m-q-text">${EXAMPLE.q}</p>
+    <div class="m-q-ans">${EXAMPLE.a.map((a, i) => `<button type="button" data-ans="${i}"><b>${'ABCD'[i]}</b>${a}</button>`).join('')}</div>
+    <p class="m-q-res" id="exRes" aria-live="polite"></p>
+  </div>`;
+function startExample() {
+  let left = 60;
+  const tick = () => {
+    $('exTime').textContent = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
+    $('exBar').style.setProperty('--left', `${(left / 60) * 100}%`);
+  };
+  tick();
+  clearInterval(exampleTimer);
+  exampleTimer = setInterval(() => {
+    left -= 1;
+    tick();
+    if (left <= 0) { clearInterval(exampleTimer); answerExample(null); }
+  }, 1000);
+}
+function answerExample(i) {
+  clearInterval(exampleTimer);
+  const btns = [...$('rules').querySelectorAll('[data-ans]')];
+  btns.forEach((b, k) => {
+    b.disabled = true;
+    if (k === EXAMPLE.ok) b.classList.add('is-good');
+    else if (k === i) b.classList.add('is-bad');
+  });
+  const good = `${'ABCD'[EXAMPLE.ok]}: ${EXAMPLE.a[EXAMPLE.ok]}`;
+  $('exRes').innerHTML = (i === EXAMPLE.ok
+    ? 'Dobrze! W grze dobra odpowiedź pozwala np. kupić salę.'
+    : i === null ? `Czas minął. Dobra odpowiedź to ${good}.` : `Niestety źle. Dobra odpowiedź to ${good}.`)
+    + ' <button type="button" class="chip" data-retry="1" style="margin-left: 6px">Jeszcze raz</button>';
+}
+function renderRules() {
+  $('rules').innerHTML = RULES.map((r, i) =>
+    `<section class="m-card m-rule${r.wide ? ' m-rule-wide' : ''}"><h3><span>${i + 1}</span>${r.t}</h3>${r.b}${r.q ? exampleHtml() : ''}</section>`).join('');
+  startExample();
+}
+$('rules').addEventListener('click', e => {
+  const a = e.target.closest('[data-ans]');
+  if (a && !a.disabled) { answerExample(+a.dataset.ans); return; }
+  if (e.target.closest('[data-retry]')) renderRules();
+});
+
+// Profil
+function renderProfilePage() {
+  $('profNick').value = profile.nick;
+  $('profErr').hidden = true;
+  $('pawnPick').innerHTML = PLAYERS.map((p, i) =>
+    `<button type="button" data-v="${i}" aria-pressed="${i === profile.pawn}">${avatar(i, profile.color)}${p.pawn}</button>`).join('');
+  $('colorPick').innerHTML = PAWN_COLORS.map((c, i) =>
+    `<button type="button" class="swatch" style="--c:${c.hex}" data-v="${i}" aria-pressed="${i === profile.color}" aria-label="${c.name}"></button>`).join('');
+  const st = profile.stats || {};
+  $('profStats').innerHTML = [[fmtNum(st.games || 0), 'rozegrane gry'], [fmtNum(st.wins || 0), 'wygrane'], [st.q ? `${Math.round((100 * st.ok) / st.q)}%` : '–', 'dobre odpowiedzi']]
+    .map(([b, s]) => `<div class="m-stat"><b>${b}</b><span>${s}</span></div>`).join('');
+}
+$('pawnPick').addEventListener('click', e => {
+  const b = e.target.closest('[data-v]');
+  if (!b) return;
+  profile.pawn = +b.dataset.v;
+  store.set('profil', profile);
+  renderMe(); renderProfilePage();
+});
+$('colorPick').addEventListener('click', e => {
+  const b = e.target.closest('[data-v]');
+  if (!b) return;
+  const meIdx = setup.slots.findIndex(s => s.kind === 'me');
+  pickColor(meIdx, +b.dataset.v);
+  saveSetup();
+  renderMe(); renderProfilePage();
+});
+$('profNick').addEventListener('change', e => {
+  const v = e.target.value.trim();
+  $('profErr').hidden = v.length >= 3;
+  if (v.length < 3) return;
+  profile.nick = v;
+  store.set('profil', profile);
+  renderMe();
+});
+
+// Ustawienia
+function renderSettingsPage() {
+  const chips = (items, cur, attr) => `<div class="chips">${items.map(([v, l]) => chipHtml(l, `${attr}="${v}"`, String(v) === String(cur))).join('')}</div>`;
+  $('settingsBox').innerHTML = `
+    <div class="m-set"><span>Motyw</span>${chips([['system', 'Systemowy'], ['light', 'Jasny'], ['dark', 'Ciemny']], prefs.theme, 'data-theme-set')}</div>
+    <div class="m-set"><span>Muzyka<small>Muzykę dodamy razem z rozgrywką</small></span><div class="m-range"><input type="range" id="volMusic" min="0" max="100" step="5" value="${prefs.music}" aria-label="Głośność muzyki"><output id="volMusicOut">${prefs.music}%</output></div></div>
+    <div class="m-set"><span>Efekty dźwiękowe<small>Np. rzut kostkami</small></span><div class="m-range"><input type="range" id="volFx" min="0" max="100" step="5" value="${prefs.effects}" aria-label="Głośność efektów"><output id="volFxOut">${prefs.effects}%</output></div></div>
+    <div class="m-set"><span>Rozmiar elementów</span>${chips([[0.9, 'Mały'], [1, 'Średni'], [1.15, 'Duży']], prefs.scale, 'data-scale')}</div>
+    <div class="m-set"><span>Wygląd planszy<small>Zmiana przeładuje stronę</small></span>${chips(LOOKS.map((lk, i) => [i, lk.name]), lookIdx, 'data-look')}</div>
+    <div class="m-set"><span>Środek planszy</span>${chips(CENTER_STYLES.map((name, i) => [i, name]), centerStyle, 'data-center')}</div>
+    <div class="m-set"><span>Obracanie planszy w menu</span>${chips([[1, 'Włączone'], [0, 'Wyłączone']], prefs.spin ? 1 : 0, 'data-spin')}</div>`;
+}
+$('settingsBox').addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  const d = b.dataset;
+  if (d.themeSet) { prefs.theme = d.themeSet; applyTheme(); }
+  else if (d.scale) { prefs.scale = +d.scale; applyScale(); }
+  else if (d.look !== undefined) { savePrefs(); switchLook(+d.look); return; }
+  else if (d.center !== undefined) setCenterStyle(+d.center);
+  else if (d.spin !== undefined) { prefs.spin = d.spin === '1'; controls.autoRotate = menuOpen && prefs.spin && !reduceMotion; }
+  else return;
+  savePrefs();
+  renderSettingsPage();
+});
+$('settingsBox').addEventListener('input', e => {
+  if (e.target.id === 'volMusic') { prefs.music = +e.target.value; $('volMusicOut').textContent = `${prefs.music}%`; }
+  if (e.target.id === 'volFx') { prefs.effects = +e.target.value; $('volFxOut').textContent = `${prefs.effects}%`; }
+  savePrefs();
+});
+$('btnTheme').addEventListener('click', () => {
+  prefs.theme = effectiveTheme() === 'dark' ? 'light' : 'dark';
+  savePrefs();
+  applyTheme();
+  if (!$('pgSettings').hidden) renderSettingsPage();
+});
+
+// Ekrany: logowanie, menu, wyjście z gry
 let menuOpen = false;
 function showScreen(name) {
   $('scrLogin').hidden = name !== 'login';
-  $('scrPanel').hidden = name !== 'panel';
-  if (name === 'panel') { renderProfile(); renderModes(); renderModeOpts(); renderSemesters(); renderSettings(); }
+  $('scrMain').hidden = name !== 'main';
+  $('scrBye').hidden = name !== 'bye';
+  if (name === 'main') { renderMe(); go('home'); }
+  if (name === 'login') $('ssoNote').hidden = true;
 }
 function openMenu() {
   menuOpen = true;
@@ -2216,11 +2846,14 @@ function openMenu() {
   document.body.classList.add('menu-open');
   $('menu').hidden = false;
   controls.enabled = false;
-  controls.autoRotate = prefs.spin && !reduceMotion;
-  showScreen(profile ? 'panel' : 'login');
+  controls.autoRotateSpeed = 0.6;
+  controls.autoRotate = prefs.spin && !reduceMotion;   // plansza powoli obraca się w tle
+  showScreen(profile ? 'main' : 'login');
 }
 function closeMenu(message) {
   menuOpen = false;
+  closeDropdown();
+  clearInterval(exampleTimer);
   document.body.classList.remove('menu-open');
   $('menu').hidden = true;
   controls.autoRotate = false;
@@ -2236,12 +2869,25 @@ $('guestForm').addEventListener('submit', e => {
   $('nickErr').hidden = true;
   profile = { nick, guest: true, pawn: 0, color: 0 };
   store.set('profil', profile);
-  showScreen('panel');
+  showScreen('main');
 });
-$('btnLogout').addEventListener('click', () => { profile = null; store.del('profil'); $('nick').value = ''; showScreen('login'); });
+$('btnLogout').addEventListener('click', () => {
+  closeDropdown();
+  profile = null;
+  store.del('profil');
+  $('nick').value = '';
+  showScreen('login');
+});
+$('btnExit').addEventListener('click', () => {
+  closeDropdown();
+  $('byeTitle').textContent = `Do zobaczenia, ${profile.nick}!`;
+  showScreen('bye');
+});
+$('btnBack').addEventListener('click', () => showScreen('main'));
 $('btnPreview').addEventListener('click', () => closeMenu());
-$('btnStart').addEventListener('click', () => closeMenu('To podgląd planszy. Rozgrywkę dodamy, gdy rozpiszesz zasady.'));
 $('btnMenu').addEventListener('click', openMenu);
+applyTheme();
+applyScale();
 
 $('btnTop').addEventListener('click', () => flyTo(presetTop()));
 $('btnReset').addEventListener('click', () => flyTo(presetBoard()));
@@ -2469,8 +3115,8 @@ const EXIT_CARDS = [
   { motif: 'kotek', color: '#3E8EDE', light: '#E3F0FC', art: artPet },
 ];
 
-function exitCardSVG(card, i) {
-  const id = `bc${i}`;
+function exitCardSVG(card, i, uid = i) {
+  const id = `bc${uid}`;
   const art = 'x="40" y="136" width="550" height="500" rx="28"';
   return `<svg viewBox="0 0 630 880" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Karta Wyjście z dziekanatu, ${i + 1} z 4: ${card.motif}">
   <defs>
@@ -2899,6 +3545,1334 @@ if (window.KartyPytan) {
     .map(n => `<li><i style="--c:${SEMESTRY[n].kolor}" aria-hidden="true"></i>${SEMESTRY[n].nazwa}</li>`).join('');
 }
 
+// ---------------------------------------------------------------------------
+// Rozgrywka: tury, kostki, pytania, kupowanie i budowanie, karty, dziekanat, boty, koniec gry.
+// Kwoty i ustawienia, których autor jeszcze nie ustalił, są w jednym miejscu (ECON i niżej).
+// ---------------------------------------------------------------------------
+const CUR = 'zł';
+const money = v => `${Math.round(v).toLocaleString('pl-PL')} ${CUR}`;
+const ECON = {
+  startCash: 1500,                 // gotówka na początek
+  startPay: 200,                   // zwykła kwota za przejście przez START (do tego premia za odpowiedzi)
+  tax: 100,                        // Czesne, trafia do puli
+  bail: 100,                       // „Zapłać za warunek” w dziekanacie, trafia do puli
+  stationPrice: 200,
+  stationRent: [0, 50, 120],       // czynsz parkingu zależy od tego, ile parkingów ma właściciel
+  stationBonus: 50,                // bonus, gdy staniesz na swoim parkingu
+  specialPrice: 250,
+  specialRent: [0, 60, 130, 210, 300],
+  sellRate: 0.5,                   // sprzedaż bankowi za długi: połowa wartości
+  questionTime: 60,                // sekundy na odpowiedź
+};
+const GROUP_PRICE = { 1: 60, 2: 100, 3: 140, 4: 180, 5: 220, 6: 260, 7: 300, 8: 350 };
+const RENT_MULT = [0.12, 0.5, 1.0, 1.8, 2.6, 3.6];   // czynsz = cena sali × mnożnik poziomu (0 = bez budynku)
+const BUILD_MULT = [0, 0.5, 0.5, 0.5, 0.5, 1.0];     // koszt poziomu = cena sali × mnożnik
+const BOT = {
+  'łatwy': { acc: 0.45, reserve: 40, buy: 0.7 },
+  'średni': { acc: 0.65, reserve: 150, buy: 0.9 },
+  'trudny': { acc: 0.85, reserve: 250, buy: 1 },
+};
+const SHOW_CORRECT = false;        // po złej odpowiedzi gra nie pokazuje dobrej, żeby pytania nie „wyciekały”
+const DICE_SOUND_FILE = '';        // np. 'assets/dzwieki/kostki.mp3' (własne nagranie albo CC0); puste = dźwięk z kodu
+const START_CELL = 0, JAIL_CELL = 8, POOL_CELL = 16, GOTO_CELL = 24;
+const MOVE_SPEED = 1;
+
+const buyable = i => !!FIELDS[i] && ['room', 'station', 'special'].includes(FIELDS[i].type);
+const priceOf = i => (FIELDS[i].type === 'room' ? GROUP_PRICE[FIELDS[i].group] : FIELDS[i].type === 'station' ? ECON.stationPrice : ECON.specialPrice);
+const levelCost = (i, lvl) => Math.round(priceOf(i) * BUILD_MULT[lvl]);
+const GROUP_CELLS = {};
+for (const i of ROOM_CELLS) (GROUP_CELLS[FIELDS[i].group] ||= []).push(i);
+const SPECIAL_CELLS = Object.keys(FIELDS).map(Number).filter(i => FIELDS[i].type === 'special');
+const fname = i => FIELDS[i]?.name || CORNER_INFO[i]?.[0].split(' · ')[1] || `Pole ${i + 1}`;
+const pct = (ok, q) => (q ? Math.round((100 * ok) / q) : null);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const rnd = n => Math.floor(Math.random() * n);
+const pickOne = a => a[rnd(a.length)];
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+
+let G = null;                       // stan rozgrywki; null = gra nie trwa
+const STOP = Symbol('koniec gry');  // przerywa turę, gdy gra się skończyła albo gracz wyszedł do menu
+// Czeka na animację albo decyzję, a potem sprawdza, czy gra nadal trwa (i czy nie ma pauzy)
+async function w(promise) {
+  const g = G;
+  const r = await promise;
+  while (G === g && g && g.paused) await sleep(150);
+  if (!g || G !== g || g.over) throw STOP;
+  return r;
+}
+const isBot = p => p.kind === 'bot';
+const sameTeam = (a, b) => a === b || (G.teams && a.team === b.team);
+const active = () => G.players.filter(p => !p.out);
+const opponents = p => active().filter(o => !sameTeam(o, p));
+
+// ---------------------------------------------------------------------------
+// Dźwięki: syntezowane w przeglądarce (Web Audio), bez plików
+// ---------------------------------------------------------------------------
+let actx = null;
+function audio() {
+  if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
+  if (actx.state === 'suspended') actx.resume();
+  return actx;
+}
+let noiseBuf = null;
+function noise(a) {
+  if (!noiseBuf) {
+    noiseBuf = a.createBuffer(1, a.sampleRate * 0.5, a.sampleRate);
+    const d = noiseBuf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  return noiseBuf;
+}
+function click(a, t, freq, gain, dur) {   // krótkie stuknięcie: filtrowany szum
+  const src = a.createBufferSource(); src.buffer = noise(a);
+  const f = a.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = 3.5;
+  const g = a.createGain();
+  g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  src.connect(f).connect(g).connect(a.destination);
+  src.start(t, Math.random() * 0.3); src.stop(t + dur + 0.02);
+}
+function tone(a, t, freq, dur, gain, type = 'sine', to = null) {
+  const o = a.createOscillator(); o.type = type;
+  o.frequency.setValueAtTime(freq, t);
+  if (to) o.frequency.exponentialRampToValueAtTime(to, t + dur);
+  const g = a.createGain();
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g).connect(a.destination);
+  o.start(t); o.stop(t + dur + 0.02);
+}
+let diceAudio = null;
+function sfx(name) {
+  const vol = (prefs.effects ?? 80) / 100;
+  if (!vol) return;
+  if (name === 'dice' && DICE_SOUND_FILE) {
+    diceAudio ||= new Audio(DICE_SOUND_FILE);
+    diceAudio.volume = vol; diceAudio.currentTime = 0; diceAudio.play().catch(() => {});
+    return;
+  }
+  const a = audio();
+  if (!a) return;
+  const t = a.currentTime + 0.01;
+  const v = 0.9 * vol;
+  if (name === 'dice') {   // kostki: potrząśnięcie w dłoni, a potem stukot o planszę
+    for (let k = 0; k < 6; k++) click(a, t + k * 0.045, 2600 + Math.random() * 1200, 0.18 * v, 0.03);
+    const hits = [0.42, 0.5, 0.78, 0.86, 1.0, 1.08, 1.17, 1.25, 1.32];
+    hits.forEach((h, k) => click(a, t + h, 1500 + Math.random() * 2400, (0.75 - k * 0.06) * v, 0.05 + Math.random() * 0.03));
+    tone(a, t + 0.42, 140, 0.12, 0.25 * v, 'sine', 70);
+  } else if (name === 'hop') tone(a, t, 520, 0.08, 0.12 * v, 'triangle', 760);
+  else if (name === 'good') [523, 659, 784].forEach((f, k) => tone(a, t + k * 0.09, f, 0.32, 0.22 * v, 'triangle'));
+  else if (name === 'bad') { tone(a, t, 330, 0.28, 0.2 * v, 'sawtooth', 220); tone(a, t + 0.18, 220, 0.4, 0.18 * v, 'sawtooth', 150); }
+  else if (name === 'coin') { tone(a, t, 1320, 0.12, 0.16 * v); tone(a, t + 0.08, 1760, 0.3, 0.16 * v); }
+  else if (name === 'card') for (let k = 0; k < 4; k++) click(a, t + k * 0.03, 900 + k * 500, 0.12 * v, 0.08);
+  else if (name === 'build') tone(a, t, 180, 0.25, 0.35 * v, 'sine', 60);
+  else if (name === 'fanfare') [523, 659, 784, 1046].forEach((f, k) => tone(a, t + k * 0.13, f, 0.5, 0.2 * v, 'triangle'));
+}
+
+// ---------------------------------------------------------------------------
+// Kostki 3D
+// ---------------------------------------------------------------------------
+const DIE = 0.62;
+const PIPS = {
+  1: [[0.5, 0.5]], 2: [[0.27, 0.27], [0.73, 0.73]], 3: [[0.25, 0.25], [0.5, 0.5], [0.75, 0.75]],
+  4: [[0.27, 0.27], [0.73, 0.27], [0.27, 0.73], [0.73, 0.73]],
+  5: [[0.26, 0.26], [0.74, 0.26], [0.5, 0.5], [0.26, 0.74], [0.74, 0.74]],
+  6: [[0.28, 0.22], [0.72, 0.22], [0.28, 0.5], [0.72, 0.5], [0.28, 0.78], [0.72, 0.78]],
+};
+function dieTexture(n) {
+  const [c, g] = makeCanvas(256, 256);
+  g.fillStyle = '#FFFFFF'; g.fillRect(0, 0, 256, 256);
+  g.fillStyle = n === 1 ? '#D6534F' : UNI_NAVY;
+  for (const [x, y] of PIPS[n]) { g.beginPath(); g.arc(x * 256, y * 256, n === 1 ? 36 : 24, 0, Math.PI * 2); g.fill(); }
+  return tex(c);
+}
+// Kolejność ścian w bryle: +X, -X, +Y, -Y, +Z, -Z. Przeciwległe ściany sumują się do 7.
+const dieMats = [3, 4, 1, 6, 2, 5].map(n => new THREE.MeshStandardMaterial({ map: dieTexture(n), roughness: 0.32 }));
+const dieGeo = new RoundedBoxGeometry(DIE, DIE, DIE, 4, 0.07);
+const AX = new THREE.Vector3(1, 0, 0), AY = new THREE.Vector3(0, 1, 0), AZ = new THREE.Vector3(0, 0, 1);
+const FACE_UP = {   // obrót, po którym dana liczba oczek jest na górze
+  1: new THREE.Quaternion(),
+  6: new THREE.Quaternion().setFromAxisAngle(AX, Math.PI),
+  2: new THREE.Quaternion().setFromAxisAngle(AX, -Math.PI / 2),
+  5: new THREE.Quaternion().setFromAxisAngle(AX, Math.PI / 2),
+  3: new THREE.Quaternion().setFromAxisAngle(AZ, Math.PI / 2),
+  4: new THREE.Quaternion().setFromAxisAngle(AZ, -Math.PI / 2),
+};
+const dice = [0, 1].map(() => {
+  const m = mesh(dieGeo, dieMats, true, false);
+  m.visible = false;
+  board.add(m);
+  return m;
+});
+function throwDice(a, b) {
+  const lands = [
+    new THREE.Vector3(-1.0 + (Math.random() - 0.5) * 0.5, CENTER_Y + DIE / 2, 1.2 + (Math.random() - 0.5) * 0.5),
+    new THREE.Vector3(0.15 + (Math.random() - 0.5) * 0.5, CENTER_Y + DIE / 2, 1.75 + (Math.random() - 0.5) * 0.4),
+  ];
+  const jobs = [a, b].map((v, k) => {
+    const d = dice[k];
+    d.visible = true;
+    const end = lands[k];
+    const start = end.clone().add(new THREE.Vector3(-2.4 - Math.random(), 3.2, -2.4 - Math.random()));
+    const qf = new THREE.Quaternion().setFromAxisAngle(AY, Math.random() * Math.PI * 2).multiply(FACE_UP[v]);
+    const axis = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
+    const turns = Math.PI * (4 + Math.random() * 2);
+    const spin = new THREE.Quaternion();
+    return tween(reduceMotion ? 200 : 1250 + k * 90, t => {
+      const e = 1 - Math.pow(1 - t, 2.2);
+      d.position.lerpVectors(start, end, e);
+      d.position.y = end.y + (start.y - end.y) * Math.pow(1 - t, 2) * Math.abs(Math.cos(t * Math.PI * 2.5));
+      spin.setFromAxisAngle(axis, turns * (1 - e));
+      d.quaternion.copy(qf).multiply(spin);
+    });
+  });
+  sfx('dice');
+  return Promise.all(jobs);
+}
+
+// ---------------------------------------------------------------------------
+// Pionki na planszy
+// ---------------------------------------------------------------------------
+const PAWN_SPOTS = [[-0.27, 0.2], [0.27, 0.2], [-0.27, 0.62], [0.27, 0.62]];
+const CORNER_SPOTS = [[-0.42, 0.05], [0.42, 0.05], [-0.42, 0.55], [0.42, 0.55]];
+function spotPos(cell, k) {
+  const p = cellPose(cell);
+  const [ox, oz] = (p.corner ? CORNER_SPOTS : PAWN_SPOTS)[k];
+  const c = Math.cos(p.rotY), s = Math.sin(p.rotY);
+  return new THREE.Vector3(p.x + ox * c + oz * s, TILE_H, p.z - ox * s + oz * c);
+}
+function placePawn(p) {
+  p.obj.position.copy(spotPos(p.pos, p.idx));
+  p.obj.rotation.y = cellPose(p.pos).rotY;
+}
+function turnTo(p, rotY) {
+  let d = rotY - p.obj.rotation.y;
+  while (d > Math.PI) d -= Math.PI * 2;
+  while (d < -Math.PI) d += Math.PI * 2;
+  return p.obj.rotation.y + d;
+}
+function hop(p, from, to, height = 0.42, dur = 230) {
+  const a = spotPos(from, p.idx), b = spotPos(to, p.idx);
+  const r0 = p.obj.rotation.y, r1 = turnTo(p, cellPose(to).rotY);
+  sfx('hop');
+  return tween(reduceMotion ? 60 : dur / MOVE_SPEED, t => {
+    p.obj.position.lerpVectors(a, b, t);
+    p.obj.position.y = TILE_H + height * Math.sin(Math.PI * t);
+    p.obj.rotation.y = r0 + (r1 - r0) * t;
+    const sq = 1 - 0.12 * Math.sin(Math.PI * t);
+    p.obj.scale.set(1 / Math.sqrt(sq), sq, 1 / Math.sqrt(sq));
+  }).then(() => p.obj.scale.set(1, 1, 1));
+}
+
+// ---------------------------------------------------------------------------
+// Znaczniki na polach: pasek w kolorze właściciela, tarcza i brak prądu
+// ---------------------------------------------------------------------------
+function iconSprite(kind) {
+  const [c, g] = makeCanvas(128, 128);
+  g.lineJoin = 'round'; g.lineCap = 'round';
+  if (kind === 'shield') {
+    g.fillStyle = '#2F7FF0'; g.strokeStyle = '#FFFFFF'; g.lineWidth = 8;
+    g.beginPath(); g.moveTo(64, 10); g.lineTo(110, 26); g.quadraticCurveTo(110, 92, 64, 118); g.quadraticCurveTo(18, 92, 18, 26); g.closePath();
+    g.fill(); g.stroke();
+    g.lineWidth = 12; g.beginPath(); g.moveTo(42, 64); g.lineTo(58, 80); g.lineTo(88, 48); g.stroke();
+  } else {
+    g.fillStyle = '#1E2A47'; g.beginPath(); g.arc(64, 64, 54, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#F2B72E';
+    g.beginPath(); g.moveTo(72, 18); g.lineTo(38, 72); g.lineTo(62, 72); g.lineTo(54, 110); g.lineTo(90, 54); g.lineTo(66, 54); g.closePath(); g.fill();
+    g.strokeStyle = '#D6534F'; g.lineWidth = 12; g.beginPath(); g.moveTo(26, 26); g.lineTo(102, 102); g.stroke();
+  }
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex(c), depthTest: false, transparent: true }));
+  s.scale.setScalar(0.5);
+  s.renderOrder = 5;
+  return s;
+}
+function refreshMarks(i) {
+  const o = G.own.get(i);
+  const cg = cellGroups[i];
+  const m = G.marks.get(i) || {};
+  G.marks.set(i, m);
+  if (!o) { for (const k of Object.keys(m)) { if (m[k]) cg.remove(m[k]); delete m[k]; } return; }
+  if (!m.bar) {
+    m.bar = mesh(new THREE.BoxGeometry(W - 0.16, 0.03, 0.16), mat(o.owner.hex, { roughness: 0.35 }), false, false);
+    m.bar.position.set(0, TILE_H + 0.016, D / 2 - 0.16);
+    cg.add(m.bar);
+  }
+  m.bar.material.color.set(o.owner.hex);
+  for (const [key, on, x] of [['shield', o.shield > 0, -0.28], ['off', o.off > 0, 0.28]]) {
+    if (on && !m[key]) { m[key] = iconSprite(key); m[key].position.set(x, 1.35, BUILD_Z); cg.add(m[key]); }
+    if (!on && m[key]) { cg.remove(m[key]); delete m[key]; }
+  }
+}
+function focusCell(i) {
+  const t = cellTarget(i);
+  return flyTo([t.clone().add(DIR_BOARD.clone().multiplyScalar(boardDist() * 0.45)), t], 550);
+}
+const backToBoard = () => flyTo(presetBoard(), 650);
+// Budynek na polu: stary znika, nowy spada z góry
+async function showLevel(i, focus = true) {
+  const o = G.own.get(i);
+  const cg = cellGroups[i];
+  const m = G.marks.get(i) || {};
+  G.marks.set(i, m);
+  if (focus) focusCell(i);
+  if (m.building) { const old = m.building; m.building = null; await shrinkOut(old, cg); }
+  if (o && o.level > 0) {
+    const def = BUILDINGS[o.level - 1];
+    const obj = def.make(o.owner.hex);
+    obj.position.set(0, TILE_H + 2.6, BUILD_Z);
+    cg.add(obj);
+    m.building = obj;
+    sfx('build');
+    await dropIn(obj, def.board, o.owner.hex, cg);
+  }
+  refreshMarks(i);
+  if (focus) { await sleep(450); backToBoard(); }
+}
+
+// ---------------------------------------------------------------------------
+// Warstwa gry: duże komunikaty, okna wyboru, okno pytania
+// ---------------------------------------------------------------------------
+const layer = $('gLayer');
+function banner(title, sub = '', color = '', ms = 1700) {
+  layer.querySelectorAll('.g-banner-wrap').forEach(el => el.remove());
+  const wrap = document.createElement('div');
+  wrap.className = 'g-banner-wrap';
+  wrap.setAttribute('role', 'status');
+  wrap.innerHTML = `<div class="g-banner"${color ? ` style="--bc:${color}"` : ''}><b>${title}</b>${sub ? `<span>${sub}</span>` : ''}</div>`;
+  layer.append(wrap);
+  return new Promise(r => setTimeout(() => {
+    wrap.firstElementChild.classList.add('out');
+    setTimeout(() => { wrap.remove(); r(); }, 240);
+  }, ms));
+}
+function openModal(html, cls = '') {
+  const bd = document.createElement('div');
+  bd.className = 'g-backdrop';
+  bd.innerHTML = `<div class="m-card g-modal ${cls}" role="dialog" aria-modal="true">${html}</div>`;
+  layer.append(bd);
+  return bd;
+}
+// Okno z przyciskami. Gracz klika, bot wybiera sam (botPick zwraca wartość jednej z opcji).
+function choose(p, { title, text = '', options, two = false }, botPick) {
+  return new Promise(resolve => {
+    const bd = openModal(`<h2>${title}</h2>${text ? `<p>${text}</p>` : ''}
+      <div class="g-opts${two ? ' two' : ''}">${options.map((o, k) =>
+        `<button type="button" class="m-btn ${o.primary ? 'm-primary' : 'm-secondary'}" data-k="${k}"${o.disabled ? ' disabled' : ''}>${o.label}</button>`).join('')}</div>`);
+    const done = k => { bd.remove(); resolve(options[k].value); };
+    if (p && isBot(p)) {
+      let v = botPick ? botPick() : options.find(o => !o.disabled)?.value;
+      let k = options.findIndex(o => o.value === v && !o.disabled);
+      if (k < 0) k = options.findIndex(o => !o.disabled);
+      setTimeout(() => {
+        bd.querySelector(`[data-k="${k}"]`)?.classList.add('m-primary');
+        setTimeout(() => done(k), 450);
+      }, 700 + Math.random() * 600);
+    } else {
+      bd.addEventListener('click', e => {
+        const b = e.target.closest('[data-k]');
+        if (b && !b.disabled) done(+b.dataset.k);
+      });
+      requestAnimationFrame(() => bd.querySelector('.m-btn:not(:disabled)')?.focus());
+    }
+  });
+}
+const fieldLabel = i => {
+  const o = G.own.get(i);
+  const lvl = o && FIELDS[i].type === 'room' ? (o.level ? ` · ${BUILDINGS[o.level - 1].name.toLowerCase()}` : ' · bez budynku') : '';
+  return `${escHtml(fname(i))}${o ? ` <small>(${escHtml(o.owner.name)}${lvl}${o.shield ? ' · tarcza' : ''})</small>` : ''}`;
+};
+function chooseField(p, title, text, cells, botPick, allowSkip = false) {
+  const options = cells.map(i => ({ label: fieldLabel(i), value: i }));
+  if (allowSkip) options.push({ label: 'Pomiń', value: -1 });
+  return choose(p, { title, text, options }, botPick);
+}
+
+// Talia pytań: losowa kolejność, a po jej końcu tasowanie z animacją.
+// Pytania z końca poprzedniej talii nie trafiają na początek nowej.
+function makeDeck(list) { return { list, order: [], tail: [], rounds: 0 }; }
+function newOrder(d) {
+  const order = shuffle(d.list.slice());
+  const k = Math.min(d.tail.length, Math.floor(order.length / 2));
+  const tail = new Set(d.tail);
+  for (let tries = 0; tries < 20; tries++) {
+    let moved = false;
+    for (let i = 0; i < k; i++) {
+      if (!tail.has(order[i])) continue;
+      const j = k + rnd(order.length - k);
+      if (!tail.has(order[j])) { [order[i], order[j]] = [order[j], order[i]]; moved = true; }
+    }
+    if (!moved) break;
+  }
+  return order;
+}
+let qBackUrl = null;
+function questionBackUrl() {   // tył karty z pytaniem: granat, logo i znak zapytania
+  if (!qBackUrl) {
+    const [c, g] = makeCanvas(420, 588);
+    const grad = g.createLinearGradient(0, 0, 0, 588);
+    grad.addColorStop(0, '#0B348F'); grad.addColorStop(1, UNI_NAVY);
+    g.fillStyle = grad; g.fillRect(0, 0, 420, 588);
+    g.strokeStyle = '#FFFFFF'; g.lineWidth = 10; g.strokeRect(22, 22, 376, 544);
+    g.lineWidth = 3; g.strokeRect(38, 38, 344, 512);
+    if (!drawLogoInk(g, 210, 210, 92, '#FFFFFF')) { g.fillStyle = '#FFFFFF'; g.beginPath(); g.arc(210, 210, 70, 0, Math.PI * 2); g.fill(); }
+    g.fillStyle = '#FFFFFF'; g.font = '700 150px Fredoka, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText('?', 210, 420);
+    qBackUrl = c.toDataURL('image/jpeg', 0.9);
+  }
+  return qBackUrl;
+}
+async function shuffleAnim(title) {
+  const url = questionBackUrl();
+  const bd = openModal(`<h2>${title}</h2><p>Talia się skończyła. Pytania dostają nową, losową kolejność.</p>
+    <div class="g-shuffle" aria-hidden="true">${'<img alt="" src="' + url + '">'.repeat(4)}</div>`);
+  sfx('card');
+  await sleep(1300); sfx('card');
+  await sleep(900);
+  bd.remove();
+}
+async function drawQuestion(kind) {
+  const d = G.decks[kind];
+  if (!d.order.length) {
+    d.order = newOrder(d);
+    if (d.rounds++) await w(shuffleAnim(kind === 'dziekanat' ? 'Tasowanie pytań dziekanatu' : 'Tasowanie pytań'));
+  }
+  const q = d.order.shift();
+  d.tail.push(q);
+  if (d.tail.length > Math.max(2, Math.floor(d.list.length / 3))) d.tail.shift();
+  return q;
+}
+
+// Okno pytania z minutnikiem. Zwraca true przy dobrej odpowiedzi.
+async function askQuestion(p, kind = 'sem', context = '') {
+  const q = await drawQuestion(kind);
+  const notes = p.cards.findIndex(c => c.icon === 'notes');
+  let gone = [];
+  if (notes >= 0) {
+    returnCard(p, notes);
+    gone = shuffle([0, 1, 2, 3].filter(k => k !== q.ok)).slice(0, 2);
+  }
+  const cat = kind === 'dziekanat' ? 'Pytanie dziekanatu' : q.sem ? `Semestr ${q.sem}${q.przedmiot ? ` · ${escHtml(q.przedmiot)}` : ''}` : 'Pytanie';
+  const catColor = kind === 'dziekanat' ? '#B8862B' : window.KartyPytan?.SEMESTRY?.[q.sem]?.kolor || '#2F7FF0';
+  const bd = openModal(`
+    <div class="g-q-head"><span class="g-cat" style="--c:${catColor}">${cat}</span>
+      <span class="g-time"><i></i><span class="g-tleft">1:00</span></span></div>
+    <p class="g-ctx">${avatar(p.pawnIdx, p.colorIdx).replace('m-avatar', 'm-avatar g-mini')} <b>${escHtml(p.name)}</b>${context ? ` · ${context}` : ''}</p>
+    <p class="g-qtext">${escHtml(q.q)}</p>
+    ${gone.length ? '<p class="g-note">Notatki od kolegi: 2 złe odpowiedzi znikają.</p>' : ''}
+    <div class="g-ans">${q.a.map((a, k) => `<button type="button" data-a="${k}"${gone.includes(k) ? ' class="is-gone" disabled' : ''}><b>${'ABCD'[k]}</b>${escHtml(a)}</button>`).join('')}</div>
+    <p class="g-res" aria-live="polite">${isBot(p) ? `${escHtml(p.name)} się zastanawia…` : ''}</p>`, 'wide');
+  const btns = [...bd.querySelectorAll('[data-a]')];
+  const timeEl = bd.querySelector('.g-time');
+  let left = ECON.questionTime;
+  const show = () => {
+    timeEl.querySelector('.g-tleft').textContent = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
+    timeEl.style.setProperty('--left', `${(left / ECON.questionTime) * 100}%`);
+    timeEl.classList.toggle('is-low', left <= 10);
+  };
+  show();
+  const pick = await new Promise(resolve => {
+    const timer = setInterval(() => {
+      if (!G) { clearInterval(timer); resolve(null); return; }
+      if (G.paused) return;
+      left -= 1; show();
+      if (left <= 0) { clearInterval(timer); resolve(null); }
+    }, 1000);
+    const finish = k => { clearInterval(timer); resolve(k); };
+    if (isBot(p)) {
+      const good = Math.random() < BOT[p.level].acc;
+      const wrong = [0, 1, 2, 3].filter(k => k !== q.ok && !gone.includes(k));
+      setTimeout(() => finish(good ? q.ok : pickOne(wrong)), 1300 + Math.random() * 1500);
+    } else {
+      bd.addEventListener('click', e => {
+        const b = e.target.closest('[data-a]');
+        if (b && !b.disabled) finish(+b.dataset.a);
+      });
+    }
+  });
+  const ok = pick === q.ok;
+  btns.forEach((b, k) => {
+    b.disabled = true;
+    if (k === pick) b.classList.add(ok ? 'is-good' : 'is-bad');
+    if (SHOW_CORRECT && k === q.ok) b.classList.add('is-good');
+  });
+  bd.querySelector('.g-res').textContent = ok ? 'Dobrze!' : pick === null ? 'Czas minął.' : 'Niestety źle.';
+  sfx(ok ? 'good' : 'bad');
+  p.lap.q++; p.total.q++;
+  if (ok) { p.lap.ok++; p.total.ok++; }
+  await sleep(1300);
+  bd.remove();
+  renderHud();
+  if (!G || G.over) throw STOP;
+  return ok;
+}
+
+// ---------------------------------------------------------------------------
+// Pieniądze
+// ---------------------------------------------------------------------------
+function fieldValue(i) {
+  const o = G.own.get(i);
+  let v = priceOf(i);
+  if (o) for (let l = 1; l <= o.level; l++) v += levelCost(i, l);
+  return v;
+}
+function wealth(p) {
+  let v = p.cash;
+  for (const [i, o] of G.own) if (o.owner === p) v += fieldValue(i);
+  return v;
+}
+const ownedBy = p => [...G.own].filter(([, o]) => o.owner === p).map(([i]) => i);
+function receive(p, amount) {
+  p.cash += amount;
+  if (amount > 0) sfx('coin');
+  renderHud();
+}
+// Za długi gra sama sprzedaje bankowi budynki, a potem sale (za połowę wartości)
+async function raiseCash(p, need) {
+  const sold = [];
+  while (p.cash < need) {
+    const withB = ownedBy(p).filter(i => G.own.get(i).level > 0).sort((a, b) => G.own.get(b).level - G.own.get(a).level);
+    if (withB.length) {
+      const i = withB[0], o = G.own.get(i);
+      p.cash += Math.round(levelCost(i, o.level) * ECON.sellRate);
+      o.level -= 1;
+      sold.push(`${fname(i)}: budynek w dół`);
+      await showLevel(i, false);
+      continue;
+    }
+    const fields = ownedBy(p).sort((a, b) => priceOf(a) - priceOf(b));
+    if (!fields.length) break;
+    const i = fields[0];
+    p.cash += Math.round(priceOf(i) * ECON.sellRate);
+    G.own.delete(i);
+    refreshMarks(i);
+    sold.push(`${fname(i)}: sprzedana`);
+  }
+  renderHud();
+  if (sold.length) await w(banner(`${escHtml(p.name)} sprzedaje majątek`, escHtml(sold.slice(0, 4).join(' · ')) + (sold.length > 4 ? ' …' : ''), p.hex, 2200));
+}
+// Płatność do gracza, do puli albo do banku (to = null). Zwraca false, gdy gracz zbankrutował.
+async function pay(p, amount, to) {
+  amount = Math.round(amount);
+  if (amount <= 0) return true;
+  if (p.cash < amount) await raiseCash(p, amount);
+  const paid = Math.min(p.cash, amount);
+  p.cash -= paid;
+  if (to === 'pool') G.pool += paid;
+  else if (to) to.cash += paid;
+  sfx('coin');
+  renderHud();
+  if (paid < amount) { await bankrupt(p); return false; }
+  return true;
+}
+async function bankrupt(p) {
+  p.out = true;
+  for (const i of ownedBy(p)) {
+    G.own.delete(i);
+    await showLevel(i, false);
+    refreshMarks(i);
+  }
+  for (const c of p.cards.splice(0)) G.cardDecks.bonus.push(c);
+  shrinkOut(p.obj, board);
+  renderHud();
+  await w(banner(`${escHtml(p.name)} odpada z gry`, 'Brak pieniędzy na zapłatę. Sale wracają do banku.', p.hex, 2400));
+  const left = active();
+  if (left.length <= 1 || (G.teams && left.every(o => o.team === left[0].team))) endGame('bankruptcy');
+}
+
+// ---------------------------------------------------------------------------
+// Czynsz, monopole, wygrana od razu
+// ---------------------------------------------------------------------------
+const hasMonopoly = (p, group) => GROUP_CELLS[group].every(i => G.own.get(i)?.owner === p);
+function rentOf(i) {
+  const o = G.own.get(i);
+  if (!o || o.off > 0) return 0;
+  const f = FIELDS[i];
+  if (f.type === 'room') {
+    let r = priceOf(i) * RENT_MULT[o.level];
+    if (o.level === 0 && hasMonopoly(o.owner, f.group)) r *= 2;
+    return Math.round(r);
+  }
+  const n = [...G.own].filter(([k, x]) => x.owner === o.owner && FIELDS[k].type === f.type).length;
+  return f.type === 'station' ? ECON.stationRent[n] : ECON.specialRent[n];
+}
+function checkInstantWin(p) {
+  const team = o => o && (G.teams ? o.team === p.team : o === p);
+  if (SPECIAL_CELLS.every(i => team(G.own.get(i)?.owner))) { endGame('specials', p); return true; }
+  // monopol = cała grupa u jednego gracza; w trybie 2 na 2 monopole partnerów się sumują
+  const monos = Object.values(GROUP_CELLS).filter(cells => {
+    const o = G.own.get(cells[0])?.owner;
+    return team(o) && cells.every(i => G.own.get(i)?.owner === o);
+  }).length;
+  if (monos >= 4) { endGame('monopolies', p); return true; }
+  return false;
+}
+
+// ---------------------------------------------------------------------------
+// Kupowanie i budowanie
+// ---------------------------------------------------------------------------
+const botKeeps = (p, cost) => p.cash - cost >= BOT[p.level].reserve;
+function botWantsBuy(p, i) {
+  const cost = priceOf(i);
+  if (p.cash < cost) return false;
+  const f = FIELDS[i];
+  const completes = f.type === 'room' && GROUP_CELLS[f.group].every(k => k === i || G.own.get(k)?.owner === p);
+  if (completes && p.cash - cost >= 30) return true;
+  return botKeeps(p, cost) && Math.random() < BOT[p.level].buy;
+}
+async function buyField(p, i) {
+  const price = priceOf(i);
+  if (p.cash < price) { await w(banner('Za mało gotówki', `${escHtml(fname(i))} kosztuje ${money(price)}.`, p.hex)); return; }
+  p.cash -= price;
+  G.own.set(i, { owner: p, level: 0, shield: 0, off: 0 });
+  sfx('coin');
+  refreshMarks(i);
+  renderHud();
+  const f = FIELDS[i];
+  const mono = f.type === 'room' && hasMonopoly(p, f.group);
+  await w(banner(`Kupione: ${escHtml(fname(i))}`, `${escHtml(p.name)} płaci ${money(price)}.${mono ? ' Monopol na całą grupę: podwójny czynsz!' : ''}`, p.hex, 1900));
+  checkInstantWin(p);
+}
+// Ile poziomów można dobudować za jednym razem: najwyżej 2, a hotel (poziom 5) tylko z poziomu 4
+const maxAdd = lvl => (lvl >= 5 ? 0 : lvl === 4 ? 1 : Math.min(2, 4 - lvl));
+function buildOptions(p, i) {
+  const o = G.own.get(i);
+  const opts = [];
+  let cost = 0;
+  for (let n = 1; n <= maxAdd(o.level); n++) {
+    const lvl = o.level + n;
+    cost += levelCost(i, lvl);
+    opts.push({ label: `${n === 1 ? '+1 poziom' : '+2 poziomy'}: ${BUILDINGS[lvl - 1].name.toLowerCase()}${lvl === 5 ? ' (hotel)' : ''} · ${money(cost)}`, value: n, disabled: p.cash < cost, cost });
+  }
+  return opts;
+}
+function botBuildPick(p, opts) {
+  const ok = opts.filter(o => !o.disabled && botKeeps(p, o.cost));
+  return ok.length ? ok[ok.length - 1].value : 0;
+}
+async function build(p, i, n) {
+  const o = G.own.get(i);
+  let cost = 0;
+  for (let k = 1; k <= n; k++) cost += levelCost(i, o.level + k);
+  if (p.cash < cost) return;
+  p.cash -= cost;
+  o.level += n;
+  renderHud();
+  await w(showLevel(i));
+  const name = BUILDINGS[o.level - 1].name;
+  await w(banner(o.level === 5 ? 'Hotel!' : `${name}: ${escHtml(fname(i))}`,
+    o.level === 5 ? `Serwerownia na ${escHtml(fname(i))}. Tego pola nic już nie ruszy.` : `${escHtml(p.name)} płaci ${money(cost)}${o.owner !== p ? ` (sala partnera: ${escHtml(o.owner.name)})` : ''}.`, p.hex));
+}
+// Pole wolne albo własne: pytanie, a po złej odpowiedzi zakup lub budowa na początku następnej tury
+async function landProperty(p, i) {
+  const f = FIELDS[i];
+  const o = G.own.get(i);
+  if (!o) {
+    const price = priceOf(i);
+    if (p.cash < price) { await w(banner(`${escHtml(fname(i))}`, `Wolne pole za ${money(price)}. Masz za mało gotówki.`, '', 1600)); return; }
+    const go = await w(choose(p, {
+      title: `Wolne pole: ${escHtml(fname(i))}`,
+      text: `Cena: <b>${money(price)}</b>, czynsz od ${money(f.type === 'room' ? Math.round(price * RENT_MULT[0]) : (f.type === 'station' ? ECON.stationRent[1] : ECON.specialRent[1]))}. Żeby kupić, odpowiedz dobrze na pytanie.`,
+      options: [{ label: 'Kupuję: pokaż pytanie', value: true, primary: true }, { label: 'Nie kupuję', value: false }], two: true,
+    }, () => botWantsBuy(p, i)));
+    if (!go) return;
+    const ok = await w(askQuestion(p, 'sem', `kupno: ${escHtml(fname(i))}`));
+    if (ok) await buyField(p, i);
+    else {
+      p.pending = { type: 'buy', cell: i };
+      await w(banner('Tym razem nie', `${escHtml(fname(i))} możesz kupić na początku następnej tury, jeśli nikt Cię nie uprzedzi.`, p.hex, 2000));
+    }
+    return;
+  }
+  const own = o.owner === p;
+  if (own || sameTeam(o.owner, p)) {
+    if (f.type === 'station' && own) {
+      receive(p, ECON.stationBonus);
+      await w(banner('Twój parking', `Bonus parkingowy: ${money(ECON.stationBonus)}.`, p.hex));
+      return;
+    }
+    if (f.type !== 'room') { await w(banner(own ? 'Twoje pole' : 'Pole partnera', own ? 'Odpoczywasz.' : 'Nie płacisz czynszu.', p.hex, 1300)); return; }
+    if (o.level >= 5) { await w(banner(own ? 'Twój hotel' : 'Hotel partnera', 'Tu nie da się już nic zbudować.', p.hex, 1300)); return; }
+    const opts = buildOptions(p, i);
+    if (opts.every(x => x.disabled)) { await w(banner(own ? 'Twoja sala' : 'Sala partnera', 'Za mało gotówki na budowę.', p.hex, 1500)); return; }
+    const n = await w(choose(p, {
+      title: own ? `Budowa: ${escHtml(fname(i))}` : `Sala partnera: ${escHtml(o.owner.name)}`,
+      text: own ? 'Wybierz, ile poziomów chcesz zbudować. Najpierw pytanie.' : 'Możesz rozbudować salę partnera. Ty płacisz, sala zostaje partnera. Najpierw pytanie.',
+      options: [...opts, { label: 'Nie buduję', value: 0 }],
+    }, () => botBuildPick(p, opts)));
+    if (!n) return;
+    const ok = await w(askQuestion(p, 'sem', `budowa: ${escHtml(fname(i))}`));
+    if (ok) await build(p, i, n);
+    else {
+      p.pending = { type: 'build', cell: i, n };
+      await w(banner('Tym razem nie', 'Zbudujesz na początku następnej tury, bez pytania.', p.hex, 1800));
+    }
+    return;
+  }
+  // cudze pole: czynsz
+  const rent = rentOf(i);
+  if (o.off > 0) { await w(banner('Brak prądu', `${escHtml(fname(i))} nie pobiera czynszu jeszcze przez ${o.off} ${o.off === 1 ? 'turę' : 'tury'}.`, '', 1800)); return; }
+  await w(banner(`Czynsz: ${money(rent)}`, `${escHtml(p.name)} → ${escHtml(o.owner.name)} · ${escHtml(fname(i))}`, o.owner.hex, 1800));
+  await pay(p, rent, o.owner);
+}
+// Na początku tury: zakup albo budowa odłożone po złej odpowiedzi
+async function resolvePending(p) {
+  const pd = p.pending;
+  p.pending = null;
+  if (!pd) return;
+  const i = pd.cell, o = G.own.get(i);
+  if (pd.type === 'buy') {
+    if (o) { await w(banner('Ktoś był szybszy', `${escHtml(fname(i))}: właściciel ${escHtml(o.owner.name)}.`, o.owner.hex)); return; }
+    const price = priceOf(i);
+    const yes = await w(choose(p, {
+      title: `Kupno: ${escHtml(fname(i))}`, text: `Z poprzedniej tury: możesz kupić to pole bez pytania za <b>${money(price)}</b>.`,
+      options: [{ label: `Kupuję za ${money(price)}`, value: true, primary: true, disabled: p.cash < price }, { label: 'Rezygnuję', value: false }], two: true,
+    }, () => botWantsBuy(p, i)));
+    if (yes) await buyField(p, i);
+  } else {
+    if (!o || !sameTeam(o.owner, p) || o.level >= 5) return;
+    const opts = buildOptions(p, i).filter(x => x.value <= pd.n);
+    const n = await w(choose(p, {
+      title: `Budowa: ${escHtml(fname(i))}`, text: 'Z poprzedniej tury: budujesz bez pytania.',
+      options: [...opts, { label: 'Rezygnuję', value: 0 }],
+    }, () => botBuildPick(p, opts)));
+    if (n) await build(p, i, n);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Karty ułatwień i utrudnień
+// ---------------------------------------------------------------------------
+function makeCardDecks() {
+  const bonus = [...BONUS_CARDS.map(c => ({ ...c, kind: 'bonus' })), ...EXIT_CARDS.map((c, k) => ({ name: 'Wyjście z dziekanatu', icon: 'exit', exit: k, kind: 'bonus', tag: 'zachowaj' }))];
+  const penalty = PENALTY_CARDS.map(c => ({ ...c, kind: 'penalty' }));
+  return { bonus: shuffle(bonus), penalty: shuffle(penalty), all: { bonus, penalty } };
+}
+function drawCard(kind) {
+  const d = G.cardDecks;
+  if (!d[kind].length) {   // stos się skończył: tasujemy karty, których nikt nie trzyma
+    const held = new Set(G.players.flatMap(p => p.cards));
+    d[kind] = shuffle(d.all[kind].filter(c => !held.has(c)));
+  }
+  return d[kind].shift();
+}
+function returnCard(p, k) {
+  const [c] = p.cards.splice(k, 1);
+  if (c) G.cardDecks.bonus.push(c);
+  renderHud();
+}
+// Karta unosi się ze stosu na planszy
+function liftCard(kind) {
+  const deck = DECKS[kind === 'bonus' ? 0 : 1];
+  const card = mesh(cardGeo, cardEdgeMats[0], true, false);
+  const face = mesh(new THREE.PlaneGeometry(CARD_W - 0.03, CARD_L - 0.03), deckFaces[kind === 'bonus' ? 0 : 1].material, false, false);
+  face.rotation.x = -Math.PI / 2; face.position.y = 0.0075;
+  card.add(face);
+  card.position.set(deck.x, CENTER_Y + 0.2, deck.z);
+  card.rotation.y = deck.rotY;
+  board.add(card);
+  sfx('card');
+  return tween(reduceMotion ? 100 : 650, t => {
+    card.position.y = CENTER_Y + 0.2 + 2.6 * t;
+    card.rotation.x = -1.2 * t;
+    card.scale.setScalar(1 + 0.4 * t);
+  }).then(() => { board.remove(card); face.geometry.dispose(); });
+}
+let cardUid = 0;
+function cardSvg(card) {
+  cardUid += 1;
+  return card.exit != null ? exitCardSVG(EXIT_CARDS[card.exit], card.exit, `g${cardUid}`) : actionCardSVG(card, card.kind, `g${cardUid}`);
+}
+function revealCard(p, card) {
+  return new Promise(resolve => {
+    const back = cardBackUrl(card.kind === 'bonus' ? 'ulatwienia' : 'utrudnienia');
+    const bd = openModal(`<h2>${card.kind === 'bonus' ? 'Ułatwienie' : 'Utrudnienie'} dla: ${escHtml(p.name)}</h2>
+      <div class="g-card-show"><div class="flip static flipped"><span class="flip-inner"><span class="face front">${cardSvg(card)}</span><span class="face back"><img class="face-img" src="${back}" alt=""></span></span></div></div>
+      <div class="g-opts"><button type="button" class="m-btn m-primary" data-ok>Dalej</button></div>`);
+    setTimeout(() => { bd.querySelector('.flip').classList.remove('flipped'); sfx('card'); }, 250);
+    const done = () => { bd.remove(); resolve(); };
+    if (isBot(p)) setTimeout(done, 2400);
+    else bd.querySelector('[data-ok]').addEventListener('click', done);
+  });
+}
+// Cel ataku: sala przeciwnika bez hotelu, a właściciel nie ma ubezpieczenia
+const attackable = (i, attacker) => {
+  const o = G.own.get(i);
+  return o && FIELDS[i].type === 'room' && o.level < 5 && !sameTeam(o.owner, attacker) && !(o.owner.insured > 0);
+};
+async function shieldBlocks(i) {
+  const o = G.own.get(i);
+  if (!o || !o.shield) return false;
+  o.shield -= 1;
+  refreshMarks(i);
+  await w(banner('Tarcza!', `Ochrona mienia na ${escHtml(fname(i))} blokuje atak i się zużywa.`, '#2F7FF0'));
+  return true;
+}
+const best = (cells, score) => cells.slice().sort((a, b) => score(b) - score(a))[0];
+async function lowerLevel(i) {
+  const o = G.own.get(i);
+  o.level -= 1;
+  await w(showLevel(i));
+}
+async function moveBy(p, steps) {
+  await w(movePlayer(p, steps));
+  await landOn(p, 'card');
+}
+async function applyCard(p, card, x2) {
+  const k = x2 ? 2 : 1;
+  const none = msg => w(banner('Bez efektu', msg, '', 1600));
+  const mine = ownedBy(p).filter(i => FIELDS[i].type === 'room');
+  switch (card.icon) {
+    // ułatwienia
+    case 'helmet': {
+      const t = Object.keys(FIELDS).map(Number).filter(i => attackable(i, p) && G.own.get(i).level > 0);
+      if (!t.length) return none('Żaden przeciwnik nie ma budynku, który można zburzyć.');
+      const i = await w(chooseField(p, 'Kontrola BHP', 'Wybierz salę przeciwnika. Jej budynek spada o 1 poziom.', t, () => best(t, c => G.own.get(c).level)));
+      if (!(await shieldBlocks(i))) await lowerLevel(i);
+      return;
+    }
+    case 'power': {
+      const t = Object.keys(FIELDS).map(Number).filter(i => attackable(i, p) && !G.own.get(i).off);
+      if (!t.length) return none('Nie ma sali przeciwnika, którą można wyłączyć.');
+      const i = await w(chooseField(p, 'Wyłączenie prądu', 'Wybierz salę przeciwnika. Przez 3 tury nie pobiera czynszu.', t, () => best(t, rentOf)));
+      if (await shieldBlocks(i)) return;
+      G.own.get(i).off = 3;
+      refreshMarks(i);
+      await w(banner('Prąd wyłączony', `${escHtml(fname(i))} nie pobiera czynszu przez 3 tury.`, '#1E2A47'));
+      return;
+    }
+    case 'gavel': {
+      const t = Object.keys(FIELDS).map(Number).filter(i => attackable(i, p) && fieldValue(i) <= p.cash);
+      if (!t.length) return none('Nie ma sali przeciwnika, na którą Cię stać.');
+      const i = await w(chooseField(p, 'Decyzja rektora', 'Przeciwnik musi Ci sprzedać wybraną salę po jej cenie (z budynkami).', t, () => best(t, c => (botKeeps(p, fieldValue(c)) ? fieldValue(c) : -1))));
+      if (await shieldBlocks(i)) return;
+      const o = G.own.get(i), val = fieldValue(i), prev = o.owner;
+      p.cash -= val; prev.cash += val;
+      o.owner = p;
+      sfx('coin');
+      renderHud();
+      await w(showLevel(i));
+      await w(banner('Decyzja rektora', `${escHtml(fname(i))}: nowy właściciel ${escHtml(p.name)}, zapłata ${money(val)}.`, p.hex));
+      checkInstantWin(p);
+      return;
+    }
+    case 'shieldRoom': {
+      for (let n = 0; n < k; n++) {
+        const t = mine.filter(i => !G.own.get(i).shield && G.own.get(i).level < 5);
+        if (!t.length) return n ? undefined : none('Nie masz sali, którą trzeba chronić.');
+        const i = await w(chooseField(p, 'Ochrona mienia', k === 2 ? `Tarcza ${n + 1} z 2: wybierz swoją salę.` : 'Wybierz swoją salę. Tarcza zablokuje jeden atak.', t, () => best(t, fieldValue)));
+        G.own.get(i).shield = 1;
+        refreshMarks(i);
+      }
+      await w(banner('Tarcza położona', 'Zablokuje jeden atak na tę salę.', '#2F7FF0'));
+      return;
+    }
+    case 'shieldPerson':
+      p.insured = 3 * k;
+      renderHud();
+      return w(banner('Ubezpieczenie studenckie', `Przez ${3 * k} tury przeciwnicy nie mogą atakować Twoich sal.`, '#2F7FF0'));
+    case 'grant': {
+      const t = mine.filter(i => G.own.get(i).level < 4);
+      if (!t.length) return none('Nie masz sali, którą można ulepszyć (hotel buduje się tylko na polu).');
+      const i = await w(chooseField(p, 'Grant badawczy', `Ulepsz za darmo swoją salę o ${k} ${k === 1 ? 'poziom' : 'poziomy'} (najwyżej do szafy rack).`, t, () => best(t, priceOf)));
+      G.own.get(i).level = Math.min(4, G.own.get(i).level + k);
+      await w(showLevel(i));
+      return;
+    }
+    case 'coins':
+      receive(p, 200 * k);
+      return w(banner(`+${money(200 * k)}`, 'Stypendium naukowe z banku.', p.hex));
+    case 'refund': {
+      const v = Math.min(G.pool, 100 * k);
+      G.pool -= v;
+      receive(p, v);
+      return w(banner(v ? `+${money(v)} z puli` : 'Pula jest pusta', 'Zwrot czesnego.', p.hex));
+    }
+    case 'people': {
+      const from = opponents(p);
+      await w(banner('Praca w samorządzie', `Każdy przeciwnik płaci Ci ${money(50 * k)}.`, p.hex));
+      for (const o of from) if (!o.out) await pay(o, 50 * k, p);
+      return;
+    }
+    case 'forward': {
+      const n = x2 ? await w(choose(p, { title: 'Wcześniejsza sesja', text: 'O ile pól chcesz się przesunąć?', options: [{ label: '3 pola', value: 3 }, { label: '6 pól', value: 6, primary: true }], two: true }, () => pickOne([3, 6]))) : 3;
+      return moveBy(p, n);
+    }
+    case 'notes':
+    case 'exit':
+      p.cards.push(card);
+      renderHud();
+      return w(banner('Karta zostaje u Ciebie', card.icon === 'notes' ? 'Zadziała przy następnym pytaniu.' : 'Użyjesz jej, żeby wcześniej wyjść z dziekanatu.', p.hex));
+    // utrudnienia
+    case 'flood': {
+      const t = mine.filter(i => G.own.get(i).level > 0 && G.own.get(i).level < 5);
+      if (!t.length) return none('Nie masz budynku, który mogłoby zalać.');
+      const i = pickOne(t);
+      if (!(await shieldBlocks(i))) { await w(banner('Zalanie sali', `${escHtml(fname(i))}: budynek spada o 1 poziom.`, '#D6534F')); await lowerLevel(i); }
+      return;
+    }
+    case 'scissors': {
+      const t = mine.filter(i => G.own.get(i).level < 5);
+      if (!t.length) return none('Nie masz sali do sprzedania.');
+      const i = await w(chooseField(p, 'Cięcia budżetowe', 'Wybierz salę. Sprzedajesz ją bankowi za pół ceny.', t, () => best(t, c => -fieldValue(c))));
+      if (await shieldBlocks(i)) return;
+      const v = Math.round(fieldValue(i) * 0.5);
+      G.own.delete(i);
+      receive(p, v);
+      await w(showLevel(i));
+      refreshMarks(i);
+      return w(banner('Cięcia budżetowe', `${escHtml(fname(i))} wraca do banku. Dostajesz ${money(v)}.`, '#D6534F'));
+    }
+    case 'swap': {
+      const t = mine.filter(i => G.own.get(i).level < 5);
+      const to = opponents(p);
+      if (!t.length || !to.length) return none('Nie masz sali, która mogłaby przejść do przeciwnika.');
+      const i = pickOne(t), who = pickOne(to);
+      if (await shieldBlocks(i)) return;
+      G.own.get(i).owner = who;
+      await w(showLevel(i));
+      refreshMarks(i);
+      await w(banner('Zmiana planu zajęć', `${escHtml(fname(i))}: nowy właściciel ${escHtml(who.name)}.`, who.hex));
+      checkInstantWin(who);
+      return;
+    }
+    case 'bulb': {
+      const t = mine.filter(i => G.own.get(i).level < 5 && !G.own.get(i).off);
+      if (!t.length) return none('Nie masz sali, w której może zabraknąć prądu.');
+      const i = pickOne(t);
+      if (await shieldBlocks(i)) return;
+      G.own.get(i).off = 3;
+      refreshMarks(i);
+      return w(banner('Brak prądu', `${escHtml(fname(i))} nie pobiera czynszu przez 3 tury.`, '#1E2A47'));
+    }
+    case 'wrench': {
+      let v = 0;
+      for (const i of mine) { const l = G.own.get(i).level; v += l === 5 ? 100 : l > 0 ? 20 : 0; }
+      v *= k;
+      if (!v) return none('Nie masz budynków, więc nic nie płacisz.');
+      await w(banner('Opłaty za sprzęt', `Płacisz ${money(v)} do puli.`, '#D6534F'));
+      await pay(p, v, 'pool');
+      return;
+    }
+    case 'exam':
+      await w(banner('Warunek', `Płacisz ${money(100 * k)} do puli.`, '#D6534F'));
+      await pay(p, 100 * k, 'pool');
+      return;
+    case 'clock':
+      return moveBy(p, -3 * k);
+    case 'door':
+      return sendToJail(p, x2 ? 'Bez karty wyjścia' : '', x2);
+    case 'hourglass':
+      p.skip += k;
+      renderHud();
+      return w(banner('Kolokwium poprawkowe', `Tracisz ${k === 1 ? '1 kolejkę' : '2 kolejki'}.`, '#D6534F'));
+    case 'plagiarism': {
+      if (!p.cards.length) return none('Nie masz kart do oddania.');
+      const n = x2 ? p.cards.length : 1;
+      for (let j = 0; j < n; j++) returnCard(p, rnd(p.cards.length));
+      return w(banner('Wykryty plagiat', n === 1 ? 'Oddajesz 1 kartę do stosu.' : 'Oddajesz wszystkie karty do stosu.', '#D6534F'));
+    }
+  }
+}
+async function chance(p) {
+  const ok = await w(askQuestion(p, 'sem', 'Szansa: dobrze = ułatwienie, źle = utrudnienie'));
+  const kind = ok ? 'bonus' : 'penalty';
+  const card = drawCard(kind);
+  await w(liftCard(kind));
+  await w(revealCard(p, card));
+  let x2 = false;
+  if (card.x2) {   // drugie pytanie: przy ułatwieniu dobra odpowiedź podwaja, przy utrudnieniu zła
+    const ok2 = await w(askQuestion(p, 'sem', kind === 'bonus' ? 'dobra odpowiedź = działanie ×2' : 'zła odpowiedź = działanie ×2'));
+    x2 = kind === 'bonus' ? ok2 : !ok2;
+    if (x2) await w(banner('Działanie ×2', escHtml(card.x2), kind === 'bonus' ? '#2E9E8A' : '#D6534F'));
+  }
+  await applyCard(p, card, x2);
+}
+
+// ---------------------------------------------------------------------------
+// Dziekanat
+// ---------------------------------------------------------------------------
+async function sendToJail(p, why = '', noCard = false) {
+  const a = p.obj.position.clone(), b = spotPos(JAIL_CELL, p.idx);
+  const r0 = p.obj.rotation.y, r1 = turnTo(p, cellPose(JAIL_CELL).rotY);
+  p.pos = JAIL_CELL;
+  p.jail = 2;
+  p.noCard = noCard;
+  renderHud();
+  await w(banner('Do dziekanatu!', `${escHtml(p.name)} stoi 2 kolejki.${why ? ` ${why}.` : ''}`, '#D6534F', 1500));
+  await w(tween(reduceMotion ? 100 : 900, t => {
+    p.obj.position.lerpVectors(a, b, easeInOut(t));
+    p.obj.position.y = TILE_H + 2.6 * Math.sin(Math.PI * t);
+    p.obj.rotation.y = r0 + (r1 - r0) * t;
+  }));
+  sfx('bad');
+}
+// Tura w dziekanacie. Zwraca 'out' (rzucasz normalnie), 'stay' albo 'moved' (wyszedł dubletem i już się ruszył)
+async function jailTurn(p) {
+  const cards = p.cards.filter(c => c.icon === 'exit').length;
+  const choice = await w(choose(p, {
+    title: `Dziekanat: kolejka ${3 - p.jail} z 2`,
+    text: 'Jak chcesz wyjść? Po 2 kolejkach wychodzisz sam.',
+    options: [
+      { label: `Zapłać za warunek: ${money(ECON.bail)}`, value: 'pay', disabled: p.cash < ECON.bail },
+      { label: 'Pytanie, a potem rzut: dublet = wyjście', value: 'roll', primary: true },
+      { label: `Karta „Wyjście z dziekanatu”${cards ? ` (masz ${cards})` : ' (nie masz)'}${p.noCard ? ': nie tym razem' : ''}`, value: 'card', disabled: !cards || p.noCard },
+    ],
+  }, () => (cards && !p.noCard ? 'card' : p.cash > (p.level === 'trudny' ? 300 : 600) ? 'pay' : 'roll')));
+  if (choice === 'pay') {
+    await pay(p, ECON.bail, 'pool');
+    p.jail = 0;
+    await w(banner('Warunek zapłacony', 'Wychodzisz z dziekanatu.', p.hex, 1300));
+    return 'out';
+  }
+  if (choice === 'card') {
+    returnCard(p, p.cards.findIndex(c => c.icon === 'exit'));
+    p.jail = 0;
+    await w(banner('Wyjście z dziekanatu', 'Karta wraca do stosu ułatwień.', p.hex, 1300));
+    return 'out';
+  }
+  const ok = await w(askQuestion(p, 'sem', 'dziekanat: dobra odpowiedź = rzut kostkami'));
+  if (!ok) { p.jail -= 1; await w(banner('Zostajesz w dziekanacie', p.jail ? 'Spróbujesz w następnej turze.' : 'W następnej turze wychodzisz sam.', '', 1500)); return 'stay'; }
+  const [a, b] = await rollDice(p);
+  if (a !== b) { p.jail -= 1; await w(banner('Bez dubletu', p.jail ? 'Zostajesz w dziekanacie.' : 'W następnej turze wychodzisz sam.', '', 1500)); return 'stay'; }
+  p.jail = 0;
+  await w(banner('Dublet!', 'Wychodzisz z dziekanatu.', p.hex, 1300));
+  await w(movePlayer(p, a + b));
+  await landOn(p, 'roll');
+  return 'moved';
+}
+async function landJail(p, how) {
+  if (how !== 'roll') { await w(banner('Dziekanat', 'Tylko odwiedzasz.', '', 1200)); return; }
+  await w(banner('Dziekanat', 'Pytanie dziekanatu. Zła odpowiedź: stoisz 1 kolejkę.', '#B8862B', 1500));
+  const ok = await w(askQuestion(p, 'dziekanat', 'pytanie dziekanatu'));
+  if (ok) await w(banner('Sprawa załatwiona', 'Idziesz dalej bez postoju.', p.hex, 1400));
+  else { p.skip += 1; renderHud(); await w(banner('Stoisz 1 kolejkę', 'Dziekanat ma jeszcze pytania.', '#D6534F', 1500)); }
+}
+
+// ---------------------------------------------------------------------------
+// Ruch i pola
+// ---------------------------------------------------------------------------
+async function passStart(p) {
+  const share = pct(p.lap.ok, p.lap.q) ?? 0;
+  const bonus = Math.round((ECON.startPay * share) / 100);
+  receive(p, ECON.startPay + bonus);
+  p.lap = { q: 0, ok: 0 };
+  await w(banner(`START: +${money(ECON.startPay + bonus)}`, `${money(ECON.startPay)} i premia ${share}% za dobre odpowiedzi w tym okrążeniu.`, p.hex, 1700));
+}
+async function movePlayer(p, steps) {
+  const dir = Math.sign(steps);
+  for (let s = 0; s < Math.abs(steps); s++) {
+    const from = p.pos;
+    p.pos = (p.pos + dir + TOTAL) % TOTAL;
+    await w(hop(p, from, p.pos));
+    if (dir > 0 && p.pos === START_CELL) await passStart(p);
+  }
+  renderHud();
+}
+async function landOn(p, how) {
+  const i = p.pos, f = FIELDS[i];
+  setStatus(`${p.name}: ${fname(i)}`);
+  if (i === START_CELL) return;
+  if (i === JAIL_CELL) return landJail(p, how);
+  if (i === GOTO_CELL) return sendToJail(p);
+  if (i === POOL_CELL) {
+    const v = G.pool;
+    G.pool = 0;
+    receive(p, v);
+    return w(banner('Stypendium rektorskie', v ? `Zabierasz całą pulę: ${money(v)}.` : 'Pula jest pusta. Następnym razem!', p.hex, 1900));
+  }
+  if (f?.type === 'tax') {
+    await w(banner('Czesne', `Płacisz ${money(ECON.tax)} do puli na środku.`, '#D6534F', 1500));
+    await pay(p, ECON.tax, 'pool');
+    return;
+  }
+  if (f?.type === 'chance') return chance(p);
+  if (buyable(i)) return landProperty(p, i);
+}
+function waitRoll(p) {
+  return new Promise(resolve => {
+    if (isBot(p)) { setTimeout(resolve, 700); return; }
+    const b = $('gRoll');
+    b.hidden = false;
+    b.innerHTML = `${diceIco}Rzuć kostkami`;
+    b.onclick = () => { b.hidden = true; b.onclick = null; audio(); resolve(); };
+    b.focus();
+  });
+}
+const diceIco = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="8.5" cy="8.5" r="1.6" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/></svg>';
+async function rollDice(p) {
+  setStatus(isBot(p) ? `${p.name} rzuca kostkami…` : `${p.name}: Twój rzut`);
+  await w(waitRoll(p));
+  const a = 1 + rnd(6), b = 1 + rnd(6);
+  await w(throwDice(a, b));
+  setStatus(`${p.name}: ${a} + ${b} = ${a + b}${a === b ? ' · dublet!' : ''}`);
+  return [a, b];
+}
+// Na początku tury właściciela odliczają się: brak prądu na jego salach i ubezpieczenie
+function tickStatuses(p) {
+  for (const [i, o] of G.own) if (o.owner === p && o.off > 0) { o.off -= 1; refreshMarks(i); }
+  if (p.insured > 0) p.insured -= 1;
+}
+async function playTurn(p) {
+  renderHud();
+  const humans = G.players.filter(x => !isBot(x) && !x.out).length;
+  if (!isBot(p) && humans > 1) await w(banner(`Tura: ${escHtml(p.name)}`, '', p.hex, 1000));
+  tickStatuses(p);
+  if (p.skip > 0) {
+    p.skip -= 1;
+    renderHud();
+    await w(banner(`${escHtml(p.name)} traci kolejkę`, p.skip ? `Jeszcze ${p.skip}.` : '', p.hex, 1500));
+    return;
+  }
+  await resolvePending(p);
+  if (p.out) return;
+  if (p.jail > 0) {
+    const r = await jailTurn(p);
+    if (r !== 'out') return;
+  }
+  for (let doubles = 0; ;) {
+    const [a, b] = await rollDice(p);
+    if (a === b) doubles += 1;
+    if (doubles === 3) { await sendToJail(p, 'Trzeci dublet z rzędu'); return; }
+    await w(movePlayer(p, a + b));
+    await landOn(p, 'roll');
+    if (p.out || p.jail > 0 || p.skip > 0 || a !== b) return;
+    await w(banner('Dublet!', 'Rzucasz jeszcze raz.', p.hex, 1100));
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Panel gry (HUD)
+// ---------------------------------------------------------------------------
+function setStatus(text) {
+  const el = $('gStatus');
+  el.hidden = !text;
+  el.textContent = text;
+}
+function renderHud() {
+  if (!G) return;
+  $('gPlayers').innerHTML = G.players.map((p, k) => {
+    const badges = [];
+    if (p.jail > 0) badges.push(`dziekanat (${p.jail})`);
+    if (p.skip > 0) badges.push(`traci kolejkę (${p.skip})`);
+    const exits = p.cards.filter(c => c.icon === 'exit').length;
+    if (exits) badges.push(`wyjście ×${exits}`);
+    if (p.cards.some(c => c.icon === 'notes')) badges.push('notatki');
+    if (p.insured > 0) badges.push(`ubezpieczenie ${p.insured}`);
+    if (p.pending) badges.push(p.pending.type === 'buy' ? 'kupno w następnej turze' : 'budowa w następnej turze');
+    const sub = p.out ? 'poza grą' : [G.teams ? TEAMS[p.team].name : '', isBot(p) ? `bot · ${p.level}` : p.kind === 'me' ? 'Ty' : 'gracz'].filter(Boolean).join(' · ');
+    return `<div class="g-player${k === G.turn ? ' is-turn' : ''}${p.out ? ' is-out' : ''}" style="--c:${p.hex}">
+      ${avatar(p.pawnIdx, p.colorIdx)}
+      <span class="g-pname"><b>${escHtml(p.name)}</b><small>${sub}</small>${badges.length ? `<span class="g-badges">${badges.map(b => `<span class="g-badge">${b}</span>`).join('')}</span>` : ''}</span>
+      <span class="g-cash">${money(p.cash)}</span>
+    </div>`;
+  }).join('');
+  $('gPool').innerHTML = `<small>Pula</small>${money(G.pool)}`;
+  const t = $('gTimer');
+  t.hidden = !G.timeLeft && !G.timeUp;
+  if (!t.hidden) {
+    const s = Math.max(0, Math.ceil(G.timeLeft / 1000));
+    t.innerHTML = `<small>Czas</small>${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  }
+}
+gameInfo = i => {
+  if (!G || !buyable(i)) return null;
+  const o = G.own.get(i), f = FIELDS[i];
+  if (!o) return `Wolne · cena ${money(priceOf(i))}`;
+  const parts = [`Właściciel: ${o.owner.name}`];
+  if (f.type === 'room') parts.push(o.level ? `${BUILDINGS[o.level - 1].name.toLowerCase()} (poziom ${o.level})` : 'bez budynku');
+  parts.push(`czynsz ${money(rentOf(i))}`);
+  if (o.shield) parts.push('tarcza');
+  if (o.off) parts.push(`bez prądu: ${o.off}`);
+  return parts.join(' · ');
+};
+
+// ---------------------------------------------------------------------------
+// Start, pauza, koniec gry
+// ---------------------------------------------------------------------------
+const FALLBACK_QUESTIONS = [
+  { q: 'Ile to jest 7 × 8?', a: ['54', '56', '64', '48'], ok: 1 },
+  { q: 'Ile to jest 12 + 15?', a: ['25', '27', '28', '17'], ok: 1 },
+  { q: 'Ile to jest 9 × 9?', a: ['81', '72', '99', '18'], ok: 0 },
+  { q: 'Ile to jest 100 − 37?', a: ['73', '67', '63', '53'], ok: 2 },
+];
+function questionList(sem) {
+  const B = window.BAZA_PYTAN || {};
+  const all = Object.entries(B.semestry || {}).flatMap(([k, qs]) => qs.map(q => ({ ...q, sem: +k })));
+  const list = sem === 8 ? all : all.filter(q => q.sem === sem);
+  return list.length ? list : all.length ? all : FALLBACK_QUESTIONS;
+}
+function startGame() {
+  saveSetup();
+  quitGame();
+  for (const [cell, b] of built) cellGroups[cell].remove(b.obj);   // budynki z pokazu budowania
+  built.clear();
+  const slots = setup.slots.map((s, i) => ({ s, i })).filter(({ s }) => s.kind !== 'empty');
+  const teams = setup.teams && slots.length === 4;
+  G = {
+    players: [], turn: 0, own: new Map(), marks: new Map(), pool: 0, over: false, paused: false, teams,
+    semester: setup.semester, timeLeft: setup.timer * 60000, timeUp: false,
+    decks: {
+      sem: makeDeck(questionList(setup.semester)),
+      dziekanat: makeDeck((window.BAZA_PYTAN?.dziekanat || []).length ? window.BAZA_PYTAN.dziekanat : questionList(setup.semester)),
+    },
+    cardDecks: makeCardDecks(),
+    anim: { flags: flags.length, steams: steams.length, coins: coins.length },
+  };
+  slots.forEach(({ s, i }, idx) => {
+    const pawnIdx = slotPawn(s), colorIdx = slotColor(s);
+    const p = {
+      idx, slot: i, kind: s.kind === 'online' ? 'local' : s.kind, level: s.level || 'średni',
+      name: s.kind === 'me' ? profile.nick : s.kind === 'bot' ? `Bot ${i + 1}` : `Gracz ${i + 1}`,
+      pawnIdx, colorIdx, hex: PAWN_COLORS[colorIdx].hex, team: i % 2,
+      cash: ECON.startCash, pos: START_CELL, out: false, jail: 0, noCard: false, skip: 0, insured: 0,
+      cards: [], pending: null, lap: { q: 0, ok: 0 }, total: { q: 0, ok: 0 },
+    };
+    p.obj = PLAYERS[pawnIdx].make(p.hex);
+    board.add(p.obj);
+    placePawn(p);
+    G.players.push(p);
+  });
+  closeMenu();
+  document.body.classList.add('in-game');
+  layer.innerHTML = '';
+  setStatus('');
+  renderHud();
+  const g = G;
+  g.clock = setInterval(() => {
+    if (G !== g || g.paused || g.over || !g.timeLeft) return;
+    g.timeLeft = Math.max(0, g.timeLeft - 1000);
+    if (!g.timeLeft && !g.timeUp) { g.timeUp = true; banner('Koniec czasu!', 'Kończymy bieżącą turę i liczymy majątek.', '#D6534F', 2200); }
+    renderHud();
+  }, 1000);
+  runGame(g, setup.mode === 'online');
+}
+async function runGame(g, online) {
+  try {
+    const sem = g.semester === 8 ? 'pytania mieszane (semestry 1–7)' : `pytania z semestru ${g.semester}`;
+    await w(banner('Zaczynamy!', `${sem} · ${g.timeLeft ? `czas gry ${g.timeLeft / 60000} min` : 'bez limitu czasu'}${online ? ' · tryb online ruszy z serwerem gry, teraz wszyscy grają przy tym komputerze' : ''}`, '', 2200));
+  } catch (e) { if (e !== STOP) throw e; return; }
+  while (G === g && !g.over) {
+    try {
+      await playTurn(g.players[g.turn]);
+    } catch (e) {
+      if (e !== STOP) console.error(e);
+    }
+    if (G !== g || g.over) return;
+    if (g.timeUp) { endGame('time'); return; }
+    do g.turn = (g.turn + 1) % g.players.length; while (g.players[g.turn].out);
+  }
+}
+function quitGame() {
+  if (!G) return;
+  const g = G;
+  G = null;
+  g.over = true;
+  clearInterval(g.clock);
+  layer.innerHTML = '';
+  $('gRoll').hidden = true;
+  setStatus('');
+  document.body.classList.remove('in-game');
+  for (const p of g.players) { board.remove(p.obj); disposeTree(p.obj); }
+  for (const [i, m] of g.marks) for (const obj of Object.values(m)) if (obj) { cellGroups[i].remove(obj); disposeTree(obj); }
+  flags.length = g.anim.flags; steams.length = g.anim.steams; coins.length = g.anim.coins;
+  dice.forEach(d => { d.visible = false; });
+  selectCell(null);
+}
+function pause() {
+  if (!G || G.over) return;
+  G.paused = true;
+  const bd = openModal(`<h2>Pauza</h2><p>Gra czeka. Czas gry też stoi.</p>
+    <div class="g-opts">
+      <button type="button" class="m-btn m-primary" data-p="back">Wróć do gry</button>
+      <button type="button" class="m-btn m-secondary" data-p="end">Zakończ grę i policz wynik</button>
+      <button type="button" class="m-btn m-secondary" data-p="quit">Wyjdź do menu (bez wyniku)</button>
+    </div>`);
+  bd.style.zIndex = 5;
+  bd.addEventListener('click', e => {
+    const b = e.target.closest('[data-p]');
+    if (!b) return;
+    bd.remove();
+    if (!G) return;
+    G.paused = false;
+    if (b.dataset.p === 'end') endGame('manual');
+    if (b.dataset.p === 'quit') { quitGame(); openMenu(); }
+  });
+}
+$('gMenuBtn').addEventListener('click', pause);
+document.addEventListener('keydown', e => {
+  if (!G || e.key !== ' ' || $('gRoll').hidden || layer.querySelector('.g-backdrop')) return;
+  e.preventDefault();
+  $('gRoll').click();
+});
+const REASONS = {
+  time: 'Koniec czasu. Wygrywa największy majątek.',
+  bankruptcy: 'Pozostali gracze zbankrutowali.',
+  specials: 'Zebrane wszystkie 4 pola specjalne: wygrana od razu!',
+  monopolies: '4 monopole: wygrana od razu!',
+  manual: 'Gra zakończona. Wygrywa największy majątek.',
+};
+function endGame(reason, instantWinner = null) {
+  const g = G;
+  if (!g || g.over) return;
+  g.over = true;
+  clearInterval(g.clock);
+  $('gRoll').hidden = true;
+  setStatus('');
+  const acc = p => pct(p.total.ok, p.total.q);
+  const rows = g.players.map(p => ({ p, wealth: p.out ? 0 : wealth(p), acc: acc(p) }));
+  const order = (a, b) => b.wealth - a.wealth || (b.acc ?? -1) - (a.acc ?? -1);
+  let winners;
+  if (instantWinner) winners = g.teams ? rows.filter(r => r.p.team === instantWinner.team) : rows.filter(r => r.p === instantWinner);
+  else if (g.teams) {
+    const team = t => rows.filter(r => r.p.team === t);
+    const sum = t => team(t).reduce((s, r) => s + r.wealth, 0);
+    const tacc = t => pct(team(t).reduce((s, r) => s + r.p.total.ok, 0), team(t).reduce((s, r) => s + r.p.total.q, 0)) ?? -1;
+    const wt = sum(0) - sum(1) || tacc(0) - tacc(1);
+    winners = team(wt >= 0 ? 0 : 1);
+  } else winners = [rows.slice().sort(order)[0]];
+  rows.sort(order);
+  const scored = rows.filter(r => r.acc != null);
+  const topAcc = scored.length ? Math.max(...scored.map(r => r.acc)) : null;
+  const prymus = topAcc == null ? null : scored.find(r => r.acc === topAcc);
+  const win = new Set(winners.map(r => r.p));
+  // statystyki gracza „Ty” zapisują się w profilu (ranking i profil)
+  const me = g.players.find(p => p.kind === 'me');
+  if (me && profile && reason !== 'quit') {
+    const st = Object.assign({ games: 0, wins: 0, q: 0, ok: 0, best: null, wealth: null }, profile.stats);
+    st.games += 1;
+    if (win.has(me)) st.wins += 1;
+    st.q += me.total.q; st.ok += me.total.ok;
+    const a = acc(me);
+    if (a != null) st.best = Math.max(st.best ?? 0, a);
+    st.wealth = Math.max(st.wealth ?? 0, rows.find(r => r.p === me).wealth);
+    profile.stats = st;
+    store.set('profil', profile);
+  }
+  layer.innerHTML = '';
+  sfx('fanfare');
+  const title = g.teams ? `Wygrywa ${TEAMS[winners[0].p.team].name}` : `Wygrywa ${escHtml(winners[0].p.name)}`;
+  const bd = openModal(`
+    <div class="g-end-head">${winners.map(r => avatar(r.p.pawnIdx, r.p.colorIdx)).join('')}<div><h2>${title}!</h2><p>${REASONS[reason]}</p></div></div>
+    <div class="m-table-wrap"><table class="m-table g-end">
+      <thead><tr><th>#</th><th>Gracz</th><th>Majątek</th><th>Dobre odpowiedzi</th></tr></thead>
+      <tbody>${rows.map((r, k) => `<tr${win.has(r.p) ? ' class="is-me"' : ''}>
+        <td><span class="m-pos">${k + 1}</span></td>
+        <td><span class="m-player">${avatar(r.p.pawnIdx, r.p.colorIdx)}${escHtml(r.p.name)}${win.has(r.p) ? '<span class="g-title">Wygrana</span>' : ''}${prymus && prymus.p === r.p ? '<span class="g-title prymus">Prymus</span>' : ''}</span></td>
+        <td>${r.p.out ? 'bankrut' : money(r.wealth)}</td>
+        <td>${r.acc == null ? '–' : `<span class="m-bar"><i style="width:${r.acc}%"></i></span>${r.acc}%`}</td></tr>`).join('')}</tbody>
+    </table></div>
+    <p class="g-ctx">Majątek to gotówka oraz sale i budynki. „Prymus” ma najwyższy procent dobrych odpowiedzi. Pytań i odpowiedzi nie pokazujemy.</p>
+    <div class="g-opts two"><button type="button" class="m-btn m-primary" data-e="again">Zagraj jeszcze raz</button><button type="button" class="m-btn m-secondary" data-e="menu">Wróć do menu</button></div>`, 'wide');
+  bd.addEventListener('click', e => {
+    const b = e.target.closest('[data-e]');
+    if (!b) return;
+    if (b.dataset.e === 'again') startGame();
+    else { quitGame(); openMenu(); }
+  });
+}
+
 // Klikanie pól
 const ray = new THREE.Raycaster();
 const ndc = new THREE.Vector2();
@@ -2972,8 +4946,6 @@ function frame() {
 }
 frame();
 $('loader').hidden = true;
-// Menu (logowanie i panel) jest na razie wyłączone. Żeby je włączyć, zmień na true.
-const MENU_ON = false;
-$('btnMenu').hidden = !MENU_ON;
-if (MENU_ON) openMenu();
+// Gra startuje od menu (logowanie, a potem ekran główny)
+openMenu();
 </script>

@@ -12,3 +12,6 @@ dist/
 # Lokalne ustawienia edytora i asystenta
 .vscode/
 .claude/settings.local.json
+
+# Python (skrypty w pytania/)
+__pycache__/

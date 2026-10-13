@@ -21,7 +21,115 @@ Ten plik zbiera wszystko, co ustaliliśmy o grze. Aktualizujemy go przy każdej 
 
 Zasady rozpisujemy od nowa, etap po etapie. Poprzednia wersja jest w `docs/archiwum-zasad.md`.
 
-Z gry usunięte są wszystkie dema: rzut kostkami, ruch pionków, przykładowe budynki i pasek graczy. Plansza, modele i karty zostają do oglądania.
+Rozgrywka działa w `index.html` od 13.10.2026 (opis niżej, w sekcji „Rozgrywka: co działa i jakie ustawienia przyjęliśmy”). Pokaz budowania i podgląd modeli zostają do oglądania poza grą.
+
+### Mechanika rozgrywki (wersja robocza z 13.10.2026)
+
+**Tura i kostki**
+- Gracz rzuca dwiema kostkami. Rzut ma animację i prawdziwy dźwięk rzucanych kostek. Pionek idzie o sumę oczek.
+- Dublet: gracz rzuca jeszcze raz. **Trzeci dublet z rzędu:** gracz idzie do dziekanatu na tych samych zasadach co z pola „Udaj się do dziekanatu”.
+- Ważne zdarzenia (kupno, pytanie, karta, dziekanat, premia za START) pokazują się jako duże karty i napisy na środku ekranu, jak w Business Tour.
+
+**Pytania**
+- Przed grą gracz wybiera semestr pytań: 1–7 albo 8 = mieszane (pytania ze wszystkich semestrów).
+- Pytania są w talii w losowej kolejności. Kiedy talia się skończy, jest animacja tasowania i nowa losowa kolejność. Pytania z końca poprzedniej talii nie trafiają na jej początek, żeby nikt nie zapamiętał kolejności.
+- Gracz nie ma dostępu do listy pytań ani kart. Karta jest widoczna tylko wtedy, kiedy pada pytanie.
+- **Kategoria „Dziekanat”:** osobne pytania o sprawy dziekanatowe. Padają tylko wtedy, gdy gracz stanie na polu Dziekanat zwykłym rzutem. Gracz, który trafił tam z pola „Udaj się do dziekanatu”, dostaje zwykłe pytania z semestru.
+- Baza pytań: arkusz Excela `pytania/pytania.xlsx` do wypełnienia przez wykładowców (opis w sekcji „Baza pytań”).
+
+**Kupowanie i budowanie**
+- **1. wizyta na wolnej sali:** pytanie. Dobra odpowiedź: kupujesz samo pole. Zła: możesz je kupić na początku swojej następnej tury, bez pytania. Jeśli w międzyczasie stanie tam inny gracz i dobrze odpowie na inne pytanie, kupuje pierwszy.
+- **Kolejne wizyty na własnej sali:** pytanie. Dobra odpowiedź: budujesz od razu. Zła: na początku następnej tury. Za jednym razem najwyżej 2 poziomy:
+  - 2. wizyta: poziom 1 albo 1–2,
+  - 3. wizyta: poziom 3 albo 3–4,
+  - 4. wizyta: poziom 5, czyli hotel (serwerownia).
+- **Hotel to tarcza:** pola z hotelem nie da się zburzyć, wyłączyć, odkupić ani zmusić właściciela do sprzedaży.
+
+**Okrążenie i premia za START**
+- Gra liczy pytania zadane graczowi w danym okrążeniu, dobre i złe.
+- Przy przejściu przez START gracz dostaje zwykłą kwotę i premię równą procentowi dobrych odpowiedzi w tym okrążeniu. Przykład: START 200, 50% dobrych odpowiedzi, czyli 200 + 100 = 300.
+- Każde okrążenie liczy się osobno. Po przejściu przez START licznik zaczyna się od zera.
+
+**Czas gry i koniec**
+- Przed grą: gra bez limitu (do końca) albo z limitem czasu (timer).
+- Na koniec czasu gra liczy majątek (gotówka i wartość pól z budynkami) oraz skuteczność odpowiedzi z całej gry.
+- Ekran końca pokazuje majątek i procent dobrych i złych odpowiedzi. Nie zdradza, które pytania padły, ile ich było ani jakie były dobre odpowiedzi.
+- Zwycięzca: **do ustalenia** (propozycja: wygrywa największy majątek, przy remisie decyduje skuteczność, a gracz z najlepszą skutecznością dostaje dodatkowy tytuł „Prymus”).
+
+### Baza pytań (zrobione 13.10.2026)
+
+- Plik `pytania/pytania.xlsx`, arkusz **Pytania**: kolumny Semestr (1–7), Przedmiot, Prowadzący, Pytanie, A, B, C, D, Poprawna (litera A–D). Arkusz **Dziekanat**: Pytanie, A, B, C, D, Poprawna. Arkusz **Instrukcja** opisuje, jak wypełniać.
+- Teraz w pliku są przykładowe pytania (6 na semestr i 8 pytań dziekanatu, „dr Jan Kowalski”). Prawdziwe pytania dadzą wykładowcy.
+- Po zmianie w Excelu trzeba w folderze projektu uruchomić `python3 pytania/excel-na-js.py`. Skrypt sprawdza wiersze (brakujące odpowiedzi, zły semestr, zła litera) i zapisuje `pytania/baza-pytan.js`, który czyta gra.
+- `pytania/szablon-z-przykladami.py` tworzy od nowa arkusz z przykładami. Uwaga: nadpisuje `pytania.xlsx`.
+- Skrypty nie potrzebują dodatkowych bibliotek, wystarczy Python 3.
+
+### Rozgrywka: co działa i jakie ustawienia przyjęliśmy (13.10.2026)
+
+Tam, gdzie autor jeszcze nie zdecydował, przyjęte są ustawienia tymczasowe. Wszystkie kwoty są w jednym miejscu w `index.html` (obiekty `ECON`, `GROUP_PRICE`, `RENT_MULT`, `BUILD_MULT`, `BOT`), więc łatwo je zmienić.
+
+**Pieniądze (tymczasowe)**
+- Waluta: zł. Na start każdy ma 1500 zł.
+- START: 200 zł i premia za okrążenie (procent dobrych odpowiedzi z tego okrążenia × 200 zł).
+- Ceny sal według grup: 1: 60, 2: 100, 3: 140, 4: 180, 5: 220, 6: 260, 7: 300, 8: 350 zł.
+- Czynsz za salę: cena × 0,12 bez budynku (×2 przy monopolu), × 0,5 telefon, × 1 laptop, × 1,8 komputer, × 2,6 szafa rack, × 3,6 serwerownia (hotel).
+- Budowa: każdy poziom od 1 do 4 kosztuje pół ceny sali, serwerownia całą cenę.
+- Parkingi: cena 200 zł, czynsz 50 zł za jeden parking właściciela, 120 zł za oba. Bonus parkingowy: 50 zł, gdy staniesz na swoim parkingu.
+- Pola specjalne: cena 250 zł, czynsz 60, 130, 210 albo 300 zł zależnie od liczby pól specjalnych właściciela.
+- Czesne: 100 zł do puli. „Zapłać za warunek” w dziekanacie: 100 zł do puli. Stypendium rektorskie zabiera całą pulę.
+- Gdy gracz nie ma czym zapłacić, gra sama sprzedaje bankowi jego budynki, a potem sale, za połowę wartości. Jeśli to nie wystarczy, gracz bankrutuje i jego sale wracają do banku.
+
+**Pytania w grze**
+- Pytanie pada przy kupnie pola (także parkingu i pola specjalnego), przy budowie, na Szansie (2 pytania), na Dziekanacie (pytanie dziekanatu) i przy wychodzeniu z dziekanatu rzutem. Przy czynszu pytania nie ma.
+- Gracz najpierw decyduje, czy chce kupić albo ile poziomów zbudować, a dopiero potem dostaje pytanie.
+- Po odpowiedzi gra pokazuje tylko „Dobrze” albo „Źle”. Dobrej odpowiedzi nie zdradza (ustawienie `SHOW_CORRECT` w kodzie).
+- Talia pytań jest osobna dla semestru i dla dziekanatu. Po jej końcu jest animacja tasowania, a pytania z końca poprzedniej talii nie trafiają na początek nowej.
+- Gdy dla wybranego semestru nie ma pytań, gra bierze pytania ze wszystkich semestrów.
+
+**Budowanie**
+- Za jednym razem najwyżej 2 poziomy. Serwerownię (hotel) można postawić tylko na sali z szafą rack (poziom 4). Dzięki temu hotel wypada najwcześniej na 4. wizycie.
+- Odpowiedź źle: zakup albo budowa czeka na początek następnej tury, bez pytania. Jeśli ktoś w międzyczasie kupi to pole, zakup przepada.
+
+**Karty**
+- Ułatwienia: 11 kart z listy plus 4 karty „Wyjście z dziekanatu”. Utrudnienia: 10 kart z listy. Karty, które gracz trzyma (wyjście z dziekanatu, notatki), nie wracają do stosu, dopóki ich nie użyje.
+- Karty ataku i „Grant badawczy” gracz kieruje sam: wybiera salę z listy. Przy utrudnieniach „Zalanie sali”, „Zmiana planu zajęć” i „Brak prądu” salę losuje gra, a przy „Cięciach budżetowych” wybiera gracz.
+- „Grant badawczy” ulepsza najwyżej do szafy rack. Serwerownię stawia się tylko po wizycie na polu.
+- „Ubezpieczenie studenckie” trwa 3 tury gracza (×2: 6 tur). Brak prądu trwa 3 tury właściciela sali.
+- „Notatki od kolegi” działają same przy następnym pytaniu gracza: znikają 2 złe odpowiedzi.
+- „Praca w samorządzie”: płacą tylko przeciwnicy, partner z drużyny nie.
+
+**Dziekanat**
+- Stanięcie na Dziekanacie zwykłym rzutem: pytanie dziekanatu, a zła odpowiedź to 1 kolejka postoju. Ruch z karty (np. „Spóźnienie na zajęcia”) na Dziekanat to tylko odwiedziny.
+- Pole „Udaj się do dziekanatu”, karta albo trzeci dublet: 2 kolejki. W każdej: zapłać 100 zł, pytanie i rzut (dublet = wyjście i ruch o wyrzuconą liczbę oczek) albo karta wyjścia. Po 2 kolejkach gracz wychodzi sam.
+
+**Koniec gry i wygrana**
+- Wygrywa największy majątek (gotówka, sale i budynki). Przy remisie wygrywa lepsza skuteczność. Gracz z najlepszą skutecznością dostaje tytuł „Prymus”.
+- Wygrana od razu: 4 monopole albo wszystkie 4 pola specjalne. Monopol to cała grupa sal u jednego gracza. W trybie 2 na 2 monopole i pola specjalne partnerów się sumują.
+- Gra kończy się też, gdy zostaje jeden gracz (albo jedna drużyna), po upływie czasu (po dokończeniu bieżącej tury) albo z menu pauzy („Zakończ grę i policz wynik”).
+- Ekran końca pokazuje majątek i procent dobrych odpowiedzi, bez pytań i bez ich liczby.
+- Wyniki gracza „Ty” zapisują się w przeglądarce (profil i wiersz w rankingu).
+
+**Tryby i boty**
+- Solo: gracze przy jednym komputerze grają na zmianę, puste miejsca mogą zająć boty. Tryb online zadziała po uruchomieniu serwera gry. Do tego czasu miejsca „Gracz online” grają przy tym samym komputerze.
+- 2 na 2: drużyna A to miejsca 1 i 3, drużyna B to 2 i 4. Partner nie płaci czynszu. Partner może rozbudować salę kolegi z drużyny: płaci sam, a sala i czynsz zostają właściciela.
+- Boty: łatwy (ok. 45% dobrych odpowiedzi), średni (65%), trudny (85%). Trudniejsze boty zostawiają większą rezerwę gotówki i chętniej domykają monopole.
+
+**Dźwięk i animacje**
+- Dźwięki (kostki, kroki pionka, monety, odpowiedzi, karty) są generowane w kodzie, bez plików. Żeby użyć nagrania kostek (własnego albo CC0), wpisz ścieżkę do pliku w `DICE_SOUND_FILE` w `index.html`. Głośność ustawia suwak „Efekty dźwiękowe”.
+- Kostki 3D lecą na środek planszy i pokazują wynik, pionek przeskakuje po polach, budynki spadają na pola, karta unosi się ze stosu i obraca na ekranie.
+
+**Menu (w trakcie, 13.10.2026)**
+- Menu otwiera się na start. W tle jest plansza, która powoli się obraca, rozmyta (blur), a na niej panele menu.
+- Kolory uczelni: granat, biel i szarość. Przyciski pasują do logo. Logo uczelni jest w menu.
+- **Profil w lewym górnym rogu:** pionek w kolorze gracza, nick, a po kliknięciu opcje „Profil”, „Wyjdź z gry” i „Wyloguj się”.
+- **Ranking (leaderboard):** rozegrane gry, wygrane, procent wygranych, procent dobrych odpowiedzi, najlepsza skuteczność w jednej grze i najlepszy majątek. Ładny i czytelny. Do czasu serwera gry dane są przykładowe.
+- **Online:** 1 na 1 na 1 na 1 albo 2 na 2. Można dodać graczy albo boty. Dwie osoby mogą grać na jednym komputerze i połączyć się z innymi.
+- **Solo (offline):** jeden komputer, nikt z zewnątrz nie dołączy. Kilka osób gra na zmianę przy jednym urządzeniu, można dodać boty.
+- Motyw jasny i ciemny. Wybór pionka i koloru: 4 pionki × 4 kolory, można np. 4 takie same pionki w różnych kolorach.
+- Ustawienia: głośność muzyki, rozmiar elementów i podobne. Animacji nie da się wyłączyć.
+- Podgląd w menu: karty i zasady. Zasady szczegółowe, z animacjami sytuacji i przykładowym pytaniem (np. prosta matematyka), nigdy z prawdziwej bazy.
+
+**Grafika (później):** plansza ma wyglądać nowocześniej, w dopracowanym stylu animowanym z liniami rysunkowymi (kontury jak w kreskówce).
 
 ### Plansza (nowa wersja, w trakcie)
 
@@ -98,14 +206,17 @@ Do ustalenia: co z Kuchnią.
 - Przycisk „Zaloguj przez wirtualny dziekanat”. Zadziała po ustaleniach z działem IT.
 - Do tego czasu: gra jako gość po wpisaniu nicku (3–20 znaków).
 
-### Panel gracza (po zalogowaniu)
-- **Nowa gra:** tryb (na jednym urządzeniu, z botami, online), liczba graczy albo botów, poziom botów (łatwy, średni, trudny), party online (stwórz z kodem albo dołącz kodem), drużyny (każdy na siebie albo 2 na 2, tylko przy 4 graczach), semestr pytań (1–7 albo 8 = mieszane).
-- **Profil:** nick, pionek (4 do wyboru), kolor (4 do wyboru), statystyki (rozegrane, wygrane, dobre odpowiedzi).
-- **Ustawienia:** wygląd planszy (5 wersji), dźwięk, obracanie planszy w tle menu.
-- **Zasady:** instrukcja gry, uzupełnimy po rozpisaniu zasad.
-- Przyciski „Obejrzyj planszę” i „Wyloguj”. Na planszy przycisk „Menu” wraca do panelu.
-- **Na razie wyłączone:** gra startuje od razu na planszy. Kod menu zostaje, włącza się go w `index.html` zmianą `MENU_ON` na `true`.
-- Ustawienia i profil zapisują się w przeglądarce gracza.
+### Menu gry (zrobione 13.10.2026)
+- Gra startuje od menu. W tle plansza powoli się obraca i jest rozmyta, a menu leży na niej w kolorach uczelni (granat, biel, szarość). Motyw jasny i ciemny (przycisk słońce/księżyc w prawym górnym rogu).
+- **Logowanie:** logo uczelni, „Zaloguj przez wirtualny dziekanat” (na razie komunikat) i gra jako gość po wpisaniu nicku.
+- **Profil w lewym górnym rogu:** pionek w kolorze gracza, nick i „Gość” albo „Student”. Po kliknięciu: Profil, Ustawienia, „Wyjdź z gry” (ekran pożegnania z przyciskiem „Wróć do gry”) i „Wyloguj się”.
+- **Ekran główny:** logo, nazwa gry i przyciski Graj, Ranking, Zasady, Karty, Ustawienia. Pod spodem „Obejrzyj planszę”. Na planszy przycisk „Menu” wraca do menu.
+- **Graj:** tryb Solo albo Online. Na 4 miejscach: Ty, gracz na tym komputerze, gracz online (tylko w trybie Online), bot (łatwy, średni, trudny) albo puste miejsce. Każdy wybiera pionek i kolor. Pionki mogą się powtarzać, kolory nie. „Każdy na siebie” albo „2 na 2” (przy 4 graczach; drużyna A to miejsca 1 i 3, drużyna B 2 i 4). Semestr pytań 1–7 albo mieszane, czas gry: bez limitu, 30, 45, 60 albo 90 minut. W trybie Online: stwórz party z kodem albo dołącz kodem. Solo wymaga co najmniej 2 graczy, Online 4 miejsc. „Rozpocznij grę” zaczyna rozgrywkę z tymi ustawieniami.
+- **Ranking:** podium z medalami i tabela: rozegrane, wygrane, procent wygranych, dobre odpowiedzi, najlepsza gra, najwyższy majątek. Sortowanie: wygrane, skuteczność, rozegrane, majątek. Dane innych graczy są przykładowe do czasu serwera gry. Twój wiersz liczy się z gier rozegranych w tej przeglądarce.
+- **Zasady:** 8 ponumerowanych kart (wersja robocza) i przykładowe pytanie z matematyki z minutnikiem, które nigdy nie pada w grze.
+- **Profil:** nick, pionek, kolor i statystyki.
+- **Ustawienia:** motyw (systemowy, jasny, ciemny), głośność muzyki i efektów (dźwięki dojdą z rozgrywką), rozmiar elementów (mały, średni, duży), wygląd planszy, środek planszy, obracanie planszy w menu.
+- Profil, ustawienia i ustawienia nowej gry zapisują się w przeglądarce gracza.
 
 ## Tyły kart ułatwień i utrudnień
 
@@ -235,11 +346,18 @@ Ilustracje kart są wektorowe (SVG), rysowane w kodzie przez asystenta AI (Claud
 
 - Wybór jednej z 5 wersji wyglądu planszy.
 - Sala balowa i Kuchnia: czy zostają i gdzie.
-- Zasady gry od nowa: pytania, kupowanie pól, dziekanat, pola specjalne, 2 na 2, boty.
+- Ekonomia: ceny, czynsze i kwoty są tymczasowe (opis w sekcji „Rozgrywka”). Do potwierdzenia albo zmiany.
+- Kto wygrywa: na razie największy majątek, remis rozstrzyga skuteczność, do tego tytuł „Prymus”. 4 monopole i 4 pola specjalne kończą grę od razu. Do potwierdzenia.
+- Czy można odkupić pole przeciwnika (jak w Business Tour) i za ile. Na razie nie można.
+- Czy pytanie pada też przy czynszu. Na razie nie, ale pada przy kupnie parkingu i pola specjalnego.
+- Prawdziwe pytania od wykładowców i pytania do kategorii „Dziekanat”.
+- Długości gry z limitem czasu do wyboru.
+- Dźwięk kostek: na razie generowany w kodzie. Można podmienić na własne nagranie albo dźwięk CC0.
+- Karta tematu pracy inżynierskiej (tezy i inne): później.
 - Wybór kart ułatwień i utrudnień.
 - Czy monopol chroni przed kartami ataku.
 - Wybór jednego z 2 wyglądów środka planszy (Pieczęć albo Wzór z logo).
-- Nazwa i wygląd waluty.
+- Nazwa i wygląd waluty (na razie zł).
 
 ## Harmonogram
 
@@ -250,10 +368,10 @@ Ilustracje kart są wektorowe (SVG), rysowane w kodzie przez asystenta AI (Claud
 | 2 | Pionki i panel wyboru pionka i koloru | 4 pionki gotowe, panel gotowy (na razie wyłączony) |
 | 3 | Karty: rewersy, awersy, treść | karty „Wyjście z dziekanatu” gotowe |
 | 4 | Pola planszy: nazwy, grupy kolorów, pola specjalne | pola 1–21 i 31 gotowe |
-| 5 | Pieniądze: waluta, banknoty, pula na środku | |
-| 6 | Pytania: szablon dla wykładowców, okno pytania z minutnikiem | wzór karty z pytaniami do druku gotowy |
-| 7 | Zasady i rozgrywka, tryb 2 na 2, boty | |
-| 8 | Ekrany: menu, ustawienia gry, koniec gry | logowanie jako gość i panel gracza gotowe |
+| 5 | Pieniądze: waluta, banknoty, pula na środku | ekonomia tymczasowa w grze (zł), pula i Stypendium rektorskie działają; brak banknotów |
+| 6 | Pytania: szablon dla wykładowców, okno pytania z minutnikiem | szablon Excela i skrypt do gry gotowe, okno pytania z minutnikiem i talia z tasowaniem działają; wzór karty do druku gotowy |
+| 7 | Zasady i rozgrywka, tryb 2 na 2, boty | pierwsza pełna wersja (13.10.2026): kostki, ruch, kupno, budowa, czynsz, karty, dziekanat, 2 na 2, boty |
+| 8 | Ekrany: menu, ustawienia gry, koniec gry | menu gotowe; w grze panel graczy, pauza i ekran końca gry |
 | 9 | Tryb online | |
 | 10 | Logowanie przez wirtualny dziekanat | |
 | 11 | Testy i wdrożenie na serwer uczelni | |
