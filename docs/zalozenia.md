@@ -313,7 +313,14 @@ Ilustracje kart są wektorowe (SVG), rysowane w kodzie przez asystenta AI (Claud
 - Stosy ułatwień i utrudnień leżą po bokach logo. Cztery rogi środka planszy to miejsca graczy („KARTY GRACZA”): róg przy START dla miejsca 1, dalej zgodnie z ruchem pionków.
 - Karty, które gracz trzyma (np. „Wyjście z dziekanatu”, „Notatki od kolegi”), i działające na niego efekty (ubezpieczenie, tarcze, utracona kolejka, brak prądu) leżą w jego rogu tyłem do góry. Każdy widzi, że ktoś ma ułatwienia albo utrudnienia, ale nie widzi, jakie.
 - **Kamera z perspektywy gracza:** ekran patrzy od strony rogu gracza, który jest przy komputerze. Przy grze kilku osób na jednym komputerze kamera obraca się na róg gracza, którego jest tura. W trybie online każdy będzie miał swój róg na dole ekranu.
-- **Panel „Twoje karty”** na dole po lewej: miniatury aktów własności gracza i jego kart ułatwień i utrudnień (z opisem, np. „do użycia”, „2 tury”). Kliknięcie miniatury otwiera kartę w okienku. Panel można zwinąć.
+- **Panel „Twoje karty”** w prawej kolumnie: miniatury aktów własności gracza i jego kart ułatwień i utrudnień (z opisem, np. „do użycia”, „2 tury”). Kliknięcie miniatury otwiera kartę w okienku. Panel można zwinąć.
+
+## Ekran gry: panele z boku planszy (od 13.10.2026)
+
+- Nic nie leży na planszy. **Lewa kolumna:** gracze, każdy na swojej karcie (pionek, nazwa, pieniądze dużą czcionką, liczba pól i kart, oznaczenia typu „dziekanat”, „wyjście ×1”). Gracz, którego jest tura, ma ramkę w swoim kolorze.
+- **Prawa kolumna:** pula Stypendium rektorskiego, przycisk Menu, czas gry (jeśli jest limit) i panel „Twoje karty”.
+- Plansza stoi w wolnym miejscu między kolumnami. Kamera sama dopasowuje się do tego miejsca, także po zmianie rozmiaru okna. Przycisk „Rzuć kostkami” jest na środku planszy, a opis ruchu pod planszą.
+- Na wąskim ekranie (do 900 px, np. telefon) gracze są nad planszą, a pula, menu i karty pod planszą. „Twoje karty” startują wtedy zwinięte.
 
 ## Karty „Wyjście z dziekanatu”
 
