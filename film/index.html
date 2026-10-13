@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="./assets/js/gsap.min.js"></script>
+    <link rel="stylesheet" href="./assets/fonts/fonts.css" />
+    <style>
+      @font-face { font-family: 'Geist'; font-weight: 800; src: url('./assets/fonts/Geist-800-latin.woff2') format('woff2'); }
+      @font-face { font-family: 'Geist Mono'; font-weight: 500; src: url('./assets/fonts/GeistMono-500-latin.woff2') format('woff2'); }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #05070d; }
+      #root { width: 100%; height: 100%; position: relative; overflow: hidden; background: #05070d; font-family: 'Geist', system-ui, sans-serif; color: #ffffff; }
+      .scene { position: absolute; inset: 0; overflow: hidden; }
+      .ground { position: absolute; inset: 0; background: #05070d; }
+      .bg { position: absolute; inset: -2%; }
+      .bg img { display: block; width: 100%; height: 100%; object-fit: cover; }
+      .shade-left { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(3, 8, 24, .86) 0%, rgba(3, 8, 24, .5) 38%, rgba(3, 8, 24, 0) 70%); }
+      .shade-bottom { position: absolute; inset: 0; background: linear-gradient(0deg, rgba(3, 8, 24, .88) 0%, rgba(3, 8, 24, .35) 42%, rgba(3, 8, 24, 0) 70%); }
+      .shade-center { position: absolute; inset: 0; background: radial-gradient(70% 70% at 50% 50%, rgba(3, 8, 24, .25) 0%, rgba(3, 8, 24, .78) 100%); }
+      .vignette { position: absolute; inset: 0; background: radial-gradient(120% 95% at 50% 50%, transparent 55%, rgba(0, 0, 0, .5) 100%); }
+      .eyebrow { display: block; font: 500 24px 'Geist Mono', ui-monospace, monospace; letter-spacing: .32em; text-transform: uppercase; color: rgba(255, 255, 255, .62); }
+      .h { display: block; font-weight: 800; letter-spacing: -.055em; line-height: .95; }
+      .silver { color: #aeb7c9; }
+      .sub { display: block; font-weight: 500; font-size: 36px; letter-spacing: -.01em; color: rgba(255, 255, 255, .78); }
+      .line { display: block; overflow: visible; }
+
+      /* 1. otwarcie */
+      #s1 .txt { position: absolute; left: 0; right: 0; top: 400px; text-align: center; }
+      #s1 .h { font-size: 112px; }
+      /* 2. hero */
+      #s2 .txt { position: absolute; left: 140px; bottom: 150px; width: 1200px; }
+      #s2 .h { font-size: 230px; letter-spacing: -.065em; }
+      #s2 .sub { margin-top: 26px; }
+      /* 3. świat */
+      #s3 .txt { position: absolute; left: 140px; top: 330px; width: 1640px; }
+      #s3 .h { font-size: 120px; }
+      #s3 .eyebrow { margin-bottom: 30px; }
+      /* 4-5. hasła jak Nike */
+      .slam { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+      .slam .word { display: block; font-weight: 800; font-size: 300px; letter-spacing: -.06em; text-transform: uppercase; line-height: .9; color: #ffffff; text-shadow: 0 20px 80px rgba(0, 0, 0, .55); }
+      .slam .word.gold { color: #f2c766; }
+      /* 6. pionki: zdjęcie ze studia po prawej, opis po lewej */
+      .pawn .shot { position: absolute; right: 120px; top: 60px; width: 960px; height: 960px;
+        -webkit-mask-image: radial-gradient(closest-side at 50% 54%, #000 58%, transparent 100%); mask-image: radial-gradient(closest-side at 50% 54%, #000 58%, transparent 100%); }
+      .pawn .shot img { display: block; width: 100%; height: 100%; object-fit: cover; }
+      .pawn .txt { position: absolute; left: 150px; top: 380px; width: 760px; }
+      .pawn .h { font-size: 132px; margin-top: 22px; }
+      .pawn .sub { margin-top: 24px; font-size: 34px; }
+      .pawn .bar { display: block; width: 96px; height: 6px; border-radius: 3px; margin-top: 34px; }
+      /* 7. budynki */
+      #s7 .txt { position: absolute; left: 140px; bottom: 140px; width: 1200px; }
+      #s7 .h { font-size: 128px; }
+      #s7 .eyebrow { margin-bottom: 26px; }
+      /* 8. urządzenia */
+      #s8 .ground { background: radial-gradient(90% 80% at 50% 0%, #0c2a6b 0%, #061436 46%, #03081a 100%); }
+      #s8 .txt { position: absolute; left: 0; right: 0; top: 96px; text-align: center; }
+      #s8 .h { font-size: 104px; }
+      .devices { position: absolute; left: 0; right: 0; top: 420px; height: 560px; }
+      .laptop { position: absolute; left: 330px; top: 30px; width: 860px; }
+      .laptop .scr { width: 860px; height: 538px; border: 16px solid #0c0f17; border-bottom-width: 24px; border-radius: 22px 22px 0 0; overflow: hidden; background: #0b0f19; box-shadow: 0 0 0 1px rgba(255, 255, 255, .14); }
+      .laptop .base { height: 22px; margin: 0 -62px; border-radius: 0 0 20px 20px; background: linear-gradient(180deg, #e4e8ef, #9aa3b4); }
+      .tablet { position: absolute; left: 1120px; top: 140px; width: 420px; }
+      .tablet .scr { width: 420px; height: 315px; border: 14px solid #0c0f17; border-radius: 30px; overflow: hidden; background: #0b0f19; box-shadow: 0 0 0 1px rgba(255, 255, 255, .14), 0 30px 70px rgba(0, 0, 0, .55); }
+      .phone { position: absolute; left: 1470px; top: 60px; width: 210px; }
+      .phone .scr { width: 210px; height: 455px; border: 9px solid #0c0f17; border-radius: 36px; overflow: hidden; background: #0b0f19; box-shadow: 0 0 0 1px rgba(255, 255, 255, .16), 0 30px 70px rgba(0, 0, 0, .6); }
+      .scr img { display: block; width: 100%; height: 100%; object-fit: cover; }
+      /* 9. noc i liczby */
+      #s9 .txt { position: absolute; left: 140px; bottom: 120px; right: 140px; }
+      .stats { display: flex; gap: 90px; margin-top: 40px; }
+      .stat { display: block; }
+      .stat b { display: block; font: 500 108px 'Geist Mono', ui-monospace, monospace; letter-spacing: -.05em; line-height: 1; color: #ffffff; }
+      .stat span { display: block; margin-top: 12px; font-size: 26px; font-weight: 500; color: rgba(255, 255, 255, .72); }
+      #s9 .h { font-size: 92px; }
+      /* 10. plansza końcowa */
+      #s10 .ground { background: radial-gradient(80% 90% at 50% 10%, #12408f 0%, #00276f 42%, #001643 100%); }
+      #s10 .txt { position: absolute; left: 0; right: 0; top: 300px; text-align: center; }
+      #s10 .h { font-size: 210px; letter-spacing: -.065em; }
+      #s10 .sub { margin-top: 26px; font-size: 40px; color: rgba(255, 255, 255, .86); }
+      #s10 .cta { display: inline-block; margin-top: 54px; padding: 22px 44px; border-radius: 20px; background: #ffffff; color: #00276f; font-weight: 700; font-size: 32px; letter-spacing: -.01em; }
+      #s10 .legal { position: absolute; left: 0; right: 0; bottom: 84px; text-align: center; }
+      #s10 .legal span { display: block; font: 500 20px 'Geist Mono', ui-monospace, monospace; letter-spacing: .14em; text-transform: uppercase; color: rgba(255, 255, 255, .62); }
+      #s10 .legal span + span { margin-top: 12px; letter-spacing: .04em; text-transform: none; color: rgba(255, 255, 255, .5); font-size: 18px; }
+
+      #flash { position: absolute; inset: 0; pointer-events: none; }
+      #flashIn { position: absolute; inset: 0; background: #ffffff; opacity: 0; mix-blend-mode: overlay; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="42.46" data-width="1920" data-height="1080">
+
+      <!-- 1. Otwarcie: czerń i hasło -->
+      <section id="s1" class="scene clip" data-start="0" data-duration="3.692" data-track-index="1">
+        <div class="ground"></div>
+        <div class="txt">
+          <span class="h line" id="s1a">Uczelnia,</span>
+          <span class="h line silver" id="s1b">jakiej jeszcze nie znasz.</span>
+        </div>
+      </section>
+
+      <!-- 2. Makieta z tytułem -->
+      <section id="s2" class="scene clip" data-start="3.692" data-duration="3.692" data-track-index="1">
+        <div class="ground"></div>
+        <div class="bg" id="s2bg" data-layout-allow-overflow><img src="./assets/img/diorama-day.jpg" alt="Makieta kampusu nad wodą z planszą na placu" /></div>
+        <div class="shade-bottom"></div>
+        <div class="txt">
+          <span class="eyebrow" id="s2e">Praca inżynierska · WSiZ Bielsko-Biała</span>
+          <span class="h line" id="s2h">WSiZ Tour</span>
+          <span class="sub" id="s2s">Gra planszowa 3D o Twojej uczelni.</span>
+        </div>
+      </section>
+
+      <!-- 3. Świat -->
+      <section id="s3" class="scene clip" data-start="7.385" data-duration="3.692" data-track-index="1">
+        <div class="ground"></div>
+        <div class="bg" id="s3bg" data-layout-allow-overflow><img src="./assets/img/water.jpg" alt="Pomost, żaglówki i plaża" /></div>
+        <div class="shade-left"></div>
+        <div class="txt">
+          <span class="eyebrow" id="s3e">Kampus nad wodą</span>
+          <span class="h line" id="s3a">Uniwersytet z jednej strony.</span>
+          <span class="h line silver" id="s3b">Wakacje z drugiej.</span>
+        </div>
+      </section>
+
+      <!-- 4. Rzuć. Odpowiedz. -->
+      <section id="s4" class="scene clip" data-start="11.077" data-duration="3.692" data-track-index="1">
+        <div class="ground"></div>
+        <div class="bg" id="s4bg" data-layout-allow-overflow><img src="./assets/img/board-close.jpg" alt="Plansza w trakcie gry" /></div>
+        <div class="shade-center"></div>
+        <div class="slam"><span class="word" id="w1">Rzuć.</span></div>
+        <div class="slam"><span class="word" id="w2">Odpowiedz.</span></div>
+      </section>
+
+      <!-- 5. Kupuj. Buduj. -->
+      <section id="s5" class="scene clip" data-start="14.769" data-duration="3.692" data-track-index="1">
+        <div class="ground"></div>
+        <div class="bg" id="s5bg" data-layout-allow-overflow><img src="./assets/img/buildings-close.jpg" alt="Kupione sale z budynkami" /></div>
+        <div class="shade-center"></div>
+        <div class="slam"><span class="word" id="w3">Kupuj.</span></div>
+        <div class="slam"><span class="word gold" id="w4">Buduj.</span></div>
+      </section>
+
+      <!-- 6. Pionki w studiu, po jednym takcie -->
+      <section id="p1" class="scene clip pawn" data-start="18.462" data-duration="1.846" data-track-index="1">
+        <div class="ground"></div>
+        <div class="shot" id="p1i"><img src="./assets/img/pawn-1.jpg" alt="Pionek Sztandar" /></div>
+        <div class="txt"><span class="eyebrow">Pionek 01</span><span class="h line" id="p1h">Sztandar.</span><span class="sub">Dla tych, którzy prowadzą.</span><span class="bar" style="background:#e5484d"></span></div>
+      </section>
+      <section id="p2" class="scene clip pawn" data-start="20.308" data-duration="1.846" data-track-index="1">
+        <div class="ground"></div>
+        <div class="shot" id="p2i"><img src="./assets/img/pawn-2.jpg" alt="Pionek Drukarka 3D" /></div>
+        <div class="txt"><span class="eyebrow">Pionek 02</span><span class="h line" id="p2h">Drukarka 3D.</span><span class="sub">Dla tych, którzy budują.</span><span class="bar" style="background:#2f7ff0"></span></div>
+      </section>
+      <section id="p3" class="scene clip pawn" data-start="22.154" data-duration="1.846" data-track-index="1">
+        <div class="ground"></div>
+        <div class="shot" id="p3i"><img src="./assets/img/pawn-3.jpg" alt="Pionek Koparka" /></div>
+        <div class="txt"><span class="eyebrow">Pionek 03</span><span class="h line" id="p3h">Koparka.</span><span class="sub">Dla tych, którzy liczą.</span><span class="bar" style="background:#1fa463"></span></div>
+      </section>
+      <section id="p4" class="scene clip pawn" data-start="24.000" data-duration="1.846" data-track-index="1">
+        <div class="ground"></div>
+        <div class="shot" id="p4i"><img src="./assets/img/pawn-4.jpg" alt="Pionek Ekspres" /></div>
+        <div class="txt"><span class="eyebrow">Pionek 04</span><span class="h line" id="p4h">Ekspres.</span><span class="sub">Dla tych, którzy nie śpią przed sesją.</span><span class="bar" style="background:#f2b72e"></span></div>
+      </section>
+
+      <!-- 7. Budynki -->
+      <section id="s7" class="scene clip" data-start="25.846" data-duration="3.692" data-track-index="1">
+        <div class="ground"></div>
+        <div class="bg" id="s7bg" data-layout-allow-overflow><img src="./assets/img/ui-models.jpg" alt="Pionki i pięć poziomów budynków" /></div>
+        <div class="shade-bottom"></div>
+        <div class="txt">
+          <span class="eyebrow" id="s7e">Pięć poziomów</span>
+          <span class="h line" id="s7a">Od telefonu</span>
+          <span class="h line silver" id="s7b">do serwerowni.</span>
+        </div>
+      </section>
+
+      <!-- 8. Urządzenia -->
+      <section id="s8" class="scene clip" data-start="29.538" data-duration="3.692" data-track-index="1">
+        <div class="ground"></div>
+        <div class="txt">
+          <span class="eyebrow" id="s8e">Komputer · tablet · telefon</span>
+          <span class="h line" id="s8a">Graj, gdzie chcesz. Kiedy chcesz.</span>
+        </div>
+        <div class="devices">
+          <div class="laptop" id="dl"><div class="scr"><img src="./assets/img/ui-game.jpg" alt="Gra na komputerze" /></div><div class="base"></div></div>
+          <div class="tablet" id="dt"><div class="scr"><img src="./assets/img/ui-tablet.jpg" alt="Gra na tablecie" /></div></div>
+          <div class="phone" id="dp"><div class="scr"><img src="./assets/img/ui-phone.jpg" alt="Gra na telefonie" /></div></div>
+        </div>
+      </section>
+
+      <!-- 9. Noc i liczby -->
+      <section id="s9" class="scene clip" data-start="33.231" data-duration="3.692" data-track-index="1">
+        <div class="ground"></div>
+        <div class="bg" id="s9bg" data-layout-allow-overflow><img src="./assets/img/diorama-night.jpg" alt="Makieta nocą" /></div>
+        <div class="shade-bottom"></div>
+        <div class="txt">
+          <span class="h line" id="s9h">Wiedza się opłaca.</span>
+          <div class="stats">
+            <div class="stat" id="st1"><b id="n1">0</b><span>pola na planszy</span></div>
+            <div class="stat" id="st2"><b id="n2">0</b><span>akty własności</span></div>
+            <div class="stat" id="st3"><b id="n3">0</b><span>pionki</span></div>
+            <div class="stat" id="st4"><b id="n4">0 s</b><span>na odpowiedź</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 10. Plansza końcowa -->
+      <section id="s10" class="scene clip" data-start="36.923" data-duration="5.537" data-track-index="1">
+        <div class="ground"></div>
+        <div class="txt">
+          <span class="h line" id="s10h">WSiZ Tour</span>
+          <span class="sub" id="s10s">Zagraj w swoją uczelnię. W przeglądarce, na każdym ekranie.</span>
+          <span class="cta" id="s10c">Zagraj teraz</span>
+        </div>
+        <div class="legal" id="s10l">
+          <span>Wyższa Szkoła Informatyki i Zarządzania w Bielsku-Białej · praca inżynierska</span>
+          <span>Muzyka: „Epic Cinematic Trailer | ELITE”, Alex-Productions (onsound.eu), licencja CC BY 3.0</span>
+        </div>
+      </section>
+
+      <div class="vignette clip" id="vig" data-start="0" data-duration="42.46" data-track-index="3"></div>
+      <div id="flash" class="clip" data-start="0" data-duration="42.46" data-track-index="4"><div id="flashIn"></div></div>
+
+      <audio id="bgm" src="./assets/audio/epic-cinematic-trailer.mp3" class="clip" data-start="0" data-duration="42.46" data-media-start="27.5" data-volume="0.95" data-fade-in="0.4" data-fade-out="3" data-track-index="5"></audio>
+    </div>
+    <script>
+      // Takt = 4 uderzenia przy 130 BPM. Cięcia wypadają na początku taktów.
+      const B = 60 / 130 * 4;
+      const tl = gsap.timeline({ paused: true });
+      const ease = 'power3.out';
+      const blurIn = (sel, at, d = 1.1) => tl.fromTo(sel, { opacity: 0, y: 40, filter: 'blur(18px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: d, ease }, at);
+      const fadeUp = (sel, at, d = 0.8) => tl.fromTo(sel, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: d, ease }, at);
+      const kenBurns = (sel, at, len, from = 1.12, to = 1.0, x0 = 0, x1 = 0) => tl.fromTo(sel, { scale: from, xPercent: x0 }, { scale: to, xPercent: x1, duration: len, ease: 'none' }, at);
+      const flash = (at, peak = 0.55) => tl.fromTo('#flashIn', { opacity: peak }, { opacity: 0, duration: 0.35, ease: 'power2.out' }, at);
+      const slam = (sel, at, len) => {
+        tl.fromTo(sel, { opacity: 0, scale: 1.45, skewX: -9, filter: 'blur(12px)' }, { opacity: 1, scale: 1, skewX: -9, filter: 'blur(0px)', duration: 0.42, ease: 'back.out(1.6)' }, at);
+        tl.to(sel, { opacity: 0, duration: 0.18, ease: 'power1.in' }, at + len - 0.18);
+        flash(at, 0.5);
+      };
+
+      // 1. Otwarcie
+      blurIn('#s1a', 0.35, 1.2);
+      blurIn('#s1b', 1.1, 1.3);
+      // 2. Hero
+      kenBurns('#s2bg', 2 * B, 2 * B, 1.14, 1.02);
+      fadeUp('#s2e', 2 * B + 0.25);
+      blurIn('#s2h', 2 * B + 0.35, 1.0);
+      fadeUp('#s2s', 2 * B + 0.9);
+      flash(2 * B, 0.35);
+      // 3. Świat
+      kenBurns('#s3bg', 4 * B, 2 * B, 1.06, 1.14, -1.5, 1.5);
+      fadeUp('#s3e', 4 * B + 0.2);
+      blurIn('#s3a', 4 * B + 0.3, 0.9);
+      blurIn('#s3b', 4 * B + 0.85, 0.9);
+      // 4-5. Hasła na takt
+      kenBurns('#s4bg', 6 * B, 2 * B, 1.16, 1.04);
+      slam('#w1', 6 * B, B);
+      slam('#w2', 7 * B, B);
+      kenBurns('#s5bg', 8 * B, 2 * B, 1.04, 1.16);
+      slam('#w3', 8 * B, B);
+      slam('#w4', 9 * B, B);
+      // 6. Pionki: obrót zdjęcia i wejście nazwy na każdy takt
+      ['p1', 'p2', 'p3', 'p4'].forEach((p, k) => {
+        const at = (10 + k) * B;
+        tl.fromTo(`#${p}i`, { scale: 1.12, opacity: 0 }, { scale: 1.0, opacity: 1, duration: B, ease: 'power2.out' }, at);
+        tl.fromTo(`#${p}h`, { opacity: 0, x: -40 }, { opacity: 1, x: 0, duration: 0.5, ease }, at + 0.1);
+        flash(at, 0.3);
+      });
+      // 7. Budynki
+      kenBurns('#s7bg', 14 * B, 2 * B, 1.0, 1.1);
+      fadeUp('#s7e', 14 * B + 0.2);
+      blurIn('#s7a', 14 * B + 0.3, 0.9);
+      blurIn('#s7b', 14 * B + 0.8, 0.9);
+      // 8. Urządzenia wjeżdżają po kolei
+      fadeUp('#s8e', 16 * B + 0.1);
+      blurIn('#s8a', 16 * B + 0.2, 0.9);
+      tl.fromTo('#dl', { opacity: 0, y: 120 }, { opacity: 1, y: 0, duration: 0.9, ease }, 16 * B + 0.45);
+      tl.fromTo('#dt', { opacity: 0, y: 140 }, { opacity: 1, y: 0, duration: 0.9, ease }, 16 * B + 0.7);
+      tl.fromTo('#dp', { opacity: 0, y: 160 }, { opacity: 1, y: 0, duration: 0.9, ease }, 16 * B + 0.95);
+      flash(16 * B, 0.3);
+      // 9. Noc i liczby (licznik liczony z czasu osi, więc działa przy przewijaniu)
+      kenBurns('#s9bg', 18 * B, 2 * B, 1.12, 1.0);
+      blurIn('#s9h', 18 * B + 0.2, 0.9);
+      [['#st1', '#n1', 32, ''], ['#st2', '#n2', 23, ''], ['#st3', '#n3', 4, ''], ['#st4', '#n4', 60, ' s']].forEach(([box, num, to, unit], k) => {
+        const at = 18 * B + 0.6 + k * 0.18, o = { v: 0 };
+        fadeUp(box, at, 0.6);
+        tl.fromTo(o, { v: 0 }, { v: to, duration: 1.3, ease: 'power2.out', onUpdate: () => { document.querySelector(num).textContent = Math.round(o.v) + unit; } }, at);
+      });
+      // 10. Koniec
+      flash(20 * B, 0.35);
+      blurIn('#s10h', 20 * B + 0.3, 1.2);
+      fadeUp('#s10s', 20 * B + 1.0, 0.9);
+      tl.fromTo('#s10c', { opacity: 0, y: 24, scale: 0.96 }, { opacity: 1, y: 0, scale: 1, duration: 0.7, ease: 'back.out(1.5)' }, 20 * B + 1.5);
+      fadeUp('#s10l', 20 * B + 2.0, 0.9);
+      tl.to({}, { duration: 0.01 }, 42.45);
+
+      window.__timelines['main'] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

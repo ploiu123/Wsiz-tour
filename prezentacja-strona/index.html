@@ -151,6 +151,9 @@
   .head .eyebrow { grid-column: 1 / -1; }
   .head p { padding-bottom: 6px; }
 
+  /* zwiastun */
+  .film { border-radius: var(--radius-xl); overflow: hidden; box-shadow: var(--shadow); background: #05070d; aspect-ratio: 16 / 9; }
+  .film video { display: block; width: 100%; height: 100%; object-fit: cover; background: #05070d; }
   /* świat: duże zdjęcie i mniejsze, zachodzące na nie */
   .world { display: grid; grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); gap: 28px; align-items: start; }
   .shot { border-radius: var(--radius-l); overflow: hidden; background: var(--bg-2); box-shadow: var(--shadow); }
@@ -331,6 +334,7 @@
     <a class="brand" href="#top" aria-label="WSiZ Tour, na górę strony"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1.2" fill="currentColor"/><circle cx="15" cy="15" r="1.2" fill="currentColor"/><circle cx="15" cy="9" r="1.2" fill="currentColor"/><circle cx="9" cy="15" r="1.2" fill="currentColor"/></svg></i>WSiZ Tour</a>
     <nav aria-label="Sekcje">
       <ul>
+        <li><a href="#film">Zwiastun</a></li>
         <li><a href="#swiat">Świat</a></li>
         <li><a href="#tura">Tura</a></li>
         <li><a href="#pionki">Pionki</a></li>
@@ -390,6 +394,22 @@
       <div class="stat reveal" style="--d:.3s"><b class="count" data-to="7">7</b><span>semestrów pytań</span></div>
     </div>
   </div>
+
+  <!-- Zwiastun -->
+  <section id="film" style="padding-bottom:0">
+    <div class="wrap">
+      <div class="head">
+        <p class="eyebrow reveal">00 · Zwiastun</p>
+        <h2 class="reveal">Cała gra w 42 sekundy.</h2>
+        <p class="lead reveal" style="--d:.1s">Film zrobiony z zrzutów naszej gry, cięty w rytm muzyki. Muzyka: „Epic Cinematic Trailer | ELITE”, Alex-Productions (onsound.eu), licencja CC BY 3.0.</p>
+      </div>
+      <div class="film reveal" style="--d:.12s">
+        <video id="promoFilm" controls playsinline preload="metadata" poster="img/diorama-day.jpg" width="1920" height="1080">
+          <source src="video/wsiz-tour.mp4" type="video/mp4">
+        </video>
+      </div>
+    </div>
+  </section>
 
   <!-- Świat -->
   <section id="swiat">
