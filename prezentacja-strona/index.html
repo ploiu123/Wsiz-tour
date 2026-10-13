@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WSiZ Tour</title>
+<meta name="description" content="WSiZ Tour: gra planszowa 3D w przeglądarce o Wyższej Szkole Informatyki i Zarządzania w Bielsku-Białej. Praca inżynierska.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f5f1;
+    --bg-2: #eeece6;
+    --surface: #ffffff;
+    --ink: #0e1526;
+    --ink-2: #4a5164;
+    --ink-3: #7b8192;
+    --line: rgba(14, 21, 38, .1);
+    --accent: #00276f;          /* granat uczelni */
+    --accent-ink: #ffffff;
+    --accent-soft: #e3e8f2;     /* szaroniebieski uczelni, rozjaśniony */
+    --stage: #070b16;
+    --stage-ink: #eef1f7;
+    --stage-ink-2: #9aa3b8;
+    --shadow: 0 30px 60px -30px rgba(14, 30, 70, .35);
+    --radius-xl: 28px;
+    --radius-l: 20px;
+    --radius-m: 14px;
+    --sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0b0f19;
+      --bg-2: #111727;
+      --surface: #141b2d;
+      --ink: #eef1f7;
+      --ink-2: #b4bccd;
+      --ink-3: #8790a4;
+      --line: rgba(238, 241, 247, .1);
+      --accent: #ccd3e1;
+      --accent-ink: #00276f;
+      --accent-soft: rgba(204, 211, 225, .1);
+      --stage: #05080f;
+      --shadow: 0 30px 60px -30px rgba(0, 0, 0, .7);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0b0f19;
+    --bg-2: #111727;
+    --surface: #141b2d;
+    --ink: #eef1f7;
+    --ink-2: #b4bccd;
+    --ink-3: #8790a4;
+    --line: rgba(238, 241, 247, .1);
+    --accent: #ccd3e1;
+    --accent-ink: #00276f;
+    --accent-soft: rgba(204, 211, 225, .1);
+    --stage: #05080f;
+    --shadow: 0 30px 60px -30px rgba(0, 0, 0, .7);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 400 17px/1.6 var(--sans); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; overflow-x: hidden; }
+  img { display: block; max-width: 100%; height: auto; }
+  a { color: inherit; }
+  :focus-visible { outline: 3px solid #2f7ff0; outline-offset: 3px; border-radius: 6px; }
+
+  /* ziarno: stała warstwa, bez wpływu na przewijanie */
+  .grain { position: fixed; inset: 0; z-index: 50; pointer-events: none; opacity: .045; mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  :root[data-theme="dark"] .grain { mix-blend-mode: screen; opacity: .03; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .grain { mix-blend-mode: screen; opacity: .03; } }
+
+  .wrap { width: min(1320px, 100% - 32px); margin-inline: auto; }
+  .eyebrow { font: 500 12.5px/1.3 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin: 0; }
+  h1, h2, h3 { margin: 0; font-weight: 700; letter-spacing: -.035em; text-wrap: balance; }
+  h2 { font-size: clamp(32px, 4.4vw, 58px); line-height: 1.02; }
+  h3 { font-size: 21px; letter-spacing: -.02em; line-height: 1.2; }
+  p { margin: 0; text-wrap: pretty; }
+  .lead { font-size: clamp(17px, 1.35vw, 19px); color: var(--ink-2); max-width: 58ch; }
+  .muted { color: var(--ink-2); }
+  .mono { font-family: var(--mono); }
+
+  /* nawigacja */
+  .nav { position: sticky; top: 0; z-index: 20; backdrop-filter: blur(14px) saturate(1.2); -webkit-backdrop-filter: blur(14px) saturate(1.2);
+    background: color-mix(in srgb, var(--bg) 78%, transparent); border-bottom: 1px solid transparent; transition: border-color .3s; }
+  .nav.scrolled { border-bottom-color: var(--line); }
+  .nav .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 64px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: -.02em; text-decoration: none; }
+  .brand i { width: 26px; height: 26px; border-radius: 8px; background: radial-gradient(120% 90% at 30% 0%, #1d4fa8 0%, #00276f 70%); box-shadow: inset 0 1px 0 rgba(255,255,255,.25); display: grid; place-items: center; }
+  .brand i svg { width: 15px; height: 15px; color: #fff; }
+  .nav ul { display: flex; gap: 4px; list-style: none; margin: 0; padding: 0; }
+  .nav ul a { display: block; padding: 8px 12px; border-radius: 10px; font-size: 14.5px; color: var(--ink-2); text-decoration: none; transition: color .2s, background .2s; }
+  .nav ul a:hover { color: var(--ink); background: var(--accent-soft); }
+  .nav-actions { display: flex; align-items: center; gap: 8px; }
+  .theme { width: 38px; height: 38px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); display: grid; place-items: center; cursor: pointer; transition: transform .15s; }
+  .theme:active { transform: scale(.96); }
+  .theme svg { width: 18px; height: 18px; }
+
+  .btn { display: inline-flex; align-items: center; gap: 10px; padding: 14px 20px; border-radius: 14px; font: 600 15.5px var(--sans); letter-spacing: -.01em; text-decoration: none; border: 1px solid transparent; cursor: pointer;
+    transition: transform .35s cubic-bezier(.16, 1, .3, 1), box-shadow .35s cubic-bezier(.16, 1, .3, 1), background .2s; }
+  .btn svg { width: 18px; height: 18px; }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); box-shadow: 0 14px 30px -12px rgba(0, 39, 111, .55), inset 0 1px 0 rgba(255,255,255,.18); }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 20px 36px -14px rgba(0, 39, 111, .6), inset 0 1px 0 rgba(255,255,255,.18); }
+  .btn:active { transform: translateY(1px) scale(.99); }
+  .btn-ghost { color: var(--ink); padding-inline: 6px; }
+  .btn-ghost:hover { text-decoration: underline; text-underline-offset: 4px; }
+  .nav .btn { padding: 10px 14px; font-size: 14px; border-radius: 12px; }
+
+  /* hero: tekst po lewej, makieta po prawej, zachodzi na krawędź */
+  .hero { padding: clamp(36px, 6vw, 84px) 0 clamp(40px, 6vw, 72px); }
+  .hero .wrap { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(28px, 4vw, 64px); align-items: center; }
+  .hero h1 { font-size: clamp(54px, 7.6vw, 112px); line-height: .9; letter-spacing: -.055em; font-weight: 800; }
+  .hero h1 span { display: block; font-weight: 500; color: var(--ink-3); font-size: .42em; letter-spacing: -.035em; line-height: 1.1; margin-top: 14px; }
+  .hero .lead { margin-top: 24px; }
+  .hero-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-top: 32px; }
+  .hero-meta { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 30px; padding-top: 22px; border-top: 1px solid var(--line); font: 500 13px var(--mono); color: var(--ink-3); }
+  .hero-meta b { color: var(--ink); font-weight: 600; }
+  .hero-shot { position: relative; margin-right: calc((100vw - min(1320px, 100vw - 32px)) / -2); }
+  .hero-frame { position: relative; border-radius: var(--radius-xl) 0 0 var(--radius-xl); overflow: hidden; box-shadow: var(--shadow); background: var(--bg-2); aspect-ratio: 16 / 10; }
+  .hero-frame img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 45%; transition: opacity .9s cubic-bezier(.16, 1, .3, 1); }
+  .hero-frame img.night { opacity: 0; }
+  .hero-frame.is-night img.night { opacity: 1; }
+  .hero-frame.is-night img.day { opacity: 0; }
+  .kb img { animation: kb 22s ease-in-out infinite alternate; }
+  @keyframes kb { from { transform: scale(1.02); } to { transform: scale(1.09) translate(-1.2%, .8%); } }
+  .seg { position: absolute; left: 18px; bottom: 18px; display: inline-flex; padding: 4px; border-radius: 14px; background: rgba(255, 255, 255, .78); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: inset 0 0 0 1px rgba(255,255,255,.5), 0 8px 20px -10px rgba(0,0,0,.3); }
+  .seg button { all: unset; cursor: pointer; padding: 8px 14px; border-radius: 10px; font: 600 13.5px var(--sans); color: #0e1526; transition: background .25s, color .25s; }
+  .seg button[aria-pressed="true"] { background: #00276f; color: #fff; }
+  .seg button:focus-visible { outline: 3px solid #2f7ff0; }
+  .live { position: absolute; right: 18px; top: 18px; display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 999px; background: rgba(255,255,255,.78); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); font: 500 12px var(--mono); color: #0e1526; }
+  .live i { width: 7px; height: 7px; border-radius: 50%; background: #1fa463; box-shadow: 0 0 0 0 rgba(31, 164, 99, .5); animation: pulse 2.2s infinite; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(31, 164, 99, .5); } 70% { box-shadow: 0 0 0 9px rgba(31, 164, 99, 0); } 100% { box-shadow: 0 0 0 0 rgba(31, 164, 99, 0); } }
+
+  /* liczby: pasek bez kart, linie podziału */
+  .stats { border-block: 1px solid var(--line); }
+  .stats .wrap { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+  .stat { padding: 26px 18px 24px; border-left: 1px solid var(--line); }
+  .stat:first-child { border-left: 0; padding-left: 0; }
+  .stat b { display: block; font: 600 clamp(26px, 2.6vw, 36px)/1 var(--mono); letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+  .stat span { display: block; margin-top: 8px; font-size: 13.5px; color: var(--ink-2); line-height: 1.35; }
+
+  section { padding: clamp(72px, 10vw, 140px) 0; }
+  .head { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 24px 48px; align-items: end; margin-bottom: clamp(36px, 5vw, 64px); }
+  .head .eyebrow { grid-column: 1 / -1; }
+  .head p { padding-bottom: 6px; }
+
+  /* świat: duże zdjęcie i mniejsze, zachodzące na nie */
+  .world { display: grid; grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); gap: 28px; align-items: start; }
+  .shot { border-radius: var(--radius-l); overflow: hidden; background: var(--bg-2); box-shadow: var(--shadow); }
+  .shot img { width: 100%; height: 100%; object-fit: cover; transition: transform 1.2s cubic-bezier(.16, 1, .3, 1); }
+  .shot:hover img { transform: scale(1.025); }
+  .world .side { display: grid; gap: 28px; padding-top: clamp(0px, 8vw, 120px); }
+  .world .side .shot { aspect-ratio: 4 / 5; }
+  .facts { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+  .facts li { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--line); font-size: 15.5px; color: var(--ink-2); }
+  .facts li b { font: 500 12.5px/1.5 var(--mono); letter-spacing: .04em; text-transform: uppercase; color: var(--ink); padding-top: 2px; }
+
+  /* do wyboru: przełącznik wyglądu */
+  .skins { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: clamp(28px, 4vw, 64px); align-items: center; }
+  .tabs { display: grid; gap: 10px; margin-top: 28px; }
+  .tab { all: unset; cursor: pointer; display: grid; gap: 4px; padding: 18px 20px; border-radius: var(--radius-m); border: 1px solid var(--line); background: transparent; transition: background .3s, border-color .3s, transform .3s cubic-bezier(.16, 1, .3, 1); }
+  .tab b { font-weight: 600; font-size: 17px; letter-spacing: -.015em; }
+  .tab span { font-size: 14.5px; color: var(--ink-2); line-height: 1.5; }
+  .tab[aria-selected="true"] { background: var(--surface); border-color: transparent; box-shadow: 0 18px 40px -26px rgba(14, 30, 70, .45), inset 3px 0 0 var(--accent); }
+  .tab:hover { transform: translateX(3px); }
+  .tab:focus-visible { outline: 3px solid #2f7ff0; }
+  .stage-img { position: relative; aspect-ratio: 16 / 10; border-radius: var(--radius-xl); overflow: hidden; box-shadow: var(--shadow); background: var(--bg-2); }
+  .stage-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transform: scale(1.03); transition: opacity .7s cubic-bezier(.16, 1, .3, 1), transform 1.2s cubic-bezier(.16, 1, .3, 1); }
+  .stage-img img.on { opacity: 1; transform: none; }
+
+  /* tura: zygzak kroków przy zdjęciu */
+  .turn { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 6fr); gap: clamp(28px, 5vw, 80px); align-items: start; }
+  .turn .shot { position: sticky; top: 96px; aspect-ratio: 4 / 3.4; }
+  .steps { list-style: none; margin: 0; padding: 0; counter-reset: s; }
+  .steps li { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 12px; padding: 26px 0; border-top: 1px solid var(--line); }
+  .steps li:last-child { border-bottom: 1px solid var(--line); }
+  .steps li::before { counter-increment: s; content: counter(s, decimal-leading-zero); font: 500 14px/1.9 var(--mono); color: var(--ink-3); }
+  .steps h3 { margin-bottom: 6px; }
+  .steps p { color: var(--ink-2); font-size: 16px; }
+
+  /* pionki: ciemna scena jak studio produktowe */
+  .studio { background: var(--stage); color: var(--stage-ink); border-radius: clamp(24px, 3vw, 40px); padding: clamp(40px, 6vw, 88px) clamp(20px, 4vw, 64px); position: relative; overflow: hidden; }
+  .studio::before { content: ""; position: absolute; inset: -40% -10% auto; height: 80%; background: radial-gradient(50% 50% at 50% 50%, rgba(47, 90, 190, .22), transparent 70%); pointer-events: none; }
+  .studio .eyebrow { color: var(--stage-ink-2); }
+  .studio .lead { color: var(--stage-ink-2); }
+  .bento { position: relative; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto auto; gap: 18px; margin-top: clamp(32px, 5vw, 56px); }
+  .pawn { position: relative; }
+  .pawn .shot { background: #060912; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); aspect-ratio: 1 / 1; }
+  .pawn:first-child { grid-row: span 2; }
+  .pawn:first-child .shot { aspect-ratio: auto; height: 100%; min-height: 520px; }
+  .pawn:last-child { grid-column: span 2; }
+  .pawn:last-child .shot { aspect-ratio: 2.1 / 1; }
+  .pawn:last-child .shot img { object-position: 50% 62%; }
+  .pawn figcaption { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; padding: 14px 4px 0; }
+  .pawn figcaption b { font-size: 18px; font-weight: 600; letter-spacing: -.02em; }
+  .pawn figcaption span { font-size: 14px; color: var(--stage-ink-2); text-align: right; }
+  .pawn figure { margin: 0; height: 100%; display: flex; flex-direction: column; }
+  .pawn figure .shot { flex: 1; }
+  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 8px; vertical-align: 1px; background: var(--c); box-shadow: 0 0 0 3px rgba(255,255,255,.08); }
+
+  /* budynki: poziomy jak oś */
+  .levels { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(28px, 5vw, 80px); align-items: center; }
+  .ladder { list-style: none; margin: 32px 0 0; padding: 0; display: grid; gap: 0; }
+  .ladder li { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .ladder li:first-child { border-top: 1px solid var(--line); }
+  .ladder i { font: 600 13px var(--mono); color: var(--ink-3); font-style: normal; }
+  .ladder b { font-weight: 600; letter-spacing: -.015em; }
+  .bar { width: clamp(60px, 12vw, 150px); height: 6px; border-radius: 3px; background: var(--accent-soft); overflow: hidden; }
+  .bar span { display: block; height: 100%; width: var(--w); background: var(--accent); border-radius: 3px; transform-origin: left; transform: scaleX(0); transition: transform 1.2s cubic-bezier(.16, 1, .3, 1) var(--d, 0s); }
+  .in .bar span, .no-js .bar span { transform: none; }
+  .duo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+  .duo .shot:first-child { grid-column: 1 / -1; aspect-ratio: 16 / 9; }
+  .duo .shot:last-child { grid-column: 1 / -1; aspect-ratio: 16 / 7; }
+
+  /* karty i interfejs */
+  .cards-row { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: clamp(28px, 5vw, 72px); align-items: center; }
+  .cards-row .shot { aspect-ratio: 16 / 11; }
+  .backs { display: flex; gap: 14px; margin-top: 28px; }
+  .back { width: 74px; aspect-ratio: 63 / 88; border-radius: 9px; position: relative; box-shadow: 0 14px 26px -14px rgba(0,0,0,.45); }
+  .back.good { background: #fff; box-shadow: inset 0 0 0 3px #1f8a76, inset 0 0 0 7px #fff, inset 0 0 0 8px #1f8a76, 0 14px 26px -14px rgba(0,0,0,.35);
+    background-image: repeating-linear-gradient(-45deg, rgba(31, 138, 118, .14) 0 6px, transparent 6px 14px); }
+  .back.bad { background: #d6534f; box-shadow: inset 0 0 0 3px #fff, inset 0 0 0 7px #d6534f, inset 0 0 0 8px #fff, 0 14px 26px -14px rgba(0,0,0,.35);
+    background-image: repeating-linear-gradient(-45deg, rgba(255, 255, 255, .16) 0 6px, transparent 6px 14px); }
+  .back:nth-child(2) { transform: rotate(5deg) translateY(4px); }
+  .caption { margin-top: 14px; font-size: 14px; color: var(--ink-3); }
+
+  /* urządzenia: laptop, tablet i telefon obok siebie, lekko na zakładkę */
+  .devices { display: flex; align-items: flex-end; justify-content: center; padding: 8px 0 0; }
+  .devices figure { margin: 0; position: relative; }
+  .devices figcaption { margin-top: 14px; text-align: center; font: 500 12.5px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+  .devices .scr { overflow: hidden; background: #0b0f19; box-shadow: var(--shadow), 0 0 0 1px rgba(255,255,255,.08) inset; }
+  .devices .scr img { width: 100%; height: 100%; object-fit: cover; }
+  .dev-laptop { width: min(720px, 56%); z-index: 1; }
+  .dev-laptop .scr { aspect-ratio: 16 / 10; border: 12px solid #0c0f17; border-bottom-width: 18px; border-radius: 18px 18px 0 0; }
+  .lap-base { height: 16px; margin: 0 -7%; border-radius: 0 0 16px 16px; background: linear-gradient(180deg, #e4e8ef, #a3abbb); box-shadow: 0 24px 40px -18px rgba(14, 30, 70, .55); position: relative; }
+  .lap-base::before { content: ""; position: absolute; left: 50%; top: 0; width: 16%; height: 45%; transform: translateX(-50%); border-radius: 0 0 9px 9px; background: #bfc6d3; }
+  .dev-tablet { width: min(300px, 25%); margin-left: -3%; z-index: 2; margin-bottom: 30px; }
+  .dev-tablet .scr { aspect-ratio: 4 / 3; border: 10px solid #0c0f17; border-radius: 22px; }
+  .dev-phone { width: min(170px, 15%); margin-left: -2%; z-index: 3; margin-bottom: 30px; }
+  .dev-phone .scr { aspect-ratio: 390 / 844; border: 7px solid #0c0f17; border-radius: 30px; position: relative; }
+  .dev-phone .scr::before { content: ""; position: absolute; top: 9px; left: 50%; width: 34%; height: 15px; border-radius: 99px; background: #0c0f17; transform: translateX(-50%); }
+  .dev-facts { list-style: none; margin: clamp(32px, 5vw, 56px) 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line); }
+  .dev-facts li { padding: 20px 24px 0 0; display: grid; gap: 4px; }
+  .dev-facts li + li { padding-left: 24px; border-left: 1px solid var(--line); }
+  .dev-facts b { font-weight: 600; letter-spacing: -.015em; }
+  .dev-facts span { color: var(--ink-2); font-size: 15px; }
+  /* kod: lista z liniami, bez kart */
+  .code { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: clamp(28px, 5vw, 80px); }
+  .rows { border-top: 1px solid var(--line); }
+  .rows div { display: grid; grid-template-columns: minmax(120px, 3fr) minmax(0, 9fr); gap: 18px; padding: 20px 0; border-bottom: 1px solid var(--line); }
+  .rows dt { font: 500 13px/1.6 var(--mono); letter-spacing: .03em; text-transform: uppercase; }
+  .rows dd { margin: 0; color: var(--ink-2); font-size: 16px; }
+  .rows code { font: 500 .9em var(--mono); background: var(--accent-soft); padding: 1px 6px; border-radius: 6px; color: var(--ink); }
+
+  /* finał */
+  .final { padding-bottom: clamp(60px, 8vw, 110px); }
+  .final-box { position: relative; border-radius: clamp(24px, 3vw, 40px); overflow: hidden; min-height: clamp(380px, 46vw, 560px); display: grid; align-items: end; color: #fff; }
+  .final-box img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .final-box::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(3, 10, 30, .82) 0%, rgba(3, 10, 30, .45) 45%, rgba(3, 10, 30, 0) 75%); z-index: 1; }
+  .final-in { position: relative; z-index: 2; padding: clamp(28px, 5vw, 64px); max-width: 640px; }
+  .final h2 { font-size: clamp(44px, 6.4vw, 92px); letter-spacing: -.05em; line-height: .92; }
+  .final p { margin-top: 16px; color: rgba(255,255,255,.78); font-size: 17px; max-width: 46ch; }
+  .final .btn-primary { margin-top: 28px; background: #fff; color: #00276f; box-shadow: 0 18px 40px -16px rgba(0,0,0,.6); }
+
+  footer { border-top: 1px solid var(--line); padding: 28px 0 44px; }
+  footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px 24px; font-size: 14px; color: var(--ink-3); }
+
+  /* wejścia przy przewijaniu: treść jest widoczna od razu, animacja tylko gdy działa JS */
+  .js .reveal { opacity: 0; transform: translateY(18px); transition: opacity .9s cubic-bezier(.16, 1, .3, 1) var(--d, 0s), transform .9s cubic-bezier(.16, 1, .3, 1) var(--d, 0s); }
+  .js .reveal.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .js .reveal { opacity: 1; transform: none; transition: none; }
+    .kb img, .live i { animation: none; }
+    .bar span { transform: none !important; transition: none; }
+  }
+
+  /* tablet */
+  @media (max-width: 1080px) {
+    .nav ul { display: none; }
+    .stats .wrap { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .stat:nth-child(5) { border-left: 0; padding-left: 0; }
+    .stat:nth-child(n + 5) { border-top: 1px solid var(--line); }
+    .bento { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .pawn:first-child { grid-row: auto; }
+    .pawn:first-child .shot { min-height: 0; aspect-ratio: 1 / 1; height: auto; }
+    .pawn:last-child { grid-column: auto; }
+    .pawn:last-child .shot { aspect-ratio: 1 / 1; }
+  }
+  /* telefon: jedna kolumna */
+  @media (max-width: 768px) {
+    body { font-size: 16px; }
+    .hero .wrap, .head, .world, .skins, .turn, .levels, .cards-row, .code { grid-template-columns: minmax(0, 1fr); }
+    .hero-shot { margin-right: 0; }
+    .hero-frame { border-radius: var(--radius-l); }
+    .world .side { padding-top: 0; grid-template-columns: minmax(0, 1fr); }
+    .world .side .shot { aspect-ratio: 16 / 10; }
+    .turn .shot { position: relative; top: 0; }
+    .stats .wrap { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .stat, .stat:nth-child(5) { border-left: 0; padding-left: 0; border-top: 1px solid var(--line); }
+    .stat:nth-child(1), .stat:nth-child(2) { border-top: 0; }
+    .stat:nth-child(even) { padding-left: 16px; border-left: 1px solid var(--line); }
+    .bento { grid-template-columns: minmax(0, 1fr); }
+    .facts li { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+    .rows div { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+    .nav .btn span { display: none; }
+    .final-box::before { background: linear-gradient(0deg, rgba(3, 10, 30, .88) 0%, rgba(3, 10, 30, .4) 60%, rgba(3, 10, 30, .1) 100%); }
+    .devices { flex-wrap: wrap; row-gap: 20px; }
+    .dev-laptop { width: 100%; }
+    .lap-base { margin: 0 -4%; }
+    .dev-tablet { width: 54%; margin: 0; }
+    .dev-phone { width: 30%; margin: 0 0 0 6%; }
+    .dev-tablet, .dev-phone { margin-bottom: 0; }
+    .dev-facts { grid-template-columns: minmax(0, 1fr); }
+    .dev-facts li, .dev-facts li + li { padding: 16px 0; border-left: 0; border-bottom: 1px solid var(--line); }
+  }
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="nav" id="nav">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="WSiZ Tour, na górę strony"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1.2" fill="currentColor"/><circle cx="15" cy="15" r="1.2" fill="currentColor"/><circle cx="15" cy="9" r="1.2" fill="currentColor"/><circle cx="9" cy="15" r="1.2" fill="currentColor"/></svg></i>WSiZ Tour</a>
+    <nav aria-label="Sekcje">
+      <ul>
+        <li><a href="#swiat">Świat</a></li>
+        <li><a href="#tura">Tura</a></li>
+        <li><a href="#pionki">Pionki</a></li>
+        <li><a href="#budynki">Budynki</a></li>
+        <li><a href="#urzadzenia">Urządzenia</a></li>
+        <li><a href="#kod">Kod</a></li>
+      </ul>
+    </nav>
+    <div class="nav-actions">
+      <button class="theme" id="theme" type="button" aria-label="Przełącz jasny i ciemny wygląd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg></button>
+      <a class="btn btn-primary" href="https://claude.ai/artifact/ATfwdTc5QKUtyK6d7A6qpV" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg><span>Zagraj</span></a>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+  <!-- Hero -->
+  <div class="hero">
+    <div class="wrap">
+      <div>
+        <p class="eyebrow reveal">Praca inżynierska · WSiZ w Bielsku-Białej</p>
+        <h1 class="reveal" style="--d:.08s">WSiZ Tour<span>Uczelnia w formie gry planszowej.</span></h1>
+        <p class="lead reveal" style="--d:.16s">Gra 3D w przeglądarce w stylu Business Tour. Rzucasz kostkami, odpowiadasz na pytania z przedmiotów, kupujesz sale i budujesz od telefonu do serwerowni. Plansza leży na kampusie nad wodą.</p>
+        <div class="hero-cta reveal" style="--d:.24s">
+          <a class="btn btn-primary" href="https://claude.ai/artifact/ATfwdTc5QKUtyK6d7A6qpV" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>Zagraj w przeglądarce</a>
+          <a class="btn btn-ghost" href="#tura">Zobacz, jak działa tura</a>
+        </div>
+        <div class="hero-meta reveal" style="--d:.32s">
+          <span><b>Three.js</b> · jeden plik</span>
+          <span><b>0</b> gotowych modeli</span>
+          <span><b>Web Audio</b> · muzyka w kodzie</span>
+        </div>
+      </div>
+      <div class="hero-shot reveal" style="--d:.12s">
+        <div class="hero-frame kb" id="heroFrame">
+          <img class="day" src="img/diorama-day.jpg" alt="Makieta w przekroju: plansza na placu uczelni, za nią gmach z wieżą zegarową i wydziały, przed nią plaża, pomost, żaglówki i latarnia morska" width="1600" height="900" fetchpriority="high">
+          <img class="night" src="img/diorama-night.jpg" alt="Ta sama makieta nocą, ze świecącymi oknami" width="1600" height="900" loading="lazy">
+          <span class="live"><i></i>Plansza w trakcie gry</span>
+          <div class="seg" role="group" aria-label="Pora dnia">
+            <button type="button" data-time="day" aria-pressed="true">Dzień</button>
+            <button type="button" data-time="night" aria-pressed="false">Noc</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Liczby -->
+  <div class="stats" aria-label="Gra w liczbach">
+    <div class="wrap">
+      <div class="stat reveal"><b class="count" data-to="32">32</b><span>pola na planszy</span></div>
+      <div class="stat reveal" style="--d:.05s"><b class="count" data-to="23">23</b><span>akty własności z ilustracjami</span></div>
+      <div class="stat reveal" style="--d:.1s"><b class="count" data-to="5">5</b><span>poziomów budynków</span></div>
+      <div class="stat reveal" style="--d:.15s"><b class="count" data-to="4">4</b><span>pionki do wyboru</span></div>
+      <div class="stat reveal" style="--d:.2s"><b><span class="count" data-to="60" style="display:inline;margin:0;font:inherit;color:inherit">60</span> s</b><span>na odpowiedź</span></div>
+      <div class="stat reveal" style="--d:.25s"><b>2 mln</b><span>złotych na start</span></div>
+      <div class="stat reveal" style="--d:.3s"><b class="count" data-to="7">7</b><span>semestrów pytań</span></div>
+    </div>
+  </div>
+
+  <!-- Świat -->
+  <section id="swiat">
+    <div class="wrap">
+      <div class="head">
+        <p class="eyebrow reveal">01 · Świat</p>
+        <h2 class="reveal">Uniwersytet z jednej strony. Wakacje z drugiej.</h2>
+        <p class="lead reveal" style="--d:.1s">Plansza leży na placu z kostki granitowej, jak makieta w przekroju: z boku widać warstwy ziemi i przezroczystą wodę. Za planszą gmach z wieżą zegarową, wydziały, boisko i parking. Przed nią plaża, pomost i latarnia na falochronie.</p>
+      </div>
+      <div class="world">
+        <div class="shot reveal" style="aspect-ratio:16/10"><img src="img/water.jpg" alt="Pomost, żaglówki kołyszące się na falach i plaża z parasolami" width="1600" height="900" loading="lazy"></div>
+        <div class="side">
+          <div class="shot reveal" style="--d:.1s"><img src="img/board-close.jpg" alt="Plansza w trakcie gry: kupione sale z budynkami i pionki na polu START" width="1600" height="900" loading="lazy" style="object-position:58% 50%"></div>
+          <ul class="facts reveal" style="--d:.15s">
+            <li><b>Fale</b>Suma fal Gerstnera. Łodzie, skuter i boje unoszą się i przechylają na tej samej fali, którą widać na wodzie.</li>
+            <li><b>Plac</b>Kostka z mapą normalnych: fugi i fazowane brzegi łapią światło. Pod ławkami i latarniami leżą miękkie cienie.</li>
+            <li><b>Kadr</b>Przed planszą nic wysokiego nie stoi, więc w grze nic nie zasłania pól.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Do wyboru -->
+  <section id="wyglad" style="padding-top:0">
+    <div class="wrap skins">
+      <div>
+        <p class="eyebrow reveal">02 · Wygląd</p>
+        <h2 class="reveal" style="margin-top:18px">Dwa wyglądy. Jedna plansza.</h2>
+        <p class="lead reveal" style="margin-top:18px;--d:.1s">W Ustawieniach wybierasz otoczenie. Wybór się zapamiętuje, a prezentacja zawsze pokazuje makietę.</p>
+        <div class="tabs reveal" role="tablist" aria-label="Wygląd planszy" style="--d:.16s">
+          <button class="tab" role="tab" id="t-dio" aria-controls="p-skins" aria-selected="true" data-skin="dio"><b>Diorama nad wodą</b><span>Kampus, plaża i morze dookoła planszy. Ciągle coś się dzieje.</span></button>
+          <button class="tab" role="tab" id="t-tek" aria-controls="p-skins" aria-selected="false" data-skin="tek" tabindex="-1"><b>Czysta tektura</b><span>Sama plansza jak z kartonu, na jasnym stole. Nic nie odciąga uwagi od gry.</span></button>
+        </div>
+      </div>
+      <div class="stage-img reveal" id="p-skins" role="tabpanel" aria-labelledby="t-dio" style="--d:.1s">
+        <img class="on" data-skin="dio" src="img/board-close.jpg" alt="Plansza w wyglądzie diorama: plac z kostki, budynki i pionki" width="1600" height="900" loading="lazy">
+        <img data-skin="tek" src="img/tektura.jpg" alt="Plansza w wyglądzie czysta tektura: falista tektura na jasnym stole" width="1600" height="900" loading="lazy">
+      </div>
+    </div>
+  </section>
+
+  <!-- Tura -->
+  <section id="tura" style="background:var(--bg-2)">
+    <div class="wrap">
+      <div class="head">
+        <p class="eyebrow reveal">03 · Tura</p>
+        <h2 class="reveal">Jedna tura. Pięć decyzji.</h2>
+        <p class="lead reveal" style="--d:.1s">Zasady jak w Business Tour, tylko zamiast szczęścia liczy się wiedza ze studiów.</p>
+      </div>
+      <div class="turn">
+        <div class="shot reveal"><img src="img/buildings-close.jpg" alt="Zbliżenie planszy: pole Sala 05, parking i kupione pola z budynkami" width="1600" height="900" loading="lazy"></div>
+        <ol class="steps">
+          <li class="reveal"><div><h3>Rzut</h3><p>Dwie kostki 3D. Dublet daje drugi rzut, trzeci dublet z rzędu kończy się w dziekanacie.</p></div></li>
+          <li class="reveal" style="--d:.06s"><div><h3>Pytanie</h3><p>Żeby kupić salę, odpowiadasz na pytanie z przedmiotu. Masz 60 sekund. Pytania wpisują wykładowcy.</p></div></li>
+          <li class="reveal" style="--d:.12s"><div><h3>Zakup albo czynsz</h3><p>Wolna sala jest do kupienia, cudza kosztuje czynsz. Paczki banknotów lecą przez plac z jednego stosu na drugi.</p></div></li>
+          <li class="reveal" style="--d:.18s"><div><h3>Budowa</h3><p>Cała grupa w jednym kolorze to monopol. Na swoich salach stawiasz budynki, a czynsz rośnie z każdym poziomem.</p></div></li>
+          <li class="reveal" style="--d:.24s"><div><h3>Szansa</h3><p>Dobra odpowiedź daje kartę ułatwienia, zła kartę utrudnienia: atak na salę przeciwnika, tarcza albo stracona kolejka.</p></div></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pionki -->
+  <section id="pionki">
+    <div class="wrap">
+      <div class="studio">
+        <div class="head" style="margin-bottom:0">
+          <p class="eyebrow reveal">04 · Pionki</p>
+          <h2 class="reveal">Cztery pionki. Każdy z charakterem.</h2>
+          <p class="lead reveal" style="--d:.1s">Stoją na podeście w kolorach uczelni: lakierowany granat, pas w kolorze gracza i jasna płytka ze srebrnym rantem.</p>
+        </div>
+        <div class="bento">
+          <div class="pawn reveal"><figure><div class="shot"><img src="img/pawn-1.jpg" alt="Pionek Sztandar: flaga z logo uczelni na złotym maszcie" width="1200" height="1200" loading="lazy"></div><figcaption><b><i class="dot" style="--c:#E5484D"></i>Sztandar</b><span>Dla tych, którzy prowadzą.</span></figcaption></figure></div>
+          <div class="pawn reveal" style="--d:.06s"><figure><div class="shot"><img src="img/pawn-2.jpg" alt="Pionek Drukarka 3D z wydrukiem na stole" width="1200" height="1200" loading="lazy"></div><figcaption><b><i class="dot" style="--c:#2F7FF0"></i>Drukarka 3D</b><span>Dla tych, którzy budują.</span></figcaption></figure></div>
+          <div class="pawn reveal" style="--d:.12s"><figure><div class="shot"><img src="img/pawn-3.jpg" alt="Pionek Koparka kryptowalut z kartami graficznymi i złotą monetą" width="1200" height="1200" loading="lazy"></div><figcaption><b><i class="dot" style="--c:#1FA463"></i>Koparka</b><span>Dla tych, którzy liczą.</span></figcaption></figure></div>
+          <div class="pawn reveal" style="--d:.18s"><figure><div class="shot"><img src="img/pawn-4.jpg" alt="Pionek Ekspres do kawy z filiżanką" width="1200" height="1200" loading="lazy"></div><figcaption><b><i class="dot" style="--c:#F2B72E"></i>Ekspres</b><span>Dla tych, którzy nie śpią przed sesją.</span></figcaption></figure></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Budynki -->
+  <section id="budynki" style="padding-top:0">
+    <div class="wrap levels">
+      <div>
+        <p class="eyebrow reveal">05 · Budynki</p>
+        <h2 class="reveal" style="margin-top:18px">Od telefonu do serwerowni.</h2>
+        <p class="lead reveal" style="margin-top:18px;--d:.1s">Pięć poziomów, każdy w całości w kolorze właściciela sali. Wszystkie modele są zbudowane kodem z prostych brył.</p>
+        <ol class="ladder reveal" style="--d:.16s">
+          <li><i>01</i><b>Telefon</b><span class="bar"><span style="--w:20%;--d:.1s"></span></span></li>
+          <li><i>02</i><b>Laptop</b><span class="bar"><span style="--w:40%;--d:.2s"></span></span></li>
+          <li><i>03</i><b>Komputer</b><span class="bar"><span style="--w:60%;--d:.3s"></span></span></li>
+          <li><i>04</i><b>Szafa rack</b><span class="bar"><span style="--w:80%;--d:.4s"></span></span></li>
+          <li><i>05</i><b>Serwerownia</b><span class="bar"><span style="--w:100%;--d:.5s"></span></span></li>
+        </ol>
+      </div>
+      <div class="duo">
+        <div class="shot reveal"><img src="img/ui-models.jpg" alt="Widok Modele: pionki i pięć poziomów budynków na jasnym podeście" width="1600" height="1000" loading="lazy" style="object-position:50% 40%"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Karty i interfejs -->
+  <section id="karty" style="background:var(--bg-2)">
+    <div class="wrap">
+      <div class="cards-row">
+        <div class="shot reveal"><img src="img/ui-cards.jpg" alt="Akty własności: karty sal z ilustracjami, ceną i tabelą czynszów" width="1600" height="1000" loading="lazy" style="object-position:50% 30%"></div>
+        <div>
+          <p class="eyebrow reveal">06 · Karty</p>
+          <h2 class="reveal" style="margin-top:18px">23 akty własności. Każdy z własną ilustracją.</h2>
+          <p class="lead reveal" style="margin-top:18px;--d:.1s">Nagłówek w kolorze grupy, cena, tabela czynszów i koszt budowy. Karty pytań są gotowe do druku w formacie 63 × 88 mm.</p>
+          <div class="backs reveal" style="--d:.16s" aria-label="Tył kart: ułatwienia i utrudnienia"><span class="back good" title="Ułatwienia"></span><span class="back bad" title="Utrudnienia"></span></div>
+          <p class="caption reveal" style="--d:.2s">Tył kart jak na polu Szansa: ułatwienia zielone, utrudnienia czerwone.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Urządzenia -->
+  <section id="urzadzenia">
+    <div class="wrap">
+      <div class="head">
+        <p class="eyebrow reveal">07 · Urządzenia</p>
+        <h2 class="reveal">Graj, gdzie chcesz. Kiedy chcesz.</h2>
+        <p class="lead reveal" style="--d:.1s">Gra działa w przeglądarce, bez instalacji. Na komputerze panele stoją w rogach, na tablecie pod planszą, a na telefonie gracze mieszczą się w jednym rzędzie. Plansza jest zawsze cała na ekranie.</p>
+      </div>
+      <div class="devices reveal" style="--d:.12s">
+        <figure class="dev-laptop"><div class="scr"><img src="img/ui-game.jpg" alt="Gra na komputerze: gracze w lewym górnym rogu, pula i menu w prawym, przycisk Rzuć kostkami" width="1600" height="1000" loading="lazy"></div><div class="lap-base"></div><figcaption>Komputer</figcaption></figure>
+        <figure class="dev-tablet"><div class="scr"><img src="img/ui-tablet.jpg" alt="Gra na tablecie: gracze w rzędzie nad planszą, pula i karty pod nią" width="1024" height="768" loading="lazy"></div><figcaption>Tablet</figcaption></figure>
+        <figure class="dev-phone"><div class="scr"><img src="img/ui-phone.jpg" alt="Gra na telefonie: gracze w jednym rzędzie u góry, plansza pośrodku, karty i pula na dole" width="390" height="844" loading="lazy"></div><figcaption>Telefon</figcaption></figure>
+      </div>
+      <ul class="dev-facts reveal" style="--d:.18s">
+        <li><b>Bez instalacji</b><span>Link otwiera grę od razu, także na telefonie.</span></li>
+        <li><b>Stała kamera</b><span>Planszę można tylko obracać, nic nie ucieka z kadru.</span></li>
+        <li><b>Sama dba o płynność</b><span>Na słabszym sprzęcie zmniejsza rozdzielczość i cienie.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Kod -->
+  <section id="kod">
+    <div class="wrap code">
+      <div>
+        <p class="eyebrow reveal">08 · Kod</p>
+        <h2 class="reveal" style="margin-top:18px">Zrobione w kodzie. Od pierwszej kostki brukowej.</h2>
+      </div>
+      <dl class="rows">
+        <div class="reveal"><dt>Silnik</dt><dd>Three.js 0.169. Cała gra mieści się w jednym pliku <code>index.html</code>, bez bundlera.</dd></div>
+        <div class="reveal" style="--d:.04s"><dt>Grafika</dt><dd>Każdy model, tekstura i ilustracja jest narysowana kodem. Bez gotowych modeli i bez generatorów obrazów.</dd></div>
+        <div class="reveal" style="--d:.08s"><dt>Muzyka</dt><dd>Syntezowana w Web Audio: spokojny podkład w menu i grze, osobny utwór prezentacji, który rośnie ze scenami.</dd></div>
+        <div class="reveal" style="--d:.12s"><dt>Pytania</dt><dd>Wykładowcy wpisują je w Excelu. Skrypt sprawdza arkusz i zapisuje <code>baza-pytan.js</code> dla gry.</dd></div>
+        <div class="reveal" style="--d:.16s"><dt>Logowanie</dt><dd>Przez wirtualny dziekanat (w przygotowaniu). Klucz aplikacji jest tylko w pliku <code>.env</code> na serwerze, nigdy w przeglądarce. Gra nie widzi haseł studentów.</dd></div>
+        <div class="reveal" style="--d:.2s"><dt>Płynność</dt><dd>Gra sama zmniejsza rozdzielczość, gdy komputer nie nadąża, i lżej liczy cienie na telefonach.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- Finał -->
+  <section class="final" style="padding-top:0">
+    <div class="wrap">
+      <div class="final-box reveal">
+        <img src="img/diorama-night.jpg" alt="" width="1600" height="900" loading="lazy">
+        <div class="final-in">
+          <h2>Rzuć kostkami.</h2>
+          <p>Gra działa w przeglądarce, bez instalacji. Solo z botami na trzech poziomach albo 2 na 2.</p>
+          <a class="btn btn-primary" href="https://claude.ai/artifact/ATfwdTc5QKUtyK6d7A6qpV" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>Zagraj w WSiZ Tour</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>WSiZ Tour · Patryk · praca inżynierska · 2026</span>
+    <span>Wyższa Szkoła Informatyki i Zarządzania w Bielsku-Białej</span>
+  </div>
+</footer>
+
+<script>
+  document.documentElement.classList.add('js');
+  // motyw: zapamiętany wybór (jeśli przeglądarka pozwala), domyślnie systemowy
+  (() => {
+    const root = document.documentElement;
+    let saved = null;
+    try { saved = localStorage.getItem('wsiz-tour-pokaz-motyw'); } catch (e) { /* bez pamięci */ }
+    if (saved) root.dataset.theme = saved;
+    document.getElementById('theme').addEventListener('click', () => {
+      const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+      root.dataset.theme = dark ? 'light' : 'dark';
+      try { localStorage.setItem('wsiz-tour-pokaz-motyw', root.dataset.theme); } catch (e) { /* bez pamięci */ }
+    });
+  })();
+  // pasek nawigacji dostaje linię po przewinięciu
+  const nav = document.getElementById('nav');
+  addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 8), { passive: true });
+  // dzień i noc w hero
+  const frame = document.getElementById('heroFrame');
+  frame.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => {
+    const night = b.dataset.time === 'night';
+    frame.classList.toggle('is-night', night);
+    frame.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  }));
+  // przełącznik wyglądu planszy (zakładki ze strzałkami)
+  const tabs = [...document.querySelectorAll('.tab')], panel = document.getElementById('p-skins');
+  const pick = t => {
+    tabs.forEach(x => { const on = x === t; x.setAttribute('aria-selected', String(on)); x.tabIndex = on ? 0 : -1; });
+    panel.setAttribute('aria-labelledby', t.id);
+    panel.querySelectorAll('img').forEach(img => img.classList.toggle('on', img.dataset.skin === t.dataset.skin));
+  };
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => pick(t));
+    t.addEventListener('keydown', e => {
+      if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      e.preventDefault();
+      const n = tabs[(i + (e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+      pick(n); n.focus();
+    });
+  });
+  // wejścia przy przewijaniu i liczniki
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const countUp = el => {
+    const to = +el.dataset.to;
+    if (reduce || !to) return;
+    const t0 = performance.now(), dur = 1100;
+    const step = now => { const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = Math.round(to * e); if (k < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  };
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(entries => entries.forEach(en => {
+      if (!en.isIntersecting) return;
+      en.target.classList.add('in');
+      en.target.querySelectorAll('.count').forEach(countUp);
+      io.unobserve(en.target);
+    }), { rootMargin: '0px 0px -8% 0px', threshold: .12 });
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+  } else document.querySelectorAll('.reveal').forEach(el => el.classList.add('in'));
+</script>
+
+</body>
+</html>

@@ -198,7 +198,7 @@ Do ustalenia: co z Kuchnią.
 - Styl reklam Apple i Nike: czarne tło, kinowe pasy, delikatne ziarno filmowe, winieta, typografia Inter Tight (napisy wjeżdżają z rozmyciem, srebrne i złote gradienty), wielkie hasła krojem Anton (pochylone, wielkie litery, cięcia do rytmu muzyki z błyskiem).
 - **Studio produktowe:** każdy pionek pokazany osobno jak produkt (czarne tło bez krawędzi, lśniąca podłoga, reflektor z góry, niebieskie i ciepłe światła konturowe, obrót na talerzu) z podpisem i krótkim opisem dla kogo jest („Sztandar. Dla tych, którzy prowadzą.”, „Drukarka 3D. Dla tych, którzy budują.”, „Koparka. Dla tych, którzy liczą.”, „Ekspres. Dla tych, którzy nie śpią przed sesją.”).
 - **Żywa plansza:** przez cały zwiastun trwa w tle gra czterech graczy (właściciele sal, budynki, pieniądze na stole, pionki skaczą, czynsz przelatuje między graczami). Wyspa jest nocą.
-- 18 scen, ok. 1 minuty 50 sekund: „Uczelnia, jakiej jeszcze nie znasz.”, logo i nazwa, makieta z lotu ptaka („Uniwersytet z jednej strony. Wakacje z drugiej.”), 4 pionki w studiu, plansza („32 pola”), kostki w zwolnionym tempie („RZUĆ.” / „DUBLET.”), przykładowe pytanie z minutnikiem (7 × 8, nigdy z prawdziwej bazy), budowanie od telefonu do serwerowni, czynsz, monopol, wachlarz kart, manifest („UCZ SIĘ. GRAJ. KUPUJ. BUDUJ. BLOKUJ. WYGRYWAJ.”), liczby (2 mln zł, 60 s, 32 pola, 7 semestrów), „Wiedza się opłaca” z deszczem pieniędzy i finał z fajerwerkami, przyciskami „Zagraj teraz” i „Obejrzyj jeszcze raz”.
+- 19 scen, ok. 2 minut: „Uczelnia, jakiej jeszcze nie znasz.”, logo i nazwa, makieta z lotu ptaka („Uniwersytet z jednej strony. Wakacje z drugiej.”), 4 pionki w studiu, plansza („32 pola”), kostki w zwolnionym tempie („RZUĆ.” / „DUBLET.”), przykładowe pytanie z minutnikiem (7 × 8, nigdy z prawdziwej bazy), budowanie od telefonu do serwerowni, czynsz, monopol, wachlarz kart, manifest („UCZ SIĘ. GRAJ. KUPUJ. BUDUJ. BLOKUJ. WYGRYWAJ.”), liczby (2 mln zł, 60 s, 32 pola, 7 semestrów), „Wiedza się opłaca” z deszczem pieniędzy, „Graj, gdzie chcesz. Kiedy chcesz.” (laptop, tablet i telefon, na których ekranach widać żywą planszę z uproszczonym interfejsem gry) i finał z fajerwerkami, przyciskami „Zagraj teraz” i „Obejrzyj jeszcze raz”.
 - Muzyka jest generowana w kodzie, bez plików i bez cudzych nagrań (zob. „Muzyka”). W zwiastunie utwór rośnie razem ze scenami: pad i pianino, potem bas i arpeggio, potem bit, a w finale pełny bit z melodią. Głośność bierze z ustawienia „Muzyka”, w zwiastunie jest też przycisk wyciszenia.
 - Sterowanie: pauza, poprzednia i następna scena, pasek scen (klik = skok do sceny), wyciszenie, zamknięcie. Klawisze: strzałki, spacja, Esc. Przyciski chowają się, gdy nie ruszasz myszką.
 - Kod jest w `index.html`: style z prefiksem `.pr-`, znaczniki w `<section class="promo">`, logika w bloku „Prezentacja” (studio `setStudio`, lista `SCENES`: czas sceny, ujęcie kamery, napisy i zdarzenia).
@@ -370,6 +370,8 @@ Prezentacja zawsze pokazuje dioramę, a po jej zamknięciu wraca wybrany wygląd
 - **Menu i gra:** spokojny, ciepły podkład (elektryczne pianino z akordami jazzowymi Dm9, G13, Cmaj9, Am9, Fmaj9, Em7, miękki bas, delikatna perkusja z lekkim bujaniem, cichy szum płyty winylowej, co 16 taktów krótka przerwa bez perkusji). Startuje po pierwszym kliknięciu (przeglądarki nie pozwalają grać wcześniej), cichnie na czas prezentacji i znika, gdy suwak „Muzyka” jest na zero.
 - **Prezentacja:** osobny utwór (112 uderzeń na minutę), który rośnie z energią sceny, z pogłosem, echem raz w lewo, raz w prawo, „pompowaniem” w rytm stopy, uderzeniami i szumem przy cięciach.
 - Mikser ma kompresor i limiter, więc nic nie przesterowuje (sprawdzone nagraniem offline: brak przesterowań, poziomy i proporcje basu, środka i góry zmierzone).
+- **Prezentacja:** utwór ma dwie części (A i B, co 8 taktów na zmianę, z inną melodią), przejścia perkusji na końcu frazy, narastający szum przed nową frazą i talerz na jej początku.
+- **Muzyka z pliku (opcjonalnie):** w `index.html` jest stała `MUSIC_FILE` (`game` i `promo`). Wpisana ścieżka do pliku w `assets/muzyka/` zastępuje syntezator (uderzenia i szumy w prezentacji zostają). Tylko licencja CC0 albo własne nagranie; muzyki ze Spotify, YouTube i radia nie wolno użyć. Instrukcja: `assets/muzyka/PRZECZYTAJ.md`.
 
 ## Efekty w grze (od 13.10.2026)
 
@@ -472,3 +474,10 @@ Prezentacja zawsze pokazuje dioramę, a po jej zamknięciu wraca wybrany wygląd
 | 10 | Logowanie przez wirtualny dziekanat | |
 | 11 | Testy i wdrożenie na serwer uczelni | |
 | 12 | Wersja do druku (opcjonalnie) | |
+
+## Strona-wizytówka projektu (od 13.10.2026)
+
+- Folder `prezentacja-strona/`: osobna strona (`index.html` i zdjęcia w `img/`) do pokazania projektu opiekunowi, na obronie albo w portfolio. Otwiera się w przeglądarce bez serwera.
+- Sekcje: makieta kampusu (dzień i noc), liczby, świat, dwa wyglądy planszy, tura w pięciu krokach, pionki w studiu, budynki od telefonu do serwerowni, akty własności, urządzenia (komputer, tablet, telefon), kod i finał z przyciskiem „Zagraj”.
+- Zdjęcia są zrzutami z naszej gry. Krój Geist i Geist Mono (Google Fonts), jeden akcent: granat uczelni. Jasny i ciemny wygląd.
+- Uwaga: na zdjęciach jest logo uczelni (środek planszy, sztandar). Przed publicznym pokazaniem strony potrzebna jest zgoda uczelni.

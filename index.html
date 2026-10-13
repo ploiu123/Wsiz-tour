@@ -884,6 +884,42 @@
   .promo .pr-logo { box-shadow: 0 0 0 1px rgba(255, 255, 255, .25), 0 0 90px 12px rgba(120, 160, 255, .28); }
   .promo .pr-cta .is-main { background: #FFFFFF; color: #000000; box-shadow: 0 18px 50px rgba(255, 255, 255, .18); }
   .promo .pr-q { border-radius: 30px; background: linear-gradient(160deg, rgba(255, 255, 255, .14), rgba(255, 255, 255, .04)); }
+  /* Scena „Wszędzie”: laptop, tablet i telefon z żywą planszą na ekranach */
+  .pr-devices { gap: 0; }
+  .pr-devices .pr-h { font-size: clamp(34px, min(5.4vw, 8.4vh), 84px); line-height: .98; }
+  .pr-dev-row { display: flex; align-items: flex-end; justify-content: center; margin: clamp(18px, 3.4vh, 40px) 0 clamp(14px, 2.6vh, 30px); }
+  .pr-scr { position: relative; overflow: hidden; background: #0b1020; }
+  .pr-scr canvas { display: block; width: 100%; height: 100%; }
+  .pr-scr i { position: absolute; font-style: normal; }
+  .pr-laptop { width: clamp(240px, min(40vw, 64vh), 600px); position: relative; z-index: 1; }
+  .pr-laptop .pr-scr { aspect-ratio: 16 / 10; border-radius: 14px 14px 0 0; border: clamp(6px, .7vw, 10px) solid #0c0f17; border-bottom-width: clamp(10px, 1.1vw, 16px); box-shadow: 0 0 0 1px rgba(255,255,255,.14), 0 30px 80px rgba(0,0,0,.6); }
+  .pr-lap-base { height: clamp(10px, 1.1vw, 16px); margin: 0 -7%; border-radius: 0 0 14px 14px; background: linear-gradient(180deg, #d9dee8, #9aa3b4); box-shadow: 0 18px 40px rgba(0,0,0,.5); position: relative; }
+  .pr-lap-base::before { content: ""; position: absolute; left: 50%; top: 0; width: 16%; height: 40%; transform: translateX(-50%); border-radius: 0 0 8px 8px; background: #b6bdcb; }
+  .pr-tablet { width: clamp(110px, min(15vw, 24vh), 230px); margin-left: clamp(-60px, -4vw, -24px); position: relative; z-index: 2; }
+  .pr-tablet .pr-scr { aspect-ratio: 3 / 4; border-radius: 18px; border: clamp(6px, .6vw, 9px) solid #0c0f17; box-shadow: 0 0 0 1px rgba(255,255,255,.14), 0 26px 60px rgba(0,0,0,.6); }
+  .pr-phone { width: clamp(70px, min(8.6vw, 13.8vh), 132px); margin-left: clamp(-34px, -2.4vw, -14px); position: relative; z-index: 3; }
+  .pr-phone .pr-scr { aspect-ratio: 9 / 19.5; border-radius: clamp(16px, 1.8vw, 26px); border: clamp(4px, .45vw, 7px) solid #0c0f17; box-shadow: 0 0 0 1px rgba(255,255,255,.16), 0 24px 50px rgba(0,0,0,.65); }
+  .pr-phone .pr-scr::before { content: ""; position: absolute; top: 4%; left: 50%; width: 30%; height: 2.6%; border-radius: 99px; background: #0c0f17; transform: translateX(-50%); z-index: 2; }
+  /* uproszczony interfejs gry na ekranach */
+  .pr-ui-players { left: 3%; top: 4%; width: 21%; display: grid; gap: 6%; padding: 2% 2%; border-radius: 6px; background: rgba(255,255,255,.92); }
+  .pr-ui-players b, .pr-ui-row b { display: block; height: 7px; border-radius: 3px; background: linear-gradient(90deg, var(--c, #00276f) 0 18%, #dfe4ee 18% 100%); }
+  .pr-ui-players b:nth-child(1), .pr-ui-row b:nth-child(1) { --c: #E5484D; } .pr-ui-players b:nth-child(2), .pr-ui-row b:nth-child(2) { --c: #2F7FF0; }
+  .pr-ui-players b:nth-child(3), .pr-ui-row b:nth-child(3) { --c: #1FA463; } .pr-ui-players b:nth-child(4), .pr-ui-row b:nth-child(4) { --c: #F2B72E; }
+  .pr-ui-chip { right: 3%; top: 4%; width: 17%; height: 7%; border-radius: 5px; background: rgba(255,255,255,.92); }
+  .pr-ui-hand { right: 3%; bottom: 5%; width: 22%; height: 9%; border-radius: 6px; background: rgba(255,255,255,.92); }
+  .pr-ui-roll { left: 50%; top: 40%; transform: translate(-50%, -50%); padding: .5em 1.1em; border-radius: 8px; background: #00276f; color: #fff; font: 600 clamp(7px, .75vw, 12px) var(--pr-font, system-ui); white-space: nowrap; box-shadow: 0 6px 16px rgba(0, 20, 70, .5); }
+  .pr-ui-roll.sm { font-size: clamp(6px, .55vw, 9px); top: 46%; }
+  .pr-ui-row { left: 5%; right: 5%; top: 8%; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4%; padding: 3%; border-radius: 6px; background: rgba(255,255,255,.92); }
+  .pr-ui-row b { height: 5px; }
+  .pr-ui-bottom { left: 5%; right: 5%; bottom: 4%; height: 7%; border-radius: 6px; background: rgba(255,255,255,.92); }
+  .pr-tablet .pr-ui-row { top: 4%; }
+  @media (max-width: 760px) {
+    .pr-laptop { width: 58vw; }
+    .pr-lap-base { margin: 0 -5%; }
+    .pr-tablet { width: 23vw; margin-left: -5vw; }
+    .pr-phone { width: 14vw; margin-left: -3vw; }
+    .pr-ui-players, .pr-ui-chip, .pr-ui-hand { display: none; }
+  }
   .pr-ui {
     position: absolute; left: 50%; bottom: max(10px, calc(3.25vh - 20px)); translate: -50% 0; z-index: 7;
     display: flex; align-items: center; gap: 8px; width: min(720px, calc(100% - 32px)); transition: opacity .5s;
@@ -7231,6 +7267,23 @@ const SCENES = [
       <h2 class="pr-h xl">${bline('Wiedza', 0.3)}${bline('<span class="pr-gold">się opłaca.</span>', 0.7)}</h2></div>`,
   },
   {
+    name: 'Wszędzie', dur: 7400, energy: 2, blur: true, mirror: true,
+    cam: u => { const a = Q - 0.25 + u * 0.7; return [V3(17 * Math.cos(a), 13.5 - 1.5 * u, 17 * Math.sin(a)), V3(0, -0.4, 0)]; },
+    events: [[900, () => P.music?.chime()]],
+    html: () => `<div class="pr-scene at-center pr-devices">
+      ${fadeP('pr-eyebrow', 'Komputer · tablet · telefon', 0.2)}
+      <h2 class="pr-h">${bline('Graj, gdzie chcesz.', 0.3)}${bline('<span class="pr-silver">Kiedy chcesz.</span>', 0.65)}</h2>
+      <div class="pr-dev-row">
+        <div class="pr-laptop pr-fade" style="--d:.9s"><div class="pr-scr"><canvas data-mirror width="640" height="400"></canvas>
+          <i class="pr-ui-players"><b></b><b></b><b></b><b></b></i><i class="pr-ui-chip"></i><i class="pr-ui-hand"></i><i class="pr-ui-roll">Rzuć kostkami</i></div><div class="pr-lap-base"></div></div>
+        <div class="pr-tablet pr-fade" style="--d:1.05s"><div class="pr-scr"><canvas data-mirror data-zoom="1.15" width="300" height="400"></canvas>
+          <i class="pr-ui-row"><b></b><b></b><b></b><b></b></i><i class="pr-ui-bottom"></i></div></div>
+        <div class="pr-phone pr-fade" style="--d:1.2s"><div class="pr-scr"><canvas data-mirror data-zoom="1.3" width="200" height="433"></canvas>
+          <i class="pr-ui-row"><b></b><b></b><b></b><b></b></i><i class="pr-ui-roll sm">Rzuć</i><i class="pr-ui-bottom"></i></div></div>
+      </div>
+      ${fadeP('pr-sub', 'W przeglądarce, bez instalacji. Ta sama gra na każdym ekranie, w każdej chwili.', 1.5)}</div>`,
+  },
+  {
     name: 'Zagraj', dur: 7000, energy: 1, hold: true, blur: true,
     events: [[400, () => fireworksShow(7)], [4800, () => fireworksShow(5, 700)]],
     cam: () => { const a = Q + 0.4 + P.time / 22000; return [V3(19 * Math.cos(a), 9.5, 19 * Math.sin(a)), V3(0, 0, 0)]; },
@@ -7439,13 +7492,18 @@ const SONGS = {
       [41, [52, 55, 57, 60]], [40, [50, 55, 59, 64]], [38, [53, 57, 60, 64]], [43, [53, 57, 60, 65]]],
     hook: [[0, 76], [6, 74], [8, 72], [14, 69]],   // krótka melodia co drugi takt: [krok, nuta]
   },
-  promo: {  // F-dur, 112 BPM: Dm9 Bbmaj9 Fmaj9 Cadd9
+  promo: {  // F-dur, 112 BPM. Część A: Dm9 Bbmaj9 Fmaj9 Cadd9, część B: Bbmaj9 Cadd9 Am7 Dm9 (co 8 taktów na zmianę)
     bpm: 112, swing: 0,
     chords: [[38, [53, 57, 60, 64]], [34, [53, 57, 60, 62]], [41, [55, 57, 60, 64]], [36, [55, 60, 62, 64]]],
+    chordsB: [[34, [53, 57, 62, 65]], [36, [55, 60, 62, 64]], [33, [55, 57, 60, 64]], [38, [53, 57, 60, 65]]],
     lead: [[69, 0, 72, 0, 74, 72, 69, 0], [74, 0, 72, 0, 69, 0, 67, 0], [69, 0, 72, 0, 77, 0, 76, 0], [74, 0, 72, 0, 67, 0, 0, 0]],
+    leadB: [[74, 0, 77, 0, 76, 74, 72, 0], [72, 0, 74, 0, 76, 0, 79, 0], [76, 0, 72, 0, 69, 0, 72, 0], [74, 0, 0, 0, 69, 0, 0, 0]],
   },
 };
 const ARP = [0, 1, 2, 3, 2, 1, 3, 2];
+// Własna muzyka z pliku (tylko licencja CC0 albo własne nagranie). Wrzuć plik do assets/muzyka/ i wpisz ścieżkę,
+// np. 'assets/muzyka/gra.mp3'. Puste = muzyka z syntezatora (napisana w kodzie, w całości nasza).
+const MUSIC_FILE = { game: '', promo: '' };
 function createMusic(style, opts = {}) {
   const a = opts.ctx || audio();
   if (!a) return null;
@@ -7598,6 +7656,17 @@ function createMusic(style, opts = {}) {
     g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.05 * vel, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
     n.connect(filter('bandpass', 5800, 1.4)).connect(g).connect(panner(-0.3)).connect(B.hats);
   }
+  function crash(t, vel = 1) {   // talerz na początku nowej frazy
+    const n = hiss(t, t + 1.9), g = gain(0);
+    g.gain.setValueAtTime(0.13 * vel, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.8);
+    n.connect(filter('highpass', 5200)).connect(filter('peaking', 8000, 0.8)).connect(g).connect(B.fx);
+  }
+  function riser(t, len) {   // narastający szum przed wejściem nowej frazy
+    const n = hiss(t, t + len + 0.05), f = filter('bandpass', 400, 1.6), g = gain(0);
+    f.frequency.setValueAtTime(400, t); f.frequency.exponentialRampToValueAtTime(6500, t + len);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.16, t + len * 0.95); g.gain.linearRampToValueAtTime(0.0001, t + len + 0.04);
+    n.connect(f).connect(g).connect(B.fx);
+  }
   function crackle(t) {   // trzask płyty winylowej, bardzo cicho
     const n = hiss(t, t + 0.01), g = gain(0);
     g.gain.setValueAtTime(0.012 + Math.random() * 0.03, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.004);
@@ -7607,7 +7676,12 @@ function createMusic(style, opts = {}) {
   // ----- aranżacja -----
   let energy = opts.energy ?? 0, step = 0;
   function stepPromo(n, t) {
-    const bar = Math.floor(n / 16), s = n % 16, [root, notes] = song.chords[bar % 4], e = energy;
+    const bar = Math.floor(n / 16), s = n % 16, e = energy, partB = Math.floor(bar / 8) % 2 === 1;
+    const [root, notes] = (partB ? song.chordsB : song.chords)[bar % 4];
+    const phraseEnd = bar % 8 === 7;
+    if (e >= 2 && bar > 0 && bar % 8 === 0 && s === 0) crash(t, e === 3 ? 1 : 0.7);
+    if (e >= 2 && phraseEnd && s === 0) riser(t, BEAT * 4);
+    if (e >= 2 && phraseEnd && s >= 12) clap(t, 0.45 + (s - 12) * 0.15);   // przejście: werbel coraz głośniej
     if (s === 0) {
       padF.frequency.setTargetAtTime([600, 950, 1500, 2400][e], t, 0.8);
       pad(t, notes, BEAT * 4);
@@ -7622,7 +7696,7 @@ function createMusic(style, opts = {}) {
       if (e === 1 && s % 2 === 0) shaker(t, s % 4 === 2 ? 1 : 0.6);
     }
     if (e >= 2) {
-      const kickOn = e === 3 ? s % 4 === 0 : s === 0 || s === 8 || s === 11;
+      const kickOn = (e === 3 ? s % 4 === 0 : s === 0 || s === 8 || s === 11) && !(phraseEnd && s >= 12);
       if (kickOn) kick(t, 1, e === 3 ? 0.62 : 0.4);
       if (s === 4 || s === 12) clap(t, e === 3 ? 1 : 0.85);
       if (s % 2 === 0) hat(t, s % 4 === 2 ? 1 : 0.55, false, 0.3);
@@ -7630,7 +7704,7 @@ function createMusic(style, opts = {}) {
       if (e === 3 && s % 2 === 1) hat(t, 0.3, false, 0.45);
     }
     if (e === 3 && s % 2 === 0) {
-      const m = song.lead[bar % 4][s / 2];
+      const m = (partB ? song.leadB : song.lead)[bar % 4][s / 2];
       if (m) { bell(t, m, 1, 0.85, -0.1); bell(t + 0.004, m + 12, 0.35, 0.6, 0.25); }
     }
   }
@@ -7660,15 +7734,24 @@ function createMusic(style, opts = {}) {
       step++; next += STEP;
     }
   }
-  let timer = 0;
+  let timer = 0, fileEl = null, fileSrc = null;
+  if (!opts.until && MUSIC_FILE[style]) {   // utwór z pliku zamiast syntezatora; efekty (uderzenia, szum) zostają
+    fileEl = new Audio(MUSIC_FILE[style]);
+    fileEl.loop = true;
+    fileSrc = a.createMediaElementSource(fileEl);
+    fileSrc.connect(out);
+    fileEl.play().catch(() => {});
+  }
   if (opts.until) run(opts.until);   // tryb nagrania (OfflineAudioContext): wszystko planowane od razu
   else {
     out.gain.setTargetAtTime(level(), a.currentTime, promo ? 0.8 : 1.6);
     timer = setInterval(() => {
-      if (hold() || document.hidden) { next = Math.max(next, a.currentTime + 0.1); return; }
+      const wait = hold() || document.hidden;
+      if (fileEl) { if (wait) fileEl.pause(); else if (fileEl.paused) fileEl.play().catch(() => {}); return; }
+      if (wait) { next = Math.max(next, a.currentTime + 0.1); return; }
       run(a.currentTime + 0.3);
     }, 50);
-    run(a.currentTime + 0.3);
+    if (!fileEl) run(a.currentTime + 0.3);
   }
   return {
     setEnergy(e) { energy = e; },
@@ -7696,7 +7779,7 @@ function createMusic(style, opts = {}) {
     stop() {
       clearInterval(timer);
       out.gain.setTargetAtTime(0, a.currentTime, 0.25);
-      setTimeout(() => { for (const o of nodes) { try { o.stop(); } catch (e) { /* już zatrzymany */ } } out.disconnect(); }, 1800);
+      setTimeout(() => { for (const o of nodes) { try { o.stop(); } catch (e) { /* już zatrzymany */ } } fileEl?.pause(); fileSrc?.disconnect(); out.disconnect(); }, 1800);
     },
   };
 }
@@ -7773,6 +7856,17 @@ function promoTick(dt) {
   });
   updateProg(u);
   if (P.time >= sc.dur && !sc.hold && !P.dip) goTo(P.idx + 1);
+}
+// Ekrany urządzeń w scenie „Wszędzie”: wycinek środka klatki w proporcjach ekranu (telefon trochę bliżej)
+function mirrorDevices() {
+  const src = renderer.domElement, W = src.width, H = src.height;
+  for (const c of P.sceneEl?.querySelectorAll('canvas[data-mirror]') || []) {
+    const g = c.getContext('2d'), ar = c.width / c.height, zoom = +c.dataset.zoom || 1;
+    let sw = W, sh = W / ar;
+    if (sh > H) { sh = H; sw = H * ar; }
+    sw /= zoom; sh /= zoom;
+    g.drawImage(src, (W - sw) / 2, (H - sh) / 2, sw, sh, 0, 0, c.width, c.height);
+  }
 }
 function renderProg() {
   const prog = $('prProg');
@@ -8065,6 +8159,7 @@ function frame() {
   const sh = shakeOffset(performance.now());
   if (sh) camera.position.add(sh);
   renderer.render(scene, camera);
+  if (P.on && SCENES[P.idx]?.mirror) mirrorDevices();
   if (sh) camera.position.sub(sh);
   if (view === 'models') labelRenderer.render(scene, camera);
   requestAnimationFrame(frame);
