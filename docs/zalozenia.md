@@ -68,16 +68,20 @@ Rozgrywka działa w `index.html` od 13.10.2026 (opis niżej, w sekcji „Rozgryw
 
 Tam, gdzie autor jeszcze nie zdecydował, przyjęte są ustawienia tymczasowe. Wszystkie kwoty są w jednym miejscu w `index.html` (obiekty `ECON`, `GROUP_PRICE`, `RENT_MULT`, `BUILD_MULT`, `BOT`), więc łatwo je zmienić.
 
-**Pieniądze (tymczasowe)**
-- Waluta: zł. Na start każdy ma 1500 zł.
-- START: 200 zł i premia za okrążenie (procent dobrych odpowiedzi z tego okrążenia × 200 zł).
-- Ceny sal według grup: 1: 60, 2: 100, 3: 140, 4: 180, 5: 220, 6: 260, 7: 300, 8: 350 zł.
-- Czynsz za salę: cena × 0,12 bez budynku (×2 przy monopolu), × 0,5 telefon, × 1 laptop, × 1,8 komputer, × 2,6 szafa rack, × 3,6 serwerownia (hotel).
+**Pieniądze (jak w Business Tour, od 13.10.2026)**
+- Waluta: zł, w skali Business Tour. Na ekranie kwoty są skracane: „250 tys. zł”, „2 mln zł”. Czynsze i koszty są zaokrąglone do pełnych tysięcy.
+- Na start każdy ma **2 mln zł**.
+- START: 250 tys. zł i premia za okrążenie (procent dobrych odpowiedzi z tego okrążenia × 250 tys. zł).
+- Ceny sal według grup: 1: 80 tys., 2: 120 tys., 3: 160 tys., 4: 200 tys., 5: 260 tys., 6: 300 tys., 7: 350 tys., 8: 400 tys. zł.
+- Czynsz za salę: cena × 0,12 bez budynku (×2 przy monopolu), × 0,5 telefon, × 1 laptop, × 1,8 komputer, × 2,6 szafa rack, × 3,6 serwerownia (hotel). Przykład: Sala 44 (400 tys.) z serwerownią: 1,44 mln zł.
 - Budowa: każdy poziom od 1 do 4 kosztuje pół ceny sali, serwerownia całą cenę.
-- Parkingi: cena 200 zł, czynsz 50 zł za jeden parking właściciela, 120 zł za oba. Bonus parkingowy: 50 zł, gdy staniesz na swoim parkingu.
-- Pola specjalne: cena 250 zł, czynsz 60, 130, 210 albo 300 zł zależnie od liczby pól specjalnych właściciela.
-- Czesne: 100 zł do puli. „Zapłać za warunek” w dziekanacie: 100 zł do puli. Stypendium rektorskie zabiera całą pulę.
+- Parkingi: cena 250 tys. zł, czynsz 60 tys. za jeden parking właściciela, 150 tys. za oba. Bonus 60 tys., gdy staniesz na swoim parkingu.
+- Pola specjalne: cena 300 tys. zł, czynsz 80, 170, 280 albo 400 tys. zł zależnie od liczby pól specjalnych właściciela.
+- Czesne: 150 tys. zł do puli. „Zapłać za warunek” w dziekanacie: 150 tys. zł do puli. Stypendium rektorskie zabiera całą pulę.
+- Karty: Stypendium naukowe 250 tys. (×2: 500 tys.), Zwrot czesnego 150 tys. z puli (×2: 300 tys.), Praca w samorządzie po 60 tys. (×2: 120 tys.), Warunek 150 tys. (×2: 300 tys.), Opłaty za sprzęt 25 tys. za budynek i 125 tys. za serwerownię (×2: podwójnie).
 - Gdy gracz nie ma czym zapłacić, gra sama sprzedaje bankowi jego budynki, a potem sale, za połowę wartości. Jeśli to nie wystarczy, gracz bankrutuje i jego sale wracają do banku.
+- Do ustalenia: przejęcie (odkupienie) pola przeciwnika jak w Business Tour. W kodzie jest przygotowana stawka `takeoverRate` (dwukrotność wartości), ale gra jeszcze tego nie robi.
+- Wszystkie kwoty są w jednym miejscu w `index.html` (`ECON`, `GROUP_PRICE`, `RENT_MULT`, `BUILD_MULT`).
 
 **Pytania w grze**
 - Pytanie pada przy kupnie pola (także parkingu i pola specjalnego), przy budowie, na Szansie (2 pytania), na Dziekanacie (pytanie dziekanatu) i przy wychodzeniu z dziekanatu rzutem. Przy czynszu pytania nie ma.
@@ -291,6 +295,25 @@ Ilustracje kart są wektorowe (SVG), rysowane w kodzie przez asystenta AI (Claud
 | Udaj się do dziekanatu | | idziesz od razu do dziekanatu | nie możesz użyć karty wyjścia |
 | Kolokwium poprawkowe | | tracisz 1 kolejkę | 2 kolejki |
 | Wykryty plagiat | | oddajesz do stosu 1 kartę ułatwienia | wszystkie |
+
+## Akty własności (od 13.10.2026)
+
+- Każde pole do kupienia ma swoją kartę: 17 sal, 2 parkingi i 4 pola specjalne, razem 23 karty. Format jak pozostałe karty (63 × 88 mm).
+- Karta ma: nagłówek w kolorze grupy (parkingi niebieskie, pola specjalne fioletowo-granatowe), numer pola, nazwę i motyw sali, **własną ilustrację** narysowaną w kodzie, złotą plakietkę z ceną, tabelę czynszów (bez budynku, z monopolem, poziomy 1–5) albo czynsze parkingu i pola specjalnego, koszt budowy i cenę sprzedaży do banku.
+- Motywy sal (propozycja, do zmiany): Sala 04 laboratorium chemiczne, Sala 05 sala wykładowa, Sala 10 pracownia komputerowa, Sala 11 pracownia sieci, Sala 12 pracownia projektowa, Sala 13 sala językowa, Sala 21 laboratorium robotyki, Sala 22 pracownia VR, Sala 23 pracownia elektroniki, Sala 31 sala multimedialna, Pokój kwestora finanse uczelni, Pokój kanclerza administracja, Pokój rektora gabinet rektora, Sala 41 pracownia grafiki, Sala 42 studio nagrań, Sala 43 sala e-sportowa, Sala 44 sala konferencyjna.
+- Wszystkie akty są w zakładce „Karty”. Kupione pole odkłada się do kart gracza (panel „Twoje karty”).
+
+## Pole na planszy: okienko i znacznik właściciela
+
+- **Kliknięcie pola** otwiera okienko: akt własności po lewej, a po prawej właściciel (z napisem „TWOJE POLE” albo „PARTNER”), duży kafelek „Czynsz teraz”, budynek i poziom, wartość pola, sprzedaż do banku, koszt następnego poziomu, oznaczenia (monopol, hotel, tarcza, brak prądu, ubezpieczenie) i lista pól z tej samej grupy z właścicielami. Pola bez aktu (narożniki, Szansa, Czesne) mają krótki opis, a Stypendium rektorskie pokazuje, ile jest w puli. Kliknięcie stosu kart pokazuje, ile kart zostało.
+- **Kupione pole:** świeci w kolorze właściciela, ma ramkę w kolorze właściciela i chorągiewkę właściciela w rogu pola. Przy kupnie jest animacja (ramka i chorągiewka wyskakują, lecą iskry). Budynki stoją w kolorze właściciela.
+
+## Karty graczy na planszy i perspektywa gracza
+
+- Stosy ułatwień i utrudnień leżą po bokach logo. Cztery rogi środka planszy to miejsca graczy („KARTY GRACZA”): róg przy START dla miejsca 1, dalej zgodnie z ruchem pionków.
+- Karty, które gracz trzyma (np. „Wyjście z dziekanatu”, „Notatki od kolegi”), i działające na niego efekty (ubezpieczenie, tarcze, utracona kolejka, brak prądu) leżą w jego rogu tyłem do góry. Każdy widzi, że ktoś ma ułatwienia albo utrudnienia, ale nie widzi, jakie.
+- **Kamera z perspektywy gracza:** ekran patrzy od strony rogu gracza, który jest przy komputerze. Przy grze kilku osób na jednym komputerze kamera obraca się na róg gracza, którego jest tura. W trybie online każdy będzie miał swój róg na dole ekranu.
+- **Panel „Twoje karty”** na dole po lewej: miniatury aktów własności gracza i jego kart ułatwień i utrudnień (z opisem, np. „do użycia”, „2 tury”). Kliknięcie miniatury otwiera kartę w okienku. Panel można zwinąć.
 
 ## Karty „Wyjście z dziekanatu”
 

@@ -496,6 +496,59 @@
     * { transition: none !important; }
   }
   /* ---------- Rozgrywka ---------- */
+  /* Okienko pola (akt własności i dane z gry) */
+  .fp-bd { position: absolute; inset: 0; z-index: 6; display: grid; place-items: center; padding: 16px; background: rgba(0, 12, 40, .38); animation: g-fade .2s both; overflow-y: auto; }
+  .fp { position: relative; display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 22px; width: min(780px, 100%); padding: 22px; animation: g-pop .3s cubic-bezier(.2, 1.3, .4, 1) both; zoom: var(--ui-scale, 1); }
+  .m-card.fp { background: #FFFFFF; }
+  :root[data-theme="dark"] .m-card.fp { background: #0A1A44; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .m-card.fp { background: #0A1A44; } }
+  .fp.fp-plain { grid-template-columns: 170px minmax(0, 1fr); width: min(600px, 100%); align-items: center; }
+  .fp-card svg, .fp-card img { display: block; width: 100%; height: auto; border-radius: 16px; box-shadow: 0 14px 30px rgba(10, 20, 40, .28); }
+  .fp-body { min-width: 0; display: grid; gap: 12px; align-content: start; }
+  .fp h2 { margin: 0; padding-right: 36px; font: 700 26px/1.15 var(--display); color: var(--ink); text-wrap: balance; }
+  .fp-sub { margin: -6px 0 0; color: var(--ink-soft); font-size: 14px; }
+  .fp-owner { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; background: var(--chip); border-left: 6px solid var(--c, var(--line)); font-size: 15px; color: var(--ink); }
+  .fp-owner b { font-weight: 700; }
+  .fp-owner .fp-me { margin-left: auto; padding: 3px 9px; border-radius: 999px; background: var(--c); color: #fff; font-size: 12px; font-weight: 800; letter-spacing: .04em; }
+  .fp-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .fp-stat { padding: 10px 12px; border-radius: 14px; background: var(--chip); }
+  .fp-stat small { display: block; font-size: 12px; color: var(--ink-soft); }
+  .fp-stat b { display: block; margin-top: 2px; font: 700 20px/1.2 var(--display); color: var(--ink); }
+  .fp-stat.big { grid-column: 1 / -1; background: var(--c, var(--chip)); }
+  .fp-stat.big small, .fp-stat.big b { color: #fff; }
+  .fp-stat.big b { font-size: 28px; }
+  .fp-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .fp-tag { padding: 4px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 700; color: #fff; background: var(--t, #1E2A47); }
+  .fp-group h3 { margin: 0 0 6px; font: 600 13px var(--body); color: var(--ink-soft); text-transform: uppercase; letter-spacing: .06em; }
+  .fp-group ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+  .fp-group li { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink); }
+  .fp-group li i { width: 12px; height: 12px; border-radius: 50%; background: var(--c, transparent); border: 2px solid var(--c, var(--line)); flex: none; }
+  .fp-group li span { margin-left: auto; color: var(--ink-soft); font-size: 13px; }
+  .fp-text { margin: 0; color: var(--ink-soft); font-size: 15px; line-height: 1.5; }
+  .fp-text b { color: var(--ink); }
+  .fp-close { position: absolute; top: 12px; right: 12px; width: 36px; height: 36px; border: 0; border-radius: 12px; background: var(--chip); color: var(--ink); font-size: 20px; line-height: 1; cursor: pointer; }
+  .fp-close:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  @media (max-width: 640px) {
+    .fp, .fp.fp-plain { grid-template-columns: minmax(0, 1fr); padding: 16px; }
+    .fp-card { width: min(220px, 70%); margin: 0 auto; }
+  }
+
+  .g-hand { position: absolute; left: 16px; bottom: 16px; width: min(440px, calc(100% - 32px)); padding: 10px 12px 12px; display: grid; gap: 8px; }
+  .g-hand-head { display: flex; align-items: center; gap: 8px; }
+  .g-hand-head b { font: 700 15px/1.2 var(--display); color: var(--ink); }
+  .g-hand-head span { font-size: 12.5px; color: var(--ink-soft); }
+  .g-hand-head button { margin-left: auto; border: 0; border-radius: 10px; padding: 6px 10px; background: var(--chip); color: var(--ink); font: 600 12.5px var(--body); cursor: pointer; }
+  .g-hand.is-closed .g-hand-row { display: none; }
+  .g-hand-row h4 { margin: 0 0 4px; font: 600 11.5px var(--body); color: var(--ink-soft); text-transform: uppercase; letter-spacing: .06em; }
+  .g-thumbs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+  .g-thumb { flex: none; width: 50px; padding: 0; border: 0; background: none; cursor: pointer; display: grid; gap: 2px; justify-items: center; }
+  .g-thumb svg { display: block; width: 50px; height: auto; border-radius: 6px; box-shadow: 0 3px 8px rgba(10, 20, 40, .25); transition: transform .15s; }
+  .g-thumb:hover svg { transform: translateY(-3px); }
+  .g-thumb small { font-size: 10px; line-height: 1.1; color: var(--ink-soft); text-align: center; }
+  .g-thumb:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 8px; }
+  .g-empty { font-size: 12.5px; color: var(--ink-soft); }
+  @media (max-width: 720px) { .g-hand { bottom: 84px; } .g-thumb, .g-thumb svg { width: 42px; } }
+
   .g-hud, .g-layer { display: none; }
   body.in-game .g-hud, body.in-game .g-layer { display: block; }
   body.in-game .hud { display: none !important; }
@@ -852,6 +905,7 @@
       <span class="g-chip" id="gPool"></span>
       <button class="m-btn m-secondary" id="gMenuBtn" type="button">Menu</button>
     </div>
+    <section class="m-card g-hand" id="gHand" aria-label="Twoje karty"></section>
     <div class="g-bottom">
       <button class="m-btn m-primary g-roll" id="gRoll" type="button" hidden></button>
       <p class="g-status" id="gStatus" hidden></p>
@@ -985,6 +1039,12 @@
       <p>Ukośne taśmy z małych logo uczelni, od lewego dolnego do prawego górnego rogu. Ułatwienia: granatowe logo na białym tle. Utrudnienia: białe logo na granatowym tle.</p>
     </div>
     <div class="cards-grid backs-grid" id="backsGrid"></div>
+
+    <div class="cards-head cards-head-2">
+      <h2>Akty własności</h2>
+      <p>Karta każdego pola, które można kupić: cena, czynsz na każdym poziomie, koszt budowy i sprzedaż. Kupione pole odkłada się do kart gracza. Kliknij kartę, żeby zobaczyć szczegóły.</p>
+    </div>
+    <div class="cards-grid" id="deedGrid"></div>
 
     <div class="cards-head cards-head-2">
       <h2>Wyjście z dziekanatu</h2>
@@ -1204,9 +1264,13 @@ const PLAYERS = [
 // Stosy kart na środku: ułatwienia przy narożniku START, utrudnienia naprzeciwko (od strony dziekanatu)
 const INNER = S - 2 * D - 0.12;   // bok środka planszy
 const CARD_W = 1.7, CARD_L = 2.4;
+// Rogi środka planszy dla graczy: 0 = róg START, dalej zgodnie z ruchem pionków
+const HAND_SPOTS = [[2.95, 2.95], [-2.95, 2.95], [-2.95, -2.95], [2.95, -2.95]];
+const HAND_SIZE = 1.95;
 const DECKS = [
-  { title: 'UŁATWIENIA', name: 'Ułatwienia', kind: 'ulatwienia', color: '#2E9E8A', icon: '+', x: 2.35, z: 2.35, rotY: Math.PI / 4 },
-  { title: 'UTRUDNIENIA', name: 'Utrudnienia', kind: 'utrudnienia', color: '#D6534F', icon: '!', x: -2.35, z: -2.35, rotY: Math.PI * 5 / 4 },
+  // Stosy leżą po bokach logo. Cztery rogi środka planszy należą do graczy (karty, które gracz trzyma).
+  { title: 'UŁATWIENIA', name: 'Ułatwienia', kind: 'ulatwienia', color: '#2E9E8A', icon: '+', x: 2.95, z: 0, rotY: 0 },
+  { title: 'UTRUDNIENIA', name: 'Utrudnienia', kind: 'utrudnienia', color: '#D6534F', icon: '!', x: -2.95, z: 0, rotY: Math.PI },
 ];
 
 // Pozycja i obrót pola; start w prawym dolnym rogu, ruch zgodnie z zegarem.
@@ -1857,6 +1921,21 @@ function centerTexture() {
   medallion(g, s / 2, s / 2, centerStyle === 1);
   // miejsca na stosy kart (widoczne też na wydruku planszy)
   const px = s / INNER;
+  // rogi środka planszy: karty, które trzyma gracz siedzący przy tym rogu
+  for (let k = 0; k < 4; k++) {
+    const [cx, cz] = HAND_SPOTS[k];
+    g.save();
+    g.translate(s / 2 + cx * px, s / 2 + cz * px);
+    g.rotate(-Math.PI / 4 + k * Math.PI / 2);
+    const z = HAND_SIZE * px;
+    g.fillStyle = 'rgba(255,255,255,.28)';
+    g.beginPath(); g.roundRect(-z / 2, -z / 2, z, z, 36); g.fill();
+    g.setLineDash([22, 16]); g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 7; g.stroke(); g.setLineDash([]);
+    g.font = '700 40px Fredoka, sans-serif';
+    g.fillStyle = 'rgba(255,255,255,.95)';
+    g.fillText('KARTY GRACZA', 0, z / 2 - 38);
+    g.restore();
+  }
   for (const deck of DECKS) {
     g.save();
     g.translate(s / 2 + deck.x * px, s / 2 + deck.z * px);
@@ -2366,8 +2445,13 @@ function fitDistance(size) {
 }
 const boardDist = () => fitDistance(S * 0.7);
 const showDist = () => fitDistance(5.9);
-function presetBoard() { return [DIR_BOARD.clone().multiplyScalar(boardDist()), new THREE.Vector3(0, 0, 0)]; }
-function presetTop() { return [new THREE.Vector3(0, boardDist() * 1.02, 0.001), new THREE.Vector3(0, 0, 0)]; }
+let viewCorner = 0;   // róg planszy gracza, z którego perspektywy patrzymy (0 = START)
+const boardDir = () => DIR_BOARD.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), -viewCorner * Math.PI / 2);
+function presetBoard() { return [boardDir().multiplyScalar(boardDist()), new THREE.Vector3(0, 0, 0)]; }
+function presetTop() {
+  const d = boardDir(); d.y = 0; d.setLength(0.001);
+  return [new THREE.Vector3(d.x, boardDist() * 1.02, d.z), new THREE.Vector3(0, 0, 0)];
+}
 function presetShow() {
   const t = new THREE.Vector3(0, 0.8 + show.position.y, 0);
   return [t.clone().add(DIR_SHOW.clone().multiplyScalar(showDist())), t];
@@ -2421,8 +2505,13 @@ function setView(v) {
 // Interfejs
 // ---------------------------------------------------------------------------
 let highlighted = null;
+function restoreGlow(m) {
+  const g = m.material.userData.glow;
+  m.material.emissive.set(g || 0x000000);
+  m.material.emissiveIntensity = g ? 0.24 : 0;
+}
 function highlight(m) {
-  if (highlighted) { highlighted.material.emissive.set(0x000000); highlighted.material.emissiveIntensity = 0; }
+  if (highlighted) restoreGlow(highlighted);
   highlighted = m;
   if (m) { m.material.emissive.set('#FFD166'); m.material.emissiveIntensity = 0.28; }
 }
@@ -2439,8 +2528,10 @@ let gameInfo = null;   // w trakcie gry: właściciel, budynek i czynsz pola
 function selectCell(i) {
   selectedCell = i;
   updateBuildBtn();
-  if (i === null) { highlight(null); $('fieldCard').hidden = true; return; }
+  if (i === null) { highlight(null); $('fieldCard').hidden = true; closeFieldInfo(); return; }
   highlight(tileTops[i]);
+  openFieldInfo(i);
+  return;
   const field = FIELDS[i];
   let title, sub;
   if (CORNER_INFO[i]) [title, sub] = CORNER_INFO[i];
@@ -2459,6 +2550,8 @@ function selectCell(i) {
 function selectDeck(face) {
   const deck = face.userData.deck;
   highlight(face);
+  openDeckInfo(deck);
+  return;
   showCard(deck.icon, deck.color, '#ffffff', `Stos kart: ${deck.name}`, 'Treść kart i ich działanie dopiszemy, gdy je rozpiszesz');
 }
 $('fcClose').addEventListener('click', () => selectCell(null));
@@ -2578,7 +2671,7 @@ async function buildOnSelected() {
   const color = cur ? cur.color : buildColor;
   const cg = cellGroups[cell];
   const target = cellTarget(cell);
-  flyTo([target.clone().add(DIR_BOARD.clone().multiplyScalar(boardDist() * 0.42)), target], 550);
+  flyTo([target.clone().add(boardDir().multiplyScalar(boardDist() * 0.42)), target], 550);
   if (cur) await shrinkOut(cur.obj, cg);
   const def = BUILDINGS[level - 1];
   const obj = def.make(color);
@@ -2915,7 +3008,7 @@ const RULES = [
   { t: 'Pytania', wide: true, q: true, b: '<p>Przed grą wybierasz semestr od 1 do 7 albo pytania mieszane. Na każde pytanie masz minutę i 4 odpowiedzi do wyboru. Pytania przygotowują wykładowcy. Tutaj pokazujemy tylko przykład, który nie pada w grze:</p>' },
   { t: 'Kupowanie i budowanie', b: '<ul><li>Pierwsza wizyta na wolnej sali: po dobrej odpowiedzi kupujesz salę.</li><li>Każda kolejna wizyta na Twojej sali: po dobrej odpowiedzi budujesz najwyżej 2 poziomy. Kolejno: telefon, laptop, komputer, szafa rack i serwerownia.</li><li>Zła odpowiedź: kupisz albo zbudujesz na początku następnej tury, chyba że ktoś inny Cię uprzedzi.</li><li>Serwerownia chroni salę: nie da się jej zburzyć, odebrać ani wyłączyć.</li></ul>' },
   { t: 'Premia za START', b: '<p>Gra liczy Twoje odpowiedzi w każdym okrążeniu. Na polu START dostajesz zwykłą kwotę i premię równą procentowi dobrych odpowiedzi z tego okrążenia. Przykład: 200 i 50% dobrych odpowiedzi to razem 300.</p>' },
-  { t: 'Pieniądze i pola', b: '<ul><li>Na start masz 1500 zł.</li><li>Na cudzej sali płacisz czynsz. Monopol, czyli cała grupa sal w jednych rękach, podwaja czynsz za salę bez budynku.</li><li>Parkingi i pola specjalne kupujesz tak jak sale. Im więcej takich pól masz, tym wyższy czynsz.</li><li>Czesne i kary trafiają do puli na środku. Kto stanie na Stypendium rektorskim, zabiera całą pulę.</li></ul>' },
+  { t: 'Pieniądze i pola', b: '<ul><li>Na start masz 2 mln zł.</li><li>Na cudzej sali płacisz czynsz. Monopol, czyli cała grupa sal w jednych rękach, podwaja czynsz za salę bez budynku.</li><li>Parkingi i pola specjalne kupujesz tak jak sale. Im więcej takich pól masz, tym wyższy czynsz.</li><li>Czesne i kary trafiają do puli na środku. Kto stanie na Stypendium rektorskim, zabiera całą pulę.</li></ul>' },
   { t: 'Dziekanat', b: '<ul><li>Stajesz na polu Dziekanat: dostajesz pytanie dziekanatu. Zła odpowiedź to 1 kolejka postoju.</li><li>Pole „Udaj się do dziekanatu” albo trzeci dublet: 2 kolejki. Wcześniej wyjdziesz, płacąc za warunek, rzucając dubletem po dobrej odpowiedzi albo kartą „Wyjście z dziekanatu”.</li></ul>' },
   { t: 'Szansa i karty', b: '<p>Na polu Szansa odpowiadasz na pytanie. Dobra odpowiedź daje kartę ułatwienia, zła kartę utrudnienia. Drugie pytanie może podwoić działanie karty.</p>' },
   { t: '2 na 2 i boty', b: '<ul><li>W drużynie nie płacisz czynszu partnerowi. Możesz rozbudować jego salę, ale sala i czynsz zostają jego.</li><li>Boty mają 3 poziomy: łatwy, średni i trudny. Im trudniejszy bot, tym częściej odpowiada dobrze i rozsądniej wydaje pieniądze.</li></ul>' },
@@ -3397,9 +3490,9 @@ const BONUS_CARDS = [
   { name: 'Ochrona mienia', icon: 'shieldRoom', tag: 'tarcza', text: 'Połóż tarczę na swojej sali. Blokuje jeden atak na tę salę.', x2: 'Tarcza na 2 sale.' },
   { name: 'Ubezpieczenie studenckie', icon: 'shieldPerson', tag: 'tarcza', text: 'Przez 3 tury przeciwnicy nie mogą atakować Twoich sal.', x2: 'Ochrona przez 6 tur.' },
   { name: 'Grant badawczy', icon: 'grant', text: 'Ulepsz za darmo swój budynek o 1 poziom.', x2: 'Ulepsz o 2 poziomy.' },
-  { name: 'Stypendium naukowe', icon: 'coins', text: 'Dostajesz 200 z banku.', x2: 'Dostajesz 400.' },
-  { name: 'Zwrot czesnego', icon: 'refund', text: 'Weź 100 z puli na środku planszy.', x2: 'Weź 200 z puli.' },
-  { name: 'Praca w samorządzie', icon: 'people', text: 'Każdy gracz płaci Ci 50.', x2: 'Każdy gracz płaci Ci 100.' },
+  { name: 'Stypendium naukowe', icon: 'coins', text: 'Dostajesz 250 tys. zł z banku.', x2: 'Dostajesz 500 tys. zł.' },
+  { name: 'Zwrot czesnego', icon: 'refund', text: 'Weź 150 tys. zł z puli na środku planszy.', x2: 'Weź 300 tys. zł z puli.' },
+  { name: 'Praca w samorządzie', icon: 'people', text: 'Każdy gracz płaci Ci 60 tys. zł.', x2: 'Każdy gracz płaci Ci 120 tys. zł.' },
   { name: 'Wcześniejsza sesja', icon: 'forward', text: 'Przesuń się o 3 pola do przodu.', x2: 'Wybierz: 3 albo 6 pól.' },
   { name: 'Notatki od kolegi', icon: 'notes', tag: 'zachowaj', text: 'Przy następnym pytaniu znikają 2 złe odpowiedzi.' },
 ];
@@ -3408,8 +3501,8 @@ const PENALTY_CARDS = [
   { name: 'Cięcia budżetowe', icon: 'scissors', tag: 'atak', text: 'Sprzedaj bankowi jedną swoją salę za pół ceny.' },
   { name: 'Zmiana planu zajęć', icon: 'swap', tag: 'atak', text: 'Losowa Twoja sala przechodzi do losowego przeciwnika.' },
   { name: 'Brak prądu', icon: 'bulb', tag: 'atak', text: 'Twoja sala nie pobiera czynszu przez 3 tury.' },
-  { name: 'Opłaty za sprzęt', icon: 'wrench', text: 'Zapłać 20 za każdy budynek i 100 za każdą serwerownię.', x2: 'Podwójne kwoty.' },
-  { name: 'Warunek', icon: 'exam', text: 'Zapłać 100 do puli na środku planszy.', x2: 'Zapłać 200.' },
+  { name: 'Opłaty za sprzęt', icon: 'wrench', text: 'Zapłać 25 tys. zł za każdy budynek i 125 tys. zł za serwerownię.', x2: 'Podwójne kwoty.' },
+  { name: 'Warunek', icon: 'exam', text: 'Zapłać 150 tys. zł do puli na środku planszy.', x2: 'Zapłać 300 tys. zł.' },
   { name: 'Spóźnienie na zajęcia', icon: 'clock', text: 'Cofnij się o 3 pola.', x2: 'Cofnij się o 6 pól.' },
   { name: 'Udaj się do dziekanatu', icon: 'door', text: 'Idziesz od razu do dziekanatu.', x2: 'Nie możesz użyć karty wyjścia.' },
   { name: 'Kolokwium poprawkowe', icon: 'hourglass', text: 'Tracisz 1 kolejkę.', x2: 'Tracisz 2 kolejki.' },
@@ -3760,28 +3853,37 @@ if (window.KartyPytan) {
 // Rozgrywka: tury, kostki, pytania, kupowanie i budowanie, karty, dziekanat, boty, koniec gry.
 // Kwoty i ustawienia, których autor jeszcze nie ustalił, są w jednym miejscu (ECON i niżej).
 // ---------------------------------------------------------------------------
+// Ekonomia jak w Business Tour: kwoty w złotych, na start 2 mln zł. Na ekranie skrót „250 tys. zł”, „2 mln zł”.
 const CUR = 'zł';
-const money = v => `${Math.round(v).toLocaleString('pl-PL')} ${CUR}`;
+const K = 1000;
+function money(v) {
+  const x = Math.round(Math.abs(v)), sign = v < 0 ? '−' : '';
+  if (x >= 1e6) return `${sign}${(x / 1e6).toLocaleString('pl-PL', { maximumFractionDigits: 2 })} mln ${CUR}`;
+  if (x >= 1e3) return `${sign}${(x / 1e3).toLocaleString('pl-PL', { maximumFractionDigits: 1 })} tys. ${CUR}`;
+  return `${sign}${x} ${CUR}`;
+}
+const roundK = v => Math.round(v / K) * K;   // czynsze i koszty zaokrąglone do pełnych tysięcy
 const ECON = {
-  startCash: 1500,                 // gotówka na początek
-  startPay: 200,                   // zwykła kwota za przejście przez START (do tego premia za odpowiedzi)
-  tax: 100,                        // Czesne, trafia do puli
-  bail: 100,                       // „Zapłać za warunek” w dziekanacie, trafia do puli
-  stationPrice: 200,
-  stationRent: [0, 50, 120],       // czynsz parkingu zależy od tego, ile parkingów ma właściciel
-  stationBonus: 50,                // bonus, gdy staniesz na swoim parkingu
-  specialPrice: 250,
-  specialRent: [0, 60, 130, 210, 300],
-  sellRate: 0.5,                   // sprzedaż bankowi za długi: połowa wartości
+  startCash: 2000 * K,             // gotówka na początek
+  startPay: 250 * K,               // zwykła kwota za przejście przez START (do tego premia za odpowiedzi)
+  tax: 150 * K,                    // Czesne, trafia do puli
+  bail: 150 * K,                   // „Zapłać za warunek” w dziekanacie, trafia do puli
+  stationPrice: 250 * K,
+  stationRent: [0, 60 * K, 150 * K],   // czynsz parkingu zależy od tego, ile parkingów ma właściciel
+  stationBonus: 60 * K,            // bonus, gdy staniesz na swoim parkingu
+  specialPrice: 300 * K,
+  specialRent: [0, 80 * K, 170 * K, 280 * K, 400 * K],
+  sellRate: 0.5,                   // sprzedaż bankowi: połowa wartości (cena i budynki)
+  takeoverRate: 2,                 // przejęcie pola przeciwnika (jak w Business Tour): dwukrotność wartości
   questionTime: 60,                // sekundy na odpowiedź
 };
-const GROUP_PRICE = { 1: 60, 2: 100, 3: 140, 4: 180, 5: 220, 6: 260, 7: 300, 8: 350 };
+const GROUP_PRICE = { 1: 80 * K, 2: 120 * K, 3: 160 * K, 4: 200 * K, 5: 260 * K, 6: 300 * K, 7: 350 * K, 8: 400 * K };
 const RENT_MULT = [0.12, 0.5, 1.0, 1.8, 2.6, 3.6];   // czynsz = cena sali × mnożnik poziomu (0 = bez budynku)
 const BUILD_MULT = [0, 0.5, 0.5, 0.5, 0.5, 1.0];     // koszt poziomu = cena sali × mnożnik
 const BOT = {
-  'łatwy': { acc: 0.45, reserve: 40, buy: 0.7 },
-  'średni': { acc: 0.65, reserve: 150, buy: 0.9 },
-  'trudny': { acc: 0.85, reserve: 250, buy: 1 },
+  'łatwy': { acc: 0.45, reserve: 50 * K, buy: 0.7 },
+  'średni': { acc: 0.65, reserve: 200 * K, buy: 0.9 },
+  'trudny': { acc: 0.85, reserve: 330 * K, buy: 1 },
 };
 const SHOW_CORRECT = false;        // po złej odpowiedzi gra nie pokazuje dobrej, żeby pytania nie „wyciekały”
 const DICE_SOUND_FILE = '';        // np. 'assets/dzwieki/kostki.mp3' (własne nagranie albo CC0); puste = dźwięk z kodu
@@ -3790,11 +3892,354 @@ const MOVE_SPEED = 1;
 
 const buyable = i => !!FIELDS[i] && ['room', 'station', 'special'].includes(FIELDS[i].type);
 const priceOf = i => (FIELDS[i].type === 'room' ? GROUP_PRICE[FIELDS[i].group] : FIELDS[i].type === 'station' ? ECON.stationPrice : ECON.specialPrice);
-const levelCost = (i, lvl) => Math.round(priceOf(i) * BUILD_MULT[lvl]);
+const levelCost = (i, lvl) => roundK(priceOf(i) * BUILD_MULT[lvl]);
 const GROUP_CELLS = {};
 for (const i of ROOM_CELLS) (GROUP_CELLS[FIELDS[i].group] ||= []).push(i);
 const SPECIAL_CELLS = Object.keys(FIELDS).map(Number).filter(i => FIELDS[i].type === 'special');
 const fname = i => FIELDS[i]?.name || CORNER_INFO[i]?.[0].split(' · ')[1] || `Pole ${i + 1}`;
+
+// ---------------------------------------------------------------------------
+// Akty własności: karta każdego pola do kupienia (sale, parkingi, pola specjalne).
+// Motyw sali to propozycja do zmiany przez autora.
+// ---------------------------------------------------------------------------
+const DEED_THEME = {
+  1: 'Laboratorium chemiczne', 2: 'Sala wykładowa', 6: 'Pracownia komputerowa', 7: 'Pracownia sieci',
+  9: 'Pracownia projektowa', 11: 'Sala językowa', 13: 'Laboratorium robotyki', 14: 'Pracownia VR',
+  15: 'Pracownia elektroniki', 17: 'Sala multimedialna', 19: 'Finanse uczelni', 21: 'Administracja',
+  23: 'Gabinet rektora', 25: 'Pracownia grafiki', 27: 'Studio nagrań', 29: 'Sala e-sportowa',
+  31: 'Sala konferencyjna', 3: 'Stacja 1 z 2', 18: 'Stacja 2 z 2',
+  4: 'Pole specjalne 1 z 4', 12: 'Pole specjalne 2 z 4', 20: 'Pole specjalne 3 z 4', 28: 'Pole specjalne 4 z 4',
+};
+const gs = (rx = 120) => `<ellipse cx="200" cy="199" rx="${rx}" ry="10" fill="#000" opacity=".08"/>`;
+const wood = (x, y, w, h) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" fill="#C08A5B"/><rect x="${x}" y="${y}" width="${w}" height="5" rx="2.5" fill="#D9A777"/>`;
+// Ilustracje w polu 400 × 210
+function deedArt(i, id, c) {
+  const sp = (x, y, r, f = '#fff') => sparkle(x, y, r, f);
+  const l = mix(c, '#ffffff', 0.55);
+  switch (i) {
+    case 1: return `${gs(150)}${wood(30, 158, 340, 16)}
+      <rect x="64" y="128" width="78" height="10" rx="4" fill="#A8744B"/>
+      ${[[72, '#E5484D'], [94, '#2F7FF0'], [116, '#F2B72E']].map(([x, col]) => `<rect x="${x}" y="84" width="14" height="60" rx="7" fill="#fff" stroke="#C9D0DC" stroke-width="3"/><rect x="${x + 2}" y="116" width="10" height="26" rx="5" fill="${col}"/>`).join('')}
+      <path d="M182 56 V88 L140 150 Q136 158 146 158 H254 Q264 158 260 150 L218 88 V56 Z" fill="#fff" stroke="#C9D0DC" stroke-width="4"/>
+      <path d="M156 128 L144 150 Q140 158 148 158 H252 Q260 158 256 150 L244 128 Z" fill="#7FD8B0"/>
+      <rect x="176" y="48" width="48" height="10" rx="5" fill="#C9D0DC"/>
+      ${face(200, 132, 0.5)}
+      <circle cx="306" cy="122" r="32" fill="#fff" stroke="#C9D0DC" stroke-width="4"/><path d="M276 128 A30 30 0 0 0 336 128 Z" fill="#B48CF0"/><rect x="298" y="70" width="16" height="24" fill="#fff" stroke="#C9D0DC" stroke-width="3"/>
+      <circle cx="300" cy="56" r="6" fill="#B48CF0" opacity=".6"/><circle cx="314" cy="42" r="4" fill="#B48CF0" opacity=".5"/>${sp(240, 30, 10, '#FFD86A')}`;
+    case 2: return `${gs(150)}
+      <rect x="84" y="20" width="232" height="126" rx="8" fill="#A8744B"/><rect x="94" y="30" width="212" height="106" rx="4" fill="#2F5D4A"/>
+      <text x="200" y="64" class="svg-display" font-size="28" fill="#fff" text-anchor="middle" opacity=".92">a² + b² = c²</text>
+      <path d="M120 96 Q150 84 180 100 M206 96 H258" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".6" fill="none"/>
+      ${face(272, 112, 0.36, '#fff')}
+      <rect x="110" y="146" width="40" height="6" rx="3" fill="#fff"/>
+      ${wood(130, 160, 140, 14)}<rect x="160" y="128" width="54" height="32" rx="4" fill="${c}"/><rect x="166" y="120" width="48" height="10" rx="3" fill="${l}"/>${sp(330, 40, 11, '#FFD86A')}`;
+    case 6: return `${gs(160)}${wood(30, 158, 340, 14)}
+      ${[[90, 0.8], [200, 1], [310, 0.8]].map(([x, s]) => `<g transform="translate(${x} 104) scale(${s})"><rect x="-56" y="-48" width="112" height="78" rx="8" fill="#2B3A5E"/><rect x="-48" y="-40" width="96" height="62" rx="4" fill="${s === 1 ? '#CDEBFF' : '#9FC3E8'}"/><rect x="-8" y="30" width="16" height="16" fill="#5A6580"/><rect x="-26" y="44" width="52" height="8" rx="4" fill="#5A6580"/></g>`).join('')}
+      ${face(200, 98, 0.5)}<rect x="160" y="160" width="80" height="10" rx="3" fill="#E3E7EE"/>${sp(200, 22, 10, '#FFD86A')}`;
+    case 7: return `${gs(150)}
+      <path d="M90 168 C90 120 130 140 150 120 M310 168 C310 120 270 140 250 120" fill="none" stroke="#F2B72E" stroke-width="6" stroke-linecap="round"/>
+      <path d="M60 168 C70 110 120 110 160 112" fill="none" stroke="#2F7FF0" stroke-width="6" stroke-linecap="round"/>
+      <rect x="124" y="86" width="152" height="66" rx="14" fill="#2B3A5E"/>
+      ${[0, 1, 2, 3, 4].map(k => `<circle cx="${150 + k * 25}" cy="138" r="5" fill="${k % 2 ? '#7CF29A' : c}"/>`).join('')}
+      <path d="M150 86 V44 M250 86 V44" stroke="#5A6580" stroke-width="7" stroke-linecap="round"/>
+      ${face(200, 112, 0.42, '#fff')}
+      <path d="M180 40 Q200 22 220 40 M168 28 Q200 0 232 28" fill="none" stroke="${c}" stroke-width="6" stroke-linecap="round"/>`;
+    case 9: return `${gs(150)}
+      <g transform="rotate(-8 200 110)"><rect x="96" y="34" width="208" height="134" rx="8" fill="#1F5FBF"/>
+        <path d="M120 140 V70 H200 V110 H260 V140 Z" fill="none" stroke="#fff" stroke-width="3" opacity=".8"/>
+        <path d="M200 70 L260 70 M120 100 H170" stroke="#fff" stroke-width="2" stroke-dasharray="6 5" opacity=".7"/>
+        ${face(240, 92, 0.38, '#fff')}</g>
+      <g transform="translate(300 150) rotate(-30)"><rect x="-90" y="-8" width="120" height="16" rx="3" fill="#F2B72E"/>${[0, 1, 2, 3, 4, 5].map(k => `<path d="M${-80 + k * 18} -8 V0" stroke="#8A6A1F" stroke-width="2"/>`).join('')}</g>
+      <path d="M70 60 L90 140 M70 60 L50 140" stroke="#5A6580" stroke-width="5" stroke-linecap="round"/><circle cx="70" cy="58" r="8" fill="#5A6580"/>`;
+    case 11: return `${gs(120)}
+      <path d="M40 40 H180 A14 14 0 0 1 194 54 V104 A14 14 0 0 1 180 118 H90 L64 140 L70 118 H54 A14 14 0 0 1 40 104 V54 A14 14 0 0 1 54 40 Z" fill="${c}"/>
+      <text x="117" y="80" class="svg-display" font-size="34" fill="#fff" text-anchor="middle" dominant-baseline="central">Hello!</text>
+      <path d="M360 70 H230 A14 14 0 0 0 216 84 V126 A14 14 0 0 0 230 140 H320 L344 160 L338 140 H346 A14 14 0 0 0 360 126 Z" fill="#F2B72E"/>
+      <text x="288" y="106" class="svg-display" font-size="32" fill="#fff" text-anchor="middle" dominant-baseline="central">¡Hola!</text>
+      <path d="M150 196 V160 A50 50 0 0 1 250 160 V196" fill="none" stroke="#2B3A5E" stroke-width="9"/>
+      <rect x="132" y="160" width="30" height="40" rx="12" fill="#2B3A5E"/><rect x="238" y="160" width="30" height="40" rx="12" fill="#2B3A5E"/>${face(200, 182, 0.32)}`;
+    case 13: return `${gs(130)}
+      <rect x="150" y="70" width="100" height="90" rx="20" fill="#C9D3E6"/><rect x="164" y="84" width="72" height="44" rx="12" fill="#2B3A5E"/>
+      <circle cx="184" cy="104" r="7" fill="#7CF29A"/><circle cx="216" cy="104" r="7" fill="#7CF29A"/><path d="M190 118 Q200 124 210 118" stroke="#7CF29A" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M200 70 V46" stroke="#5A6580" stroke-width="5"/><circle cx="200" cy="42" r="8" fill="${c}"/>
+      <rect x="166" y="160" width="20" height="32" rx="6" fill="#9AA6BC"/><rect x="214" y="160" width="20" height="32" rx="6" fill="#9AA6BC"/>
+      <path d="M150 104 L112 84 L100 110" fill="none" stroke="#9AA6BC" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/><path d="M250 104 L288 124 L300 98" fill="none" stroke="#9AA6BC" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+      <g transform="translate(330 60)"><circle r="24" fill="none" stroke="${c}" stroke-width="10" stroke-dasharray="9 7"/><circle r="9" fill="${c}"/></g>${sp(70, 50, 10, '#FFD86A')}`;
+    case 14: return `${gs(130)}
+      <path d="M110 92 Q100 40 200 40 Q300 40 290 92" fill="none" stroke="#2B3A5E" stroke-width="10"/>
+      <rect x="100" y="76" width="200" height="86" rx="34" fill="${c}"/><rect x="118" y="92" width="164" height="54" rx="22" fill="#2B3A5E"/>
+      <rect x="128" y="100" width="64" height="38" rx="16" fill="#8FD0F5"/><rect x="208" y="100" width="64" height="38" rx="16" fill="#8FD0F5"/>
+      ${face(200, 120, 0.42, '#1E2A47')}
+      <g transform="translate(330 70) rotate(15)" fill="none" stroke="#F2B72E" stroke-width="4"><rect x="-18" y="-18" width="36" height="36"/><path d="M-18 -18 L-8 -28 H28 V8 L18 18 M18 -18 L28 -28"/></g>${sp(60, 60, 12, '#FFD86A')}${sp(340, 150, 9)}`;
+    case 15: return `${gs(150)}
+      <rect x="80" y="70" width="240" height="110" rx="10" fill="#2F8F5B"/>
+      <path d="M100 100 H160 V140 H220 M240 90 V120 H300 M110 160 H190" fill="none" stroke="#F2C14E" stroke-width="4"/>
+      ${[[110, 100], [220, 140], [240, 90], [300, 120], [190, 160]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="6" fill="#F2C14E"/>`).join('')}
+      <rect x="150" y="92" width="80" height="56" rx="6" fill="#2B3A5E"/>${[0, 1, 2, 3].map(k => `<rect x="${158 + k * 18}" y="84" width="6" height="10" fill="#9AA6BC"/><rect x="${158 + k * 18}" y="146" width="6" height="10" fill="#9AA6BC"/>`).join('')}
+      ${face(190, 118, 0.38, '#fff')}
+      <circle cx="292" cy="56" r="16" fill="#FFE27A"/><circle cx="292" cy="56" r="26" fill="#FFE27A" opacity=".3"/><rect x="286" y="70" width="12" height="16" fill="#9AA6BC"/>
+      <g transform="translate(70 60) rotate(30)"><rect x="-6" y="0" width="12" height="70" rx="5" fill="${c}"/><path d="M-3 70 L0 92 L3 70 Z" fill="#9AA6BC"/></g>`;
+    case 17: return `${gs(160)}
+      <rect x="220" y="24" width="160" height="104" rx="6" fill="#fff" stroke="#C9D0DC" stroke-width="4"/><rect x="292" y="128" width="16" height="50" fill="#9AA6BC"/>
+      <path d="M286 58 V94 L316 76 Z" fill="${c}"/>
+      <path d="M104 102 L222 30 V124 Z" fill="#FFE27A" opacity=".35"/>
+      <rect x="40" y="88" width="80" height="48" rx="12" fill="#2B3A5E"/><circle cx="110" cy="112" r="14" fill="#8FD0F5" stroke="#5A6580" stroke-width="4"/>
+      ${face(68, 112, 0.32, '#fff')}${wood(30, 136, 110, 12)}${sp(200, 160, 10, '#FFD86A')}`;
+    case 19: return `${gs(150)}
+      <rect x="120" y="44" width="160" height="140" rx="14" fill="#5A6580"/><rect x="132" y="56" width="136" height="116" rx="8" fill="#7A879E"/>
+      <circle cx="236" cy="114" r="24" fill="#C9D0DC" stroke="#3B4660" stroke-width="5"/><path d="M236 96 V132 M218 114 H254" stroke="#3B4660" stroke-width="4"/>
+      <rect x="140" y="86" width="12" height="56" rx="5" fill="#C9D0DC"/>
+      ${face(180, 112, 0.45, '#fff')}
+      ${coin(70, 170, 20)}${coin(84, 150, 18)}${coin(330, 168, 22)}${banknote(330, 90, 90, 50, 12)}${sp(60, 50, 12, '#F7CD5B')}`;
+    case 21: return `${gs(160)}${wood(40, 150, 320, 16)}
+      ${[0, 1, 2, 3].map(k => `<rect x="${92 + k * 3}" y="${130 - k * 12}" width="100" height="12" rx="2" fill="${k % 2 ? '#F4F1EA' : '#fff'}" stroke="#D9CDB8" stroke-width="2"/>`).join('')}
+      <rect x="250" y="70" width="42" height="56" rx="10" fill="${c}"/><rect x="236" y="124" width="70" height="20" rx="6" fill="#2B3A5E"/>
+      ${face(271, 96, 0.34, '#fff')}<rect x="260" y="54" width="22" height="20" rx="8" fill="#5A6580"/>
+      <g transform="translate(330 120) rotate(-30)"><rect x="-4" y="-40" width="8" height="60" rx="4" fill="#1E2A47"/><path d="M-4 20 L0 30 L4 20 Z" fill="#F2C14E"/></g>`;
+    case 23: return `${gs(150)}
+      <path d="M140 60 Q140 30 200 30 Q260 30 260 60 V150 H140 Z" fill="#8E2F3C"/><rect x="152" y="60" width="96" height="70" rx="12" fill="#B23A4A"/>
+      <rect x="120" y="110" width="30" height="64" rx="10" fill="#8E2F3C"/><rect x="250" y="110" width="30" height="64" rx="10" fill="#8E2F3C"/><rect x="140" y="136" width="120" height="30" rx="8" fill="#B23A4A"/>
+      <path d="M160 70 Q200 112 240 70" fill="none" stroke="${GOLD}" stroke-width="6" stroke-dasharray="2 8" stroke-linecap="round"/>
+      <circle cx="200" cy="104" r="16" fill="${GOLD}" stroke="#B98A2A" stroke-width="3"/>
+      ${face(200, 50, 0.3, '#fff')}
+      <path d="M330 170 V100 M310 100 H350 L340 70 H320 Z" fill="${GOLD}" stroke="#B98A2A" stroke-width="3"/>${sp(70, 60, 12, '#F7CD5B')}${sp(330, 40, 9)}`;
+    case 25: return `${gs(150)}
+      <path d="M90 120 C80 60 170 40 220 60 C270 80 260 130 220 130 C200 130 200 150 210 160 C220 175 180 190 140 180 C110 172 94 150 90 120 Z" fill="#F4E1C1" stroke="#C69C6D" stroke-width="4"/>
+      ${[[130, 86, '#E5484D'], [168, 70, '#F2B72E'], [206, 80, '#2F7FF0'], [122, 130, '#1FA463'], [226, 108, c]].map(([x, y, col]) => `<circle cx="${x}" cy="${y}" r="13" fill="${col}"/>`).join('')}
+      ${face(170, 140, 0.36)}
+      <g transform="translate(290 70) rotate(35)"><rect x="-6" y="0" width="12" height="100" rx="5" fill="#C08A5B"/><rect x="-7" y="-12" width="14" height="16" fill="#C9D0DC"/><path d="M-7 -12 Q0 -40 7 -12 Z" fill="${c}"/></g>${sp(320, 160, 10, '#FFD86A')}`;
+    case 27: return `${gs(110)}
+      <rect x="176" y="20" width="48" height="84" rx="24" fill="#5A6580"/>${[0, 1, 2, 3].map(k => `<path d="M180 ${36 + k * 16} H220" stroke="#3B4660" stroke-width="3"/>`).join('')}
+      <path d="M160 70 Q160 124 200 124 Q240 124 240 70" fill="none" stroke="#2B3A5E" stroke-width="7"/><path d="M200 124 V178 M170 182 H230" stroke="#2B3A5E" stroke-width="8" stroke-linecap="round"/>
+      ${face(200, 74, 0.32, '#fff')}
+      <path d="M100 70 Q90 92 100 114 M76 56 Q58 92 76 128 M300 70 Q310 92 300 114 M324 56 Q342 92 324 128" fill="none" stroke="${c}" stroke-width="6" stroke-linecap="round"/>
+      <text x="64" y="176" class="svg-display" font-size="30" fill="${c}">♪</text><text x="320" y="40" class="svg-display" font-size="26" fill="#F2B72E">♫</text>`;
+    case 29: return `${gs(150)}
+      <path d="M96 90 Q96 64 126 64 H274 Q304 64 304 90 L320 150 Q326 178 300 176 Q284 174 270 150 H130 Q116 174 100 176 Q74 178 80 150 Z" fill="${c}"/>
+      <path d="M124 92 V122 M109 107 H139" stroke="#fff" stroke-width="8" stroke-linecap="round"/>
+      ${[[262, 92, '#F2B72E'], [282, 108, '#E5484D'], [242, 108, '#1FA463'], [262, 124, '#2F7FF0']].map(([x, y, col]) => `<circle cx="${x}" cy="${y}" r="8" fill="${col}"/>`).join('')}
+      ${face(196, 112, 0.42, '#fff')}
+      <path d="M330 30 H370 V44 Q370 70 350 74 Q330 70 330 44 Z" fill="${GOLD}"/><rect x="344" y="74" width="12" height="14" fill="${GOLD}"/><rect x="334" y="86" width="32" height="8" rx="3" fill="#B98A2A"/>
+      <text x="56" y="44" class="svg-display" font-size="28" fill="${c}">GG</text>`;
+    case 31: return `${gs(160)}
+      <rect x="196" y="18" width="10" height="160" fill="#9AA6BC"/><rect x="136" y="24" width="130" height="104" rx="6" fill="#fff" stroke="#C9D0DC" stroke-width="4"/>
+      ${[[152, 40], [176, 64], [200, 28], [224, 52]].map(([x, h]) => `<rect x="${x}" y="${116 - h}" width="18" height="${h}" rx="3" fill="${c}"/>`).join('')}
+      ${face(232, 102, 0.3)}
+      ${wood(40, 150, 320, 14)}<rect x="70" y="128" width="54" height="22" rx="3" fill="#2B3A5E"/><rect x="276" y="128" width="54" height="22" rx="3" fill="#2B3A5E"/>
+      <circle cx="96" cy="118" r="10" fill="#F4C7A1"/><circle cx="304" cy="118" r="10" fill="#C9956B"/>${sp(340, 40, 10, '#FFD86A')}`;
+    case 3: case 18: {
+      const big = i === 18;
+      const car = (x, col, sc = 1) => `<g transform="translate(${x} 150) scale(${sc})"><path d="M-60 0 V-22 Q-60 -30 -50 -32 L-34 -56 Q-30 -62 -22 -62 H24 Q32 -62 36 -56 L52 -32 Q62 -30 62 -22 V0 Z" fill="${col}"/><path d="M-26 -54 H-2 V-34 H-40 Z M6 -54 H22 L36 -34 H6 Z" fill="#CDEBFF"/><circle cx="-34" cy="2" r="14" fill="#2B3A5E"/><circle cx="34" cy="2" r="14" fill="#2B3A5E"/><circle cx="-34" cy="2" r="5" fill="#C9D0DC"/><circle cx="34" cy="2" r="5" fill="#C9D0DC"/></g>`;
+      return `${gs(170)}<rect x="20" y="164" width="360" height="8" rx="4" fill="#C9D0DC"/>
+        <rect x="${big ? 336 : 300}" y="36" width="8" height="128" fill="#9AA6BC"/><rect x="${big ? 312 : 276}" y="20" width="56" height="56" rx="10" fill="#1F5FBF"/><text x="${big ? 340 : 304}" y="50" class="svg-display" font-size="40" fill="#fff" text-anchor="middle" dominant-baseline="central">P</text>
+        ${big ? `<g transform="translate(160 160)"><rect x="-120" y="-96" width="230" height="92" rx="16" fill="#F2B72E"/>${[0, 1, 2, 3].map(k => `<rect x="${-104 + k * 50}" y="-82" width="40" height="34" rx="6" fill="#CDEBFF"/>`).join('')}<rect x="-120" y="-36" width="230" height="10" fill="#E39A32"/><circle cx="-70" cy="-2" r="16" fill="#2B3A5E"/><circle cx="60" cy="-2" r="16" fill="#2B3A5E"/>${face(-6, -30, 0.4)}</g>` : `${car(170, '#2F7FF0')}${face(170, 124, 0.3)}`}
+        ${sp(60, 50, 11, '#FFD86A')}`;
+    }
+    case 4: return `${gs(120)}
+      <ellipse cx="200" cy="176" rx="110" ry="18" fill="#7A879E"/><ellipse cx="200" cy="170" rx="110" ry="18" fill="#9AA6BC"/>
+      <path d="M170 40 H230 Q226 70 258 100 Q280 124 256 160 H144 Q120 124 142 100 Q174 70 170 40 Z" fill="#D9895B"/>
+      <ellipse cx="200" cy="40" rx="30" ry="8" fill="#B86A3E"/><path d="M150 112 Q200 126 250 112 M146 136 Q200 150 254 136" stroke="#fff" stroke-width="4" opacity=".55" fill="none"/>
+      ${face(200, 124, 0.45)}${sp(90, 60, 12, GOLD)}${sp(320, 50, 10, GOLD)}`;
+    case 12: return `${gs(120)}
+      <rect x="140" y="20" width="120" height="170" rx="12" fill="#2B3A5E"/>
+      ${[0, 1, 2, 3, 4, 5].map(k => `<rect x="152" y="${32 + k * 26}" width="96" height="20" rx="4" fill="#3B4A72"/><circle cx="166" cy="${42 + k * 26}" r="4" fill="${k % 2 ? '#7CF29A' : GOLD}"/><rect x="180" y="${39 + k * 26}" width="40" height="6" rx="3" fill="${mix(GOLD, '#ffffff', 0.3)}"/>`).join('')}
+      ${face(200, 112, 0.38, '#fff')}${sp(90, 60, 12, GOLD)}${sp(320, 140, 10, GOLD)}`;
+    case 20: return `${gs(170)}
+      <path d="M70 70 L200 20 L330 70 Z" fill="${GOLD}"/><circle cx="200" cy="52" r="10" fill="#4A3380"/>
+      <rect x="76" y="70" width="248" height="14" fill="${GOLD}"/>
+      ${[0, 1, 2, 3, 4].map(k => `<rect x="${96 + k * 48}" y="90" width="20" height="78" rx="3" fill="#F4E6C2"/>`).join('')}
+      <rect x="64" y="168" width="272" height="12" fill="${GOLD}"/><rect x="52" y="180" width="296" height="12" fill="#B98A2A"/>
+      ${sp(40, 40, 12, GOLD)}${sp(360, 40, 10, GOLD)}`;
+    case 28: return `${gs(110)}
+      <path d="M200 0 V60" stroke="${GOLD}" stroke-width="6"/>
+      <path d="M100 96 Q200 170 300 96" fill="none" stroke="${GOLD}" stroke-width="8" stroke-linecap="round"/>
+      <path d="M140 80 Q200 130 260 80" fill="none" stroke="${GOLD}" stroke-width="6" stroke-linecap="round"/>
+      ${[[100, 96], [140, 80], [200, 126], [260, 80], [300, 96]].map(([x, y]) => `<rect x="${x - 6}" y="${y - 34}" width="12" height="30" fill="#fff"/><ellipse cx="${x}" cy="${y - 44}" rx="8" ry="12" fill="#FFD166"/><circle cx="${x}" cy="${y - 44}" r="18" fill="#FFD166" opacity=".25"/>`).join('')}
+      <circle cx="200" cy="70" r="20" fill="${GOLD}"/>${face(200, 72, 0.26, '#4A3380')}
+      ${[[150, 150], [250, 150], [200, 180]].map(([x, y]) => `<path d="M${x} ${y - 14} L${x + 9} ${y} L${x} ${y + 14} L${x - 9} ${y} Z" fill="#CDEBFF"/>`).join('')}${sp(60, 160, 10, GOLD)}${sp(340, 160, 10, GOLD)}`;
+  }
+  return '';
+}
+function deedStyle(i) {
+  const f = FIELDS[i];
+  if (f.type === 'room') { const c = GROUPS[f.group].color; return { c, top: c, bot: mix(c, '#000000', 0.25), light: mix(c, '#ffffff', 0.86), badge: GROUPS[f.group].name.toUpperCase() }; }
+  if (f.type === 'station') return { c: '#1F5FBF', top: '#2F7FF0', bot: '#1A4E9E', light: '#E6F0FC', badge: 'PARKING' };
+  return { c: '#6A4BB0', top: '#4A3380', bot: '#1E2A47', light: '#EFEAF9', badge: 'SPECJALNE' };
+}
+// Wiersze tabeli na karcie
+function deedRows(i) {
+  const f = FIELDS[i], price = priceOf(i);
+  if (f.type === 'room') {
+    const base = roundK(price * RENT_MULT[0]);
+    return [
+      ['Czynsz bez budynku', money(base)],
+      ['Z monopolem (cała grupa)', money(base * 2)],
+      ...BUILDINGS.map((b, k) => [`${k + 1}`, `${b.name}${k === 4 ? ' (hotel)' : ''}`, money(roundK(price * RENT_MULT[k + 1]))]),
+    ];
+  }
+  if (f.type === 'station') return [
+    ['Czynsz: 1 parking', money(ECON.stationRent[1])],
+    ['Czynsz: oba parkingi', money(ECON.stationRent[2])],
+    ['Bonus na swoim parkingu', money(ECON.stationBonus)],
+  ];
+  return [1, 2, 3, 4].map(n => [`Czynsz: ${n} ${n === 1 ? 'pole specjalne' : 'pola specjalne'}`, money(ECON.specialRent[n])]);
+}
+let deedUid = 0;
+function deedSVG(i) {
+  const f = FIELDS[i], st = deedStyle(i), price = priceOf(i);
+  const id = `dd${++deedUid}`;
+  const rows = deedRows(i);
+  const rowH = f.type === 'room' ? 44 : 48;
+  let y = 452;
+  const table = rows.map(r => {
+    const lvl = r.length === 3;
+    const out = `${lvl ? `<circle cx="80" cy="${y}" r="14" fill="${st.c}"/><text x="80" y="${y + 1}" class="svg-body" font-size="17" font-weight="800" fill="#fff" text-anchor="middle" dominant-baseline="central">${r[0]}</text>` : ''}
+      <text x="${lvl ? 104 : 62}" y="${y}" class="svg-body" font-size="${lvl ? 23 : 24}" font-weight="${lvl ? 600 : 700}" fill="#1E2A47" dominant-baseline="central">${esc(lvl ? r[1] : r[0])}</text>
+      <text x="568" y="${y}" class="svg-body" font-size="24" font-weight="800" fill="${st.bot}" text-anchor="end" dominant-baseline="central">${r[lvl ? 2 : 1]}</text>
+      <path d="M62 ${y + rowH / 2} H568" stroke="#E6EAF0" stroke-width="2"/>`;
+    y += rowH;
+    return out;
+  }).join('');
+  const foot = f.type === 'room'
+    ? [`Budowa: ${money(levelCost(i, 1))} / poziom · serwerownia ${money(levelCost(i, 5))}`, `Sprzedaż do banku: połowa wartości (od ${money(price * ECON.sellRate)})`]
+    : f.type === 'station'
+      ? ['Na parkingu nie można budować', `Sprzedaż do banku: ${money(price * ECON.sellRate)}`]
+      : ['Na polu specjalnym nie można budować', '4 pola specjalne u jednego gracza = wygrana'];
+  return `<svg viewBox="0 0 630 880" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Akt własności: ${esc(f.name)}">
+  <defs>
+    <clipPath id="${id}-clip"><rect width="630" height="880" rx="36"/></clipPath>
+    <clipPath id="${id}-art"><rect x="40" y="186" width="550" height="210" rx="24"/></clipPath>
+    ${vgrad(id + '-hd', st.top, st.bot)}
+    <pattern id="${id}-dots" width="34" height="34" patternUnits="userSpaceOnUse"><circle cx="17" cy="17" r="3" fill="${st.c}" opacity=".14"/></pattern>
+  </defs>
+  <g clip-path="url(#${id}-clip)">
+    <rect width="630" height="880" fill="#FFFDF9"/>
+    <rect width="630" height="170" fill="url(#${id}-hd)"/>
+    <path d="M0 150 Q160 120 315 150 T630 150 V170 H0 Z" fill="#fff" opacity=".12"/>
+    <text x="48" y="44" class="svg-body" font-size="19" font-weight="800" fill="#fff" fill-opacity=".8" letter-spacing="3">AKT WŁASNOŚCI · POLE ${i + 1}</text>
+    <rect x="${582 - st.badge.length * 13 - 28}" y="24" width="${st.badge.length * 13 + 28}" height="38" rx="19" fill="#fff" fill-opacity=".22"/>
+    <text x="${582 - (st.badge.length * 13 + 28) / 2}" y="44" class="svg-body" font-size="18" font-weight="800" fill="#fff" text-anchor="middle" dominant-baseline="central" letter-spacing="1.5">${st.badge}</text>
+    <text x="315" y="96" class="svg-display" font-size="${f.name.length > 18 ? 40 : 52}" fill="#fff" text-anchor="middle" dominant-baseline="central">${esc(f.name)}</text>
+    <text x="315" y="140" class="svg-body" font-size="22" font-weight="600" fill="#fff" fill-opacity=".85" text-anchor="middle" dominant-baseline="central">${esc(DEED_THEME[i] || '')}</text>
+    <rect x="40" y="186" width="550" height="210" rx="24" fill="${st.light}"/>
+    <rect x="40" y="186" width="550" height="210" rx="24" fill="url(#${id}-dots)"/>
+    <g clip-path="url(#${id}-art)"><g transform="translate(115 186)">${deedArt(i, id, st.c)}</g></g>
+    <rect x="215" y="378" width="200" height="46" rx="23" fill="${GOLD}" stroke="#fff" stroke-width="4"/>
+    <text x="315" y="402" class="svg-body" font-size="22" font-weight="800" fill="#1E2A47" text-anchor="middle" dominant-baseline="central">CENA ${money(price).toUpperCase()}</text>
+    ${table}
+    <rect x="40" y="${Math.max(y + 4, 772)}" width="550" height="${Math.max(84, 852 - Math.max(y + 4, 772))}" rx="18" fill="${st.light}"/>
+    <text x="315" y="${Math.max(y + 4, 772) + 26}" class="svg-body" font-size="18" font-weight="600" fill="#1E2A47" text-anchor="middle" dominant-baseline="central">${esc(foot[0])}</text>
+    <text x="315" y="${Math.max(y + 4, 772) + 56}" class="svg-body" font-size="19" fill="#55607A" text-anchor="middle" dominant-baseline="central">${esc(foot[1])}</text>
+    <rect width="630" height="880" rx="36" fill="none" stroke="${st.c}" stroke-width="12"/>
+  </g>
+</svg>`;
+}
+
+// ---------------------------------------------------------------------------
+// Okienko pola: akt własności, właściciel, czynsz teraz, wartość, sprzedaż, grupa
+// ---------------------------------------------------------------------------
+// Gracz, z którego perspektywy patrzy ekran (kamera, „Twoje pole”, panel kart)
+function viewerPlayer() { return G ? G.players[G.view ?? 0] || null : null; }
+let fieldPop = null;
+function closeFieldInfo() {
+  if (!fieldPop) return;
+  fieldPop.remove();
+  fieldPop = null;
+  highlight(null);
+}
+function openPopup(html, plain, label) {
+  if (fieldPop) fieldPop.remove();
+  const bd = document.createElement('div');
+  bd.className = 'fp-bd';
+  bd.innerHTML = `<div class="m-card fp${plain ? ' fp-plain' : ''}" role="dialog" aria-modal="true" aria-label="${escHtml(label)}">
+    <button class="fp-close" type="button" data-close aria-label="Zamknij">×</button>${html}</div>`;
+  bd.addEventListener('click', e => { if (e.target === bd || e.target.closest('[data-close]')) closeFieldInfo(); });
+  $('stage').append(bd);
+  fieldPop = bd;
+  bd.querySelector('.fp-close').focus({ preventScroll: true });
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && fieldPop) closeFieldInfo(); });
+const ownerDot = o => (o ? `<i style="--c:${o.owner.hex}"></i>` : '<i></i>');
+function deedInfoHtml(i) {
+  const f = FIELDS[i], st = deedStyle(i);
+  const o = G ? G.own.get(i) : null;
+  const me = viewerPlayer();
+  const price = priceOf(i);
+  let owner, stats = [], tags = [];
+  if (!G) owner = `<div class="fp-owner">Podgląd poza grą. W trakcie gry zobaczysz tu właściciela i aktualny czynsz.</div>`;
+  else if (!o) owner = `<div class="fp-owner">Wolne pole. Kupisz je, kiedy na nim staniesz i dobrze odpowiesz na pytanie.</div>`;
+  else owner = `<div class="fp-owner" style="--c:${o.owner.hex}">Właściciel: <b>${escHtml(o.owner.name)}</b>${me && o.owner === me ? '<span class="fp-me">TWOJE POLE</span>' : me && sameTeam(o.owner, me) ? '<span class="fp-me">PARTNER</span>' : ''}</div>`;
+  if (o) {
+    const rent = rentOf(i);
+    stats.push([o.off > 0 ? `Czynsz teraz (brak prądu jeszcze ${o.off})` : 'Czynsz teraz', money(rent), true]);
+    if (f.type === 'room') stats.push(['Budynek', o.level ? `${BUILDINGS[o.level - 1].name} · ${o.level}/5` : 'bez budynku']);
+    const val = fieldValue(i);
+    stats.push(['Wartość pola', money(val)], ['Sprzedaż do banku', money(val * ECON.sellRate)]);
+    if (f.type === 'room' && o.level < 5) stats.push([`Następny poziom: ${BUILDINGS[o.level].name.toLowerCase()}`, money(levelCost(i, o.level + 1))]);
+    if (f.type === 'room' && hasMonopoly(o.owner, f.group)) tags.push(['MONOPOL', GOLD]);
+    if (o.level === 5) tags.push(['HOTEL: NIE DO RUSZENIA', '#6A4BB0']);
+    if (o.shield) tags.push([`TARCZA ×${o.shield}`, '#2F7FF0']);
+    if (o.off > 0) tags.push([`BRAK PRĄDU: ${o.off}`, '#1E2A47']);
+    if (o.owner.insured > 0) tags.push([`UBEZPIECZENIE: ${o.owner.insured}`, '#2F7FF0']);
+  } else {
+    const base = f.type === 'room' ? roundK(price * RENT_MULT[0]) : f.type === 'station' ? ECON.stationRent[1] : ECON.specialRent[1];
+    stats.push(['Cena', money(price), true], ['Czynsz na start', money(base)], ['Sprzedaż do banku', money(price * ECON.sellRate)]);
+    if (f.type === 'room') stats.push(['Budowa poziomu', money(levelCost(i, 1))]);
+  }
+  const mates = f.type === 'room' ? GROUP_CELLS[f.group] : Object.keys(FIELDS).map(Number).filter(k => FIELDS[k].type === f.type);
+  const groupTitle = f.type === 'room' ? `${GROUPS[f.group].name}: cała grupa = monopol` : f.type === 'station' ? 'Parkingi' : 'Pola specjalne: wszystkie 4 = wygrana';
+  const list = mates.map(k => {
+    const ko = G ? G.own.get(k) : null;
+    return `<li>${ownerDot(ko)}${escHtml(FIELDS[k].name)}<span>${ko ? escHtml(ko.owner.name) : G ? 'wolne' : `pole ${k + 1}`}</span></li>`;
+  }).join('');
+  return `<div class="fp-card">${deedSVG(i)}</div>
+    <div class="fp-body" style="--c:${o ? o.owner.hex : st.c}">
+      <h2>${escHtml(f.name)}</h2>
+      <p class="fp-sub">${escHtml(DEED_THEME[i] || '')} · pole ${i + 1}</p>
+      ${owner}
+      ${tags.length ? `<div class="fp-tags">${tags.map(([t, c]) => `<span class="fp-tag" style="--t:${c}">${t}</span>`).join('')}</div>` : ''}
+      <div class="fp-stats">${stats.map(([k, v, big]) => `<div class="fp-stat${big ? ' big' : ''}"><small>${k}</small><b>${v}</b></div>`).join('')}</div>
+      <div class="fp-group"><h3>${groupTitle}</h3><ul>${list}</ul></div>
+    </div>`;
+}
+function plainInfoHtml(i) {
+  const f = FIELDS[i];
+  const title = CORNER_INFO[i] ? CORNER_INFO[i][0].split(' · ')[1] : f ? f.name : `Pole ${i + 1}`;
+  let text;
+  if (i === START_CELL) text = `Za przejście przez START dostajesz <b>${money(ECON.startPay)}</b> i premię: procent dobrych odpowiedzi z tego okrążenia.`;
+  else if (i === JAIL_CELL) text = `Stajesz tu zwykłym rzutem: pytanie dziekanatu, zła odpowiedź to 1 kolejka postoju. Trafiasz tu z pola 25 albo z karty: 2 kolejki, a wyjście kosztuje <b>${money(ECON.bail)}</b>, rzut z dubletem albo karta wyjścia.`;
+  else if (i === POOL_CELL) text = `Zabierasz całą pulę ze środka planszy.${G ? ` Teraz w puli jest <b>${money(G.pool)}</b>.` : ''}`;
+  else if (i === GOTO_CELL) text = 'Idziesz od razu do dziekanatu na 2 kolejki.';
+  else if (f && f.type === 'tax') text = `Płacisz <b>${money(ECON.tax)}</b> do puli na środku planszy.`;
+  else if (f && f.type === 'chance') text = 'Pytanie: dobra odpowiedź to karta ułatwienia, zła to karta utrudnienia. Potem drugie pytanie decyduje o działaniu ×2.';
+  else text = 'Funkcję pola dopiszemy później.';
+  const img = tileTops[i].material.map.image.toDataURL('image/png');
+  return `<div class="fp-card"><img src="${img}" alt=""></div>
+    <div class="fp-body"><h2>${escHtml(title)}</h2><p class="fp-sub">Pole ${i + 1}</p><p class="fp-text">${text}</p></div>`;
+}
+function openFieldInfo(i) {
+  if (tileTops[i]) highlight(tileTops[i]);
+  const f = FIELDS[i];
+  if (f && buyable(i)) openPopup(deedInfoHtml(i), false, `Pole ${i + 1}: ${f.name}`);
+  else openPopup(plainInfoHtml(i), true, `Pole ${i + 1}`);
+}
+function openDeckInfo(deck) {
+  const kind = deck === DECKS[0] ? 'bonus' : 'penalty';
+  const left = G ? G.cardDecks[kind].length : null;
+  openPopup(`<div class="fp-card"><img src="${cardBackUrl(kind === 'bonus' ? 'ulatwienia' : 'utrudnienia')}" alt=""></div>
+    <div class="fp-body"><h2>Stos: ${deck.name}</h2><p class="fp-sub">${left != null ? `W stosie: ${left} ${left === 1 ? 'karta' : left < 5 && left > 1 ? 'karty' : 'kart'}` : 'Karty z pola Szansa'}</p>
+    <p class="fp-text">${kind === 'bonus' ? 'Kartę ułatwienia dostajesz za dobrą odpowiedź na polu Szansa.' : 'Kartę utrudnienia dostajesz za złą odpowiedź na polu Szansa.'} Wszystkie karty są w zakładce „Karty”.</p></div>`, true, `Stos kart: ${deck.name}`);
+}
+const DEED_CELLS = Object.keys(FIELDS).map(Number).filter(buyable);
+// Zakładka „Karty”: wszystkie akty własności
+for (const i of DEED_CELLS) {
+  const slot = document.createElement('div');
+  slot.className = 'card-slot';
+  slot.innerHTML = `<button class="flip deed-btn" type="button" aria-label="Akt własności: ${escHtml(FIELDS[i].name)}"><span class="flip-inner"><span class="face front">${deedSVG(i)}</span></span></button>
+    <p class="card-cap"><b>${escHtml(FIELDS[i].name)}</b> · pole ${i + 1}</p>`;
+  slot.querySelector('button').addEventListener('click', () => openFieldInfo(i));
+  $('deedGrid').append(slot);
+}
 const pct = (ok, q) => (q ? Math.round((100 * ok) / q) : null);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const rnd = n => Math.floor(Math.random() * n);
@@ -3999,18 +4444,82 @@ function iconSprite(kind) {
   s.renderOrder = 5;
   return s;
 }
+// Ramka wokół pola w kolorze właściciela
+function ownerFrame(i, hex) {
+  const geo = tileTops[i].geometry.parameters;
+  const w = geo.width, d = geo.height, t = 0.075;
+  const m = new THREE.MeshBasicMaterial({ color: hex, toneMapped: false });
+  const g = new THREE.Group();
+  for (const [x, z, sx, sz] of [[0, -d / 2 + t / 2, w, t], [0, d / 2 - t / 2, w, t], [-w / 2 + t / 2, 0, t, d - 2 * t], [w / 2 - t / 2, 0, t, d - 2 * t]]) {
+    const b = new THREE.Mesh(new THREE.BoxGeometry(sx, 0.012, sz), m);
+    b.position.set(x, 0, z);
+    g.add(b);
+  }
+  g.position.y = TILE_H + 0.008;
+  return g;
+}
+// Chorągiewka właściciela na zewnętrznym rogu pola
+function ownerFlag(hex) {
+  const g = new THREE.Group();
+  const pole = mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.62, 10), goldMat);
+  pole.position.y = 0.31;
+  const knob = mesh(new THREE.SphereGeometry(0.03, 12, 8), goldMat);
+  knob.position.y = 0.63;
+  const base = mesh(new THREE.CylinderGeometry(0.07, 0.08, 0.03, 18), mat(hex, { roughness: 0.4 }));
+  base.position.y = 0.015;
+  const geo = new THREE.PlaneGeometry(0.3, 0.19, 10, 2);
+  geo.translate(0.15, 0, 0);
+  const flag = mesh(geo, new THREE.MeshStandardMaterial({ color: hex, side: THREE.DoubleSide, roughness: 0.6 }));
+  flag.position.set(0.018, 0.5, 0);
+  const entry = { geo, base: Float32Array.from(geo.attributes.position.array), width: 0.3 };
+  flags.push(entry);
+  g.userData.flagEntry = entry;
+  g.userData.flagMat = flag.material;
+  g.userData.baseMat = base.material;
+  g.add(pole, knob, base, flag);
+  return g;
+}
+function dropFlag(g) {
+  const k = flags.indexOf(g.userData.flagEntry);
+  if (k >= 0) flags.splice(k, 1);
+}
+function setGlow(i, hex) {
+  const m = tileTops[i].material;
+  m.userData.glow = hex || null;
+  if (highlighted !== tileTops[i]) restoreGlow(tileTops[i]);
+}
+function popIn(obj, s = 1, dur = 480) {
+  obj.scale.setScalar(0.001);
+  return tween(reduceMotion ? 60 : dur, t => {
+    const e = 1 - Math.pow(1 - t, 3);
+    obj.scale.setScalar(Math.max(0.001, s * (e + Math.sin(t * Math.PI) * 0.25)));
+  }).then(() => obj.scale.setScalar(s));
+}
 function refreshMarks(i) {
   const o = G.own.get(i);
   const cg = cellGroups[i];
   const m = G.marks.get(i) || {};
   G.marks.set(i, m);
-  if (!o) { for (const k of Object.keys(m)) { if (m[k]) cg.remove(m[k]); delete m[k]; } return; }
-  if (!m.bar) {
-    m.bar = mesh(new THREE.BoxGeometry(W - 0.16, 0.03, 0.16), mat(o.owner.hex, { roughness: 0.35 }), false, false);
-    m.bar.position.set(0, TILE_H + 0.016, D / 2 - 0.16);
-    cg.add(m.bar);
+  if (!o) {
+    for (const k of Object.keys(m)) { if (m[k]) { if (k === 'flag') dropFlag(m[k]); cg.remove(m[k]); } delete m[k]; }
+    setGlow(i, null);
+    return;
   }
-  m.bar.material.color.set(o.owner.hex);
+  const isNew = !m.frame;
+  if (m.frame && m.frame.userData.hex !== o.owner.hex) { cg.remove(m.frame); m.frame = null; }
+  if (!m.frame) { m.frame = ownerFrame(i, o.owner.hex); m.frame.userData.hex = o.owner.hex; cg.add(m.frame); popIn(m.frame, 1, 360); }
+  if (!m.flag) {
+    m.flag = ownerFlag(o.owner.hex);
+    const geo = tileTops[i].geometry.parameters;
+    m.flag.position.set(-geo.width / 2 + 0.14, TILE_H, geo.height / 2 - 0.14);
+    cg.add(m.flag);
+    popIn(m.flag, 1, 520);
+  }
+  m.flag.userData.flagMat.color.set(o.owner.hex);
+  m.flag.userData.baseMat.color.set(o.owner.hex);
+  setGlow(i, o.owner.hex);
+  if (isNew) burst(cg, o.owner.hex);
+  renderHands();
   for (const [key, on, x] of [['shield', o.shield > 0, -0.28], ['off', o.off > 0, 0.28]]) {
     if (on && !m[key]) { m[key] = iconSprite(key); m[key].position.set(x, 1.35, BUILD_Z); cg.add(m[key]); }
     if (!on && m[key]) { cg.remove(m[key]); delete m[key]; }
@@ -4018,7 +4527,7 @@ function refreshMarks(i) {
 }
 function focusCell(i) {
   const t = cellTarget(i);
-  return flyTo([t.clone().add(DIR_BOARD.clone().multiplyScalar(boardDist() * 0.45)), t], 550);
+  return flyTo([t.clone().add(boardDir().multiplyScalar(boardDist() * 0.45)), t], 550);
 }
 const backToBoard = () => flyTo(presetBoard(), 650);
 // Budynek na polu: stary znika, nowy spada z góry
@@ -4303,7 +4812,7 @@ function rentOf(i) {
   if (f.type === 'room') {
     let r = priceOf(i) * RENT_MULT[o.level];
     if (o.level === 0 && hasMonopoly(o.owner, f.group)) r *= 2;
-    return Math.round(r);
+    return roundK(r);
   }
   const n = [...G.own].filter(([k, x]) => x.owner === o.owner && FIELDS[k].type === f.type).length;
   return f.type === 'station' ? ECON.stationRent[n] : ECON.specialRent[n];
@@ -4329,7 +4838,7 @@ function botWantsBuy(p, i) {
   if (p.cash < cost) return false;
   const f = FIELDS[i];
   const completes = f.type === 'room' && GROUP_CELLS[f.group].every(k => k === i || G.own.get(k)?.owner === p);
-  if (completes && p.cash - cost >= 30) return true;
+  if (completes && p.cash - cost >= 40 * K) return true;
   return botKeeps(p, cost) && Math.random() < BOT[p.level].buy;
 }
 async function buyField(p, i) {
@@ -4384,7 +4893,7 @@ async function landProperty(p, i) {
     if (p.cash < price) { await w(banner(`${escHtml(fname(i))}`, `Wolne pole za ${money(price)}. Masz za mało gotówki.`, '', 1600)); return; }
     const go = await w(choose(p, {
       title: `Wolne pole: ${escHtml(fname(i))}`,
-      text: `Cena: <b>${money(price)}</b>, czynsz od ${money(f.type === 'room' ? Math.round(price * RENT_MULT[0]) : (f.type === 'station' ? ECON.stationRent[1] : ECON.specialRent[1]))}. Żeby kupić, odpowiedz dobrze na pytanie.`,
+      text: `Cena: <b>${money(price)}</b>, czynsz od ${money(f.type === 'room' ? roundK(price * RENT_MULT[0]) : (f.type === 'station' ? ECON.stationRent[1] : ECON.specialRent[1]))}. Żeby kupić, odpowiedz dobrze na pytanie.`,
       options: [{ label: 'Kupuję: pokaż pytanie', value: true, primary: true }, { label: 'Nie kupuję', value: false }], two: true,
     }, () => botWantsBuy(p, i)));
     if (!go) return;
@@ -4592,18 +5101,18 @@ async function applyCard(p, card, x2) {
       return;
     }
     case 'coins':
-      receive(p, 200 * k);
-      return w(banner(`+${money(200 * k)}`, 'Stypendium naukowe z banku.', p.hex));
+      receive(p, 250 * K * k);
+      return w(banner(`+${money(250 * K * k)}`, 'Stypendium naukowe z banku.', p.hex));
     case 'refund': {
-      const v = Math.min(G.pool, 100 * k);
+      const v = Math.min(G.pool, 150 * K * k);
       G.pool -= v;
       receive(p, v);
       return w(banner(v ? `+${money(v)} z puli` : 'Pula jest pusta', 'Zwrot czesnego.', p.hex));
     }
     case 'people': {
       const from = opponents(p);
-      await w(banner('Praca w samorządzie', `Każdy przeciwnik płaci Ci ${money(50 * k)}.`, p.hex));
-      for (const o of from) if (!o.out) await pay(o, 50 * k, p);
+      await w(banner('Praca w samorządzie', `Każdy przeciwnik płaci Ci ${money(60 * K * k)}.`, p.hex));
+      for (const o of from) if (!o.out) await pay(o, 60 * K * k, p);
       return;
     }
     case 'forward': {
@@ -4659,7 +5168,7 @@ async function applyCard(p, card, x2) {
     }
     case 'wrench': {
       let v = 0;
-      for (const i of mine) { const l = G.own.get(i).level; v += l === 5 ? 100 : l > 0 ? 20 : 0; }
+      for (const i of mine) { const l = G.own.get(i).level; v += l === 5 ? 125 * K : l > 0 ? 25 * K : 0; }
       v *= k;
       if (!v) return none('Nie masz budynków, więc nic nie płacisz.');
       await w(banner('Opłaty za sprzęt', `Płacisz ${money(v)} do puli.`, '#D6534F'));
@@ -4667,8 +5176,8 @@ async function applyCard(p, card, x2) {
       return;
     }
     case 'exam':
-      await w(banner('Warunek', `Płacisz ${money(100 * k)} do puli.`, '#D6534F'));
-      await pay(p, 100 * k, 'pool');
+      await w(banner('Warunek', `Płacisz ${money(150 * K * k)} do puli.`, '#D6534F'));
+      await pay(p, 150 * K * k, 'pool');
       return;
     case 'clock':
       return moveBy(p, -3 * k);
@@ -4730,7 +5239,7 @@ async function jailTurn(p) {
       { label: 'Pytanie, a potem rzut: dublet = wyjście', value: 'roll', primary: true },
       { label: `Karta „Wyjście z dziekanatu”${cards ? ` (masz ${cards})` : ' (nie masz)'}${p.noCard ? ': nie tym razem' : ''}`, value: 'card', disabled: !cards || p.noCard },
     ],
-  }, () => (cards && !p.noCard ? 'card' : p.cash > (p.level === 'trudny' ? 300 : 600) ? 'pay' : 'roll')));
+  }, () => (cards && !p.noCard ? 'card' : p.cash > (p.level === 'trudny' ? 400 * K : 800 * K) ? 'pay' : 'roll')));
   if (choice === 'pay') {
     await pay(p, ECON.bail, 'pool');
     p.jail = 0;
@@ -4826,6 +5335,7 @@ function tickStatuses(p) {
   if (p.insured > 0) p.insured -= 1;
 }
 async function playTurn(p) {
+  if (!isBot(p)) setViewer(p);
   renderHud();
   const humans = G.players.filter(x => !isBot(x) && !x.out).length;
   if (!isBot(p) && humans > 1) await w(banner(`Tura: ${escHtml(p.name)}`, '', p.hex, 1000));
@@ -4861,6 +5371,104 @@ function setStatus(text) {
   el.hidden = !text;
   el.textContent = text;
 }
+// ---------------------------------------------------------------------------
+// Karty graczy: na planszy w rogu gracza (widać tył i liczbę), a u gracza w panelu „Twoje karty”
+// ---------------------------------------------------------------------------
+const cornerOf = p => p.slot;   // miejsce w menu = róg planszy
+const findCard = (icon, kind) => {
+  const list = kind === 'penalty' ? PENALTY_CARDS : BONUS_CARDS;
+  return { ...list.find(c => c.icon === icon), kind };
+};
+// Karty, które gracz trzyma, i działające na niego efekty kart
+function playerCards(p) {
+  const out = p.cards.map(c => ({ card: c, note: 'do użycia' }));
+  let shields = 0, off = 0;
+  for (const [, o] of G.own) if (o.owner === p) { shields += o.shield || 0; if (o.off > 0) off += 1; }
+  const tury = n => `${n} ${n === 1 ? 'tura' : n < 5 ? 'tury' : 'tur'}`;
+  if (p.insured > 0) out.push({ card: findCard('shieldPerson', 'bonus'), note: tury(p.insured) });
+  if (shields) out.push({ card: findCard('shieldRoom', 'bonus'), note: `tarcze: ${shields}` });
+  if (p.skip > 0) out.push({ card: findCard('hourglass', 'penalty'), note: `traci: ${p.skip}` });
+  if (off) out.push({ card: findCard('bulb', 'penalty'), note: `bez prądu: ${off}` });
+  return out;
+}
+const handGroups = [];
+const miniCardGeo = new THREE.BoxGeometry(CARD_W * 0.36, 0.012, CARD_L * 0.36);
+const miniFaceGeo = new THREE.PlaneGeometry(CARD_W * 0.36 - 0.02, CARD_L * 0.36 - 0.02);
+let handSig = '';
+function clearHands() {
+  for (const g of handGroups) board.remove(g);
+  handGroups.length = 0;
+  handSig = '';
+}
+function renderHands() {
+  if (!G) return;
+  const sig = G.players.map(p => (p.out ? 'x' : playerCards(p).map(x => x.card.kind[0]).join(''))).join('|');
+  if (sig === handSig) return;
+  handSig = sig;
+  clearHands();
+  handSig = sig;
+  for (const p of G.players) {
+    if (p.out) continue;
+    const list = playerCards(p).slice(0, 7);
+    if (!list.length) continue;
+    const k = cornerOf(p);
+    const grp = new THREE.Group();
+    grp.position.set(HAND_SPOTS[k][0], CENTER_Y, HAND_SPOTS[k][1]);
+    grp.rotation.y = Math.PI / 4 - k * Math.PI / 2;
+    list.forEach((x, j) => {
+      const card = mesh(miniCardGeo, cardEdgeMats[0], true, true);
+      const face = mesh(miniFaceGeo, deckFaces[x.card.kind === 'bonus' ? 0 : 1].material, false, false);
+      face.rotation.x = -Math.PI / 2; face.position.y = 0.0065;
+      card.add(face);
+      const off = j - (list.length - 1) / 2;
+      card.position.set(off * 0.27, 0.008 + j * 0.013, Math.abs(off) * 0.05 - 0.05);
+      card.rotation.y = -off * 0.12;
+      grp.add(card);
+    });
+    board.add(grp);
+    handGroups.push(grp);
+  }
+}
+// Panel „Twoje karty” na dole ekranu: akty własności i karty ułatwień i utrudnień gracza
+let handPanelSig = '';
+let handClosed = false;
+function renderHandPanel() {
+  const el = $('gHand');
+  if (!G) { el.innerHTML = ''; handPanelSig = ''; return; }
+  const me = viewerPlayer();
+  if (!me) return;
+  const deeds = DEED_CELLS.filter(i => G.own.get(i)?.owner === me);
+  const cards = playerCards(me);
+  const sig = [me.idx, handClosed, deeds.join(','), cards.map(x => `${x.card.name}:${x.note}`).join(',')].join('|');
+  if (sig === handPanelSig) return;
+  handPanelSig = sig;
+  el.classList.toggle('is-closed', handClosed);
+  el.style.setProperty('--c', me.hex);
+  el.innerHTML = `<div class="g-hand-head"><b>Twoje karty</b><span>${escHtml(me.name)} · pola: ${deeds.length} · karty: ${cards.length}</span>
+      <button type="button" data-toggle aria-expanded="${!handClosed}">${handClosed ? 'Pokaż' : 'Zwiń'}</button></div>
+    <div class="g-hand-row"><h4>Akty własności</h4><div class="g-thumbs">${deeds.length ? deeds.map(i => `<button class="g-thumb" type="button" data-deed="${i}" aria-label="${escHtml(FIELDS[i].name)}">${deedSVG(i)}<small>${escHtml(FIELDS[i].name)}</small></button>`).join('') : '<span class="g-empty">Nie masz jeszcze pól.</span>'}</div></div>
+    <div class="g-hand-row"><h4>Ułatwienia i utrudnienia</h4><div class="g-thumbs">${cards.length ? cards.map((x, k) => `<button class="g-thumb" type="button" data-card="${k}" aria-label="${escHtml(x.card.name)}">${cardSvg(x.card)}<small>${escHtml(x.note)}</small></button>`).join('') : '<span class="g-empty">Brak kart i efektów.</span>'}</div></div>`;
+  el.querySelector('[data-toggle]').addEventListener('click', () => { handClosed = !handClosed; renderHandPanel(); });
+  el.querySelectorAll('[data-deed]').forEach(b => b.addEventListener('click', () => openFieldInfo(+b.dataset.deed)));
+  el.querySelectorAll('[data-card]').forEach(b => b.addEventListener('click', () => {
+    const x = cards[+b.dataset.card];
+    const kind = x.card.kind === 'bonus' ? 'Ułatwienie' : 'Utrudnienie';
+    openPopup(`<div class="fp-card">${cardSvg(x.card)}</div><div class="fp-body"><h2>${escHtml(x.card.name)}</h2><p class="fp-sub">${kind} · ${escHtml(x.note)}</p><p class="fp-text">${escHtml(x.card.text || 'Użyjesz jej, żeby wcześniej wyjść z dziekanatu.')}</p></div>`, true, x.card.name);
+  }));
+}
+// Ekran patrzy z perspektywy gracza: jego róg planszy jest na dole
+function setViewer(p, animate = true) {
+  if (!G || !p) return;
+  G.view = p.idx;
+  const k = cornerOf(p);
+  if (k !== viewCorner) {
+    viewCorner = k;
+    if (view === 'board') (animate ? flyTo(presetBoard(), 800) : jumpTo(presetBoard()));
+  }
+  handPanelSig = '';
+  renderHandPanel();
+}
+
 function renderHud() {
   if (!G) return;
   $('gPlayers').innerHTML = G.players.map((p, k) => {
@@ -4880,6 +5488,8 @@ function renderHud() {
     </div>`;
   }).join('');
   $('gPool').innerHTML = `<small>Pula</small>${money(G.pool)}`;
+  renderHands();
+  renderHandPanel();
   const t = $('gTimer');
   t.hidden = !G.timeLeft && !G.timeUp;
   if (!t.hidden) {
@@ -4945,6 +5555,8 @@ function startGame() {
     placePawn(p);
     G.players.push(p);
   });
+  G.view = (G.players.find(x => !isBot(x)) || G.players[0]).idx;
+  viewCorner = cornerOf(G.players[G.view]);
   closeMenu();
   document.body.classList.add('in-game');
   layer.innerHTML = '';
@@ -4986,7 +5598,10 @@ function quitGame() {
   setStatus('');
   document.body.classList.remove('in-game');
   for (const p of g.players) { board.remove(p.obj); disposeTree(p.obj); }
-  for (const [i, m] of g.marks) for (const obj of Object.values(m)) if (obj) { cellGroups[i].remove(obj); disposeTree(obj); }
+  for (const [i, m] of g.marks) for (const [k, obj] of Object.entries(m)) if (obj) { if (k === 'flag') dropFlag(obj); cellGroups[i].remove(obj); disposeTree(obj); }
+  for (const t of tileTops) t.material.userData.glow = null;
+  clearHands();
+  viewCorner = 0;
   flags.length = g.anim.flags; steams.length = g.anim.steams; coins.length = g.anim.coins;
   dice.forEach(d => { d.visible = false; });
   selectCell(null);
@@ -5269,7 +5884,7 @@ const SCENES = [
     html: () => `<div class="pr-scene at-center">
       ${fadeP('pr-eyebrow', 'WSiZ Tour w liczbach', 0.2)}
       <div class="pr-specs">${[
-        [1500, 'zł', 'na start dla każdego gracza'],
+        [2, 'mln zł', 'na start dla każdego gracza'],
         [60, 's', 'na każdą odpowiedź'],
         [5, '', 'poziomów budynków, od telefonu do serwerowni'],
         [7, '', 'semestrów pytań albo wszystkie naraz'],
