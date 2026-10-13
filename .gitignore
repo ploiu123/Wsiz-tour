@@ -18,3 +18,5 @@ __pycache__/
 
 # Kopia strony do testów automatycznych (tworzona lokalnie)
 index-test.html
+# Playwright CLI output (may contain credentials)
+.playwright-cli/
