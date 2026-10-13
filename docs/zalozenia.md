@@ -319,7 +319,8 @@ Ilustracje kart są wektorowe (SVG), rysowane w kodzie przez asystenta AI (Claud
 
 - Nic nie leży na planszy. **Lewa kolumna:** gracze, każdy na swojej karcie (pionek, nazwa, pieniądze dużą czcionką, liczba pól i kart, oznaczenia typu „dziekanat”, „wyjście ×1”). Gracz, którego jest tura, ma ramkę w swoim kolorze.
 - **Prawa kolumna:** pula Stypendium rektorskiego, przycisk Menu, czas gry (jeśli jest limit) i panel „Twoje karty”.
-- Plansza stoi w wolnym miejscu między kolumnami. Kamera sama dopasowuje się do tego miejsca, także po zmianie rozmiaru okna. Przycisk „Rzuć kostkami” jest na środku planszy, a opis ruchu pod planszą.
+- Plansza stoi w wolnym miejscu między kolumnami. Kamera sama dopasowuje się do tego miejsca, także po zmianie rozmiaru okna.
+- **Plansza w grze jest 2× większa** (kamera 2× bliżej), żeby napisy na polach były czytelne. Kamera jedzie za pionkiem gracza, którego jest tura, a przy rzucie patrzy na kostki. Kółkiem myszy albo dwoma palcami można oddalić widok i zobaczyć całą planszę. Przycisk „Rzuć kostkami” jest na środku planszy, a opis ruchu pod planszą.
 - Na wąskim ekranie (do 900 px, np. telefon) gracze są nad planszą, a pula, menu i karty pod planszą. „Twoje karty” startują wtedy zwinięte.
 
 ## Karty „Wyjście z dziekanatu”

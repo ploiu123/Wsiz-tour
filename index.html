@@ -2472,7 +2472,25 @@ const boardDist = () => fitDistance(S * (safe.fit ? 0.8 : 0.7));
 const showDist = () => fitDistance(5.9);
 let viewCorner = 0;   // róg planszy gracza, z którego perspektywy patrzymy (0 = START)
 const boardDir = () => DIR_BOARD.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), -viewCorner * Math.PI / 2);
-function presetBoard() { return [boardDir().multiplyScalar(boardDist()), new THREE.Vector3(0, 0, 0)]; }
+// W grze kamera jest 2× bliżej planszy i jedzie za pionkiem gracza, którego jest tura.
+// Kółkiem myszy (albo dwoma palcami) można oddalić widok i zobaczyć całą planszę.
+const GAME_ZOOM = 0.5;
+const camFocus = new THREE.Vector3();
+let camTrack = null;   // pionek, za którym jedzie kamera
+const trackPoint = obj => obj.position.clone().setY(0).multiplyScalar(0.6);
+function presetBoard() {
+  const f = safe.fit ? camFocus.clone() : new THREE.Vector3();
+  return [f.clone().add(boardDir().multiplyScalar(boardDist() * (safe.fit ? GAME_ZOOM : 1))), f];
+}
+// Kamera płynnie przesuwa się za pionkiem, a obrót i oddalenie ustawione przez gracza zostają
+function followCamera(dt) {
+  if (camTrack) camFocus.copy(trackPoint(camTrack));
+  const d = camFocus.clone().sub(controls.target);
+  if (d.lengthSq() < 1e-6) return;
+  d.multiplyScalar(1 - Math.exp(-dt * 2.5));
+  controls.target.add(d);
+  camera.position.add(d);
+}
 function presetTop() {
   const d = boardDir(); d.y = 0; d.setLength(0.001);
   return [new THREE.Vector3(d.x, boardDist() * 1.02, d.z), new THREE.Vector3(0, 0, 0)];
@@ -5352,7 +5370,10 @@ async function rollDice(p) {
   setStatus(isBot(p) ? `${p.name} rzuca kostkami…` : `${p.name}: Twój rzut`);
   await w(waitRoll(p));
   const a = 1 + rnd(6), b = 1 + rnd(6);
+  camTrack = null;
+  camFocus.set(-0.45, 0, 1.45);   // kamera patrzy na kostki
   await w(throwDice(a, b));
+  camTrack = p.obj;
   setStatus(`${p.name}: ${a} + ${b} = ${a + b}${a === b ? ' · dublet!' : ''}`);
   return [a, b];
 }
@@ -5362,6 +5383,7 @@ function tickStatuses(p) {
   if (p.insured > 0) p.insured -= 1;
 }
 async function playTurn(p) {
+  camTrack = p.obj;
   if (!isBot(p)) setViewer(p);
   renderHud();
   const humans = G.players.filter(x => !isBot(x) && !x.out).length;
@@ -5587,6 +5609,8 @@ function startGame() {
   });
   G.view = (G.players.find(x => !isBot(x)) || G.players[0]).idx;
   viewCorner = cornerOf(G.players[G.view]);
+  camTrack = null;
+  camFocus.copy(trackPoint(G.players[0].obj));
   document.body.classList.add('in-game');
   layer.innerHTML = '';
   setStatus('');
@@ -5633,6 +5657,8 @@ function quitGame() {
   for (const t of tileTops) t.material.userData.glow = null;
   clearHands();
   viewCorner = 0;
+  camTrack = null;
+  camFocus.set(0, 0, 0);
   flags.length = g.anim.flags; steams.length = g.anim.steams; coins.length = g.anim.coins;
   dice.forEach(d => { d.visible = false; });
   selectCell(null);
@@ -6364,6 +6390,7 @@ function frame() {
   const t = clock.elapsedTime;
   runTweens(performance.now());
   if (P.on) promoTick(dt);
+  else if (G && safe.fit && controls.enabled && view === 'board') followCamera(dt);
   if (!reduceMotion) {
     for (const f of flags) {
       const pos = f.geo.attributes.position;
