@@ -357,10 +357,12 @@ Prezentacja zawsze pokazuje dioramę, a po jej zamknięciu wraca wybrany wygląd
 - **Menu:** ikony w kafelkach w kolorach uczelni (jasny szaroniebieski kafel, granatowa linia; w ciemnym motywie jasna linia), cieńsza i równa linia ikon, przycisk „Prezentacja gry” bez niebieskiego gradientu, z granatowym kafelkiem.
 - **Pionki 3D** stoją na podeście w kolorach uczelni: lakierowany granat, pas w kolorze gracza, jasna szaroniebieska płytka ze srebrnym rantem. Główna bryła pionka jest w kolorze gracza (z połyskiem lakieru), a ciemne i jasne części w granacie i szaroniebieskim uczelni.
 
-## Płynność (od 13.10.2026)
+## Płynność i stabilny obraz (od 13.10.2026)
 
 - Gra sama pilnuje płynności: gdy przez kilka sekund klatki są wolne, rysuje w trochę mniejszej rozdzielczości, a gdy znów jest płynnie, wraca do pełnej.
 - Na telefonach i słabszych komputerach mapa cieni jest mniejsza (2048 zamiast 4096).
+- **Tekstury nie migają:** bliska płaszczyzna kamery rośnie z odległością (dokładniejsza głębia), a cienkie warstwy (cień pod planszą, cienie rekwizytów, opaska placu, mokry piasek) są lekko przesunięte w stronę kamery. Wcześniej przy dalekich ujęciach (telefon, menu, prezentacja) napisy na polach i plac potrafiły migać.
+- **Napisy na planszy zawsze właściwą czcionką:** jeśli czcionki dojdą później niż po 3 s, pola i środek planszy rysują się jeszcze raz.
 
 ## Muzyka (od 13.10.2026)
 

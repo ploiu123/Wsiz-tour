@@ -164,7 +164,7 @@
   }
   .pv-btn svg { width: 18px; height: 18px; }
   .pv-btn:hover { background: var(--chip); }
-  .pv-btn.pv-promo { background: linear-gradient(100deg, #00276F, #2F7FF0); color: #fff; }
+  .pv-btn.pv-promo { background: radial-gradient(120% 140% at 30% 0%, #1d4fa8 0%, #00276f 60%); color: #fff; }
   .pv-seg { display: flex; gap: 2px; padding: 3px; border-radius: 13px; background: var(--chip); }
   .pv-seg button { all: unset; cursor: pointer; padding: 8px 14px; border-radius: 10px; font: 600 13.5px var(--body); color: var(--ink); }
   .pv-seg button[aria-pressed="true"] { background: var(--btn); color: var(--btn-ink); }
@@ -698,7 +698,7 @@
   /* ---------- Prezentacja: kinowy zwiastun gry na planszy 3D ---------- */
   .m-links { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 16px; }
   .m-links .m-link { margin-top: 0; }
-  .m-link.m-promo { background: linear-gradient(100deg, #00276F, #2F7FF0); color: #fff; box-shadow: 0 8px 22px rgba(0, 39, 111, .32); }
+  .m-link.m-promo { background: radial-gradient(120% 140% at 30% 0%, #1d4fa8 0%, #00276f 60%); color: #fff; box-shadow: 0 8px 22px rgba(0, 39, 111, .32); }
   .m-nav .m-promo-btn { justify-content: flex-start; padding-left: 12px; background: var(--panel-hover); color: var(--ink); border-color: var(--uni-tile-line); box-shadow: inset 3px 0 0 var(--uni-ico); }
   .m-nav .m-promo-btn:hover { border-color: var(--ink-soft); }
   .m-nav .m-promo-btn svg { color: #fff; background: radial-gradient(120% 90% at 30% 0%, #1d4fa8 0%, #00276f 100%); box-shadow: none; }
@@ -1317,16 +1317,16 @@ labelRenderer.domElement.className = 'labels';
 labelRenderer.domElement.hidden = true;
 renderer.domElement.after(labelRenderer.domElement);
 
-try {
-  await Promise.race([
-    Promise.all([
-      document.fonts.load('700 120px Fredoka'),
-      document.fonts.load('600 30px Fredoka'),
-      document.fonts.load('600 48px Figtree'),
-    ]),
-    new Promise(r => setTimeout(r, 3000)),
-  ]);
-} catch (e) { /* zostaje czcionka zapasowa */ }
+// Czcionki do napisów na planszy. Czekamy najwyżej 3 s; jeśli dojdą później, tekstury z napisami
+// rysują się jeszcze raz (inaczej napisy na polach zostawały w zapasowej czcionce).
+let fontsOk = false;
+const fontsLoaded = Promise.all([
+  document.fonts.load('700 120px Fredoka'),
+  document.fonts.load('600 30px Fredoka'),
+  document.fonts.load('600 48px Figtree'),
+]).then(() => { fontsOk = true; }, () => {});
+await Promise.race([fontsLoaded, new Promise(r => setTimeout(r, 3000))]);
+const fontsLate = !fontsOk;
 
 // Logo uczelni. Plik jest okrągły na białym tle, więc rysujemy je przycięte do koła.
 // Kolory logo: granat i jasny szaroniebieski.
@@ -2234,7 +2234,7 @@ const floorGroup = new THREE.Group();
 floorGroup.position.y = -BASE_H;
 scene.add(floorGroup);
 const contact = new THREE.Mesh(new THREE.PlaneGeometry((S + 2 * LOOK.margin) * 1.25, (S + 2 * LOOK.margin) * 1.25),
-  new THREE.MeshBasicMaterial({ map: contactShadowTexture(), transparent: true, opacity: 0.45, depthWrite: false }));
+  new THREE.MeshBasicMaterial({ map: contactShadowTexture(), transparent: true, opacity: 0.45, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
 contact.rotation.x = -Math.PI / 2;
 contact.position.y = 0.003;
 floorGroup.add(contact);
@@ -2521,7 +2521,7 @@ const blobTex = (() => {
   g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
   return new THREE.CanvasTexture(c);
 })();
-const blobMat = new THREE.MeshBasicMaterial({ map: blobTex, transparent: true, depthWrite: false });
+const blobMat = new THREE.MeshBasicMaterial({ map: blobTex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 });
 function blob(x, z, r, y = GROUND_Y + 0.03) {
   const m = new THREE.Mesh(new THREE.PlaneGeometry(r * 2, r * 2), blobMat);
   m.rotation.x = -Math.PI / 2;
@@ -2715,6 +2715,7 @@ function wakeMesh(len = 6, w = 1.4) {
   g.fillStyle = gr; g.fillRect(8, 0, 48, 256);
   const m = new THREE.Mesh(new THREE.PlaneGeometry(w, len), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false }));
   m.rotation.x = -Math.PI / 2;
+  m.renderOrder = 4;
   return m;
 }
 
@@ -2764,7 +2765,7 @@ function wakeMesh(len = 6, w = 1.4) {
   const wgr = wg.createLinearGradient(0, 0, 0, 128);
   wgr.addColorStop(0, '#000'); wgr.addColorStop(0.55, '#666'); wgr.addColorStop(1, '#FFF');
   wg.fillStyle = wgr; wg.fillRect(0, 0, 4, 128);
-  const wet = new THREE.Mesh(new THREE.PlaneGeometry(BX * 2, 1.8), new THREE.MeshStandardMaterial({ color: '#9C8257', roughness: 0.35, transparent: true, opacity: 0.55, alphaMap: new THREE.CanvasTexture(wc), depthWrite: false }));
+  const wet = new THREE.Mesh(new THREE.PlaneGeometry(BX * 2, 1.8), new THREE.MeshStandardMaterial({ color: '#9C8257', roughness: 0.35, transparent: true, opacity: 0.55, alphaMap: new THREE.CanvasTexture(wc), depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }));
   wet.rotation.x = -Math.PI / 2;
   wet.position.set(0, GROUND_Y + 0.02, SHORE_Z - 0.9);
   world.add(wet);
@@ -2805,7 +2806,7 @@ varying vec2 vLoc; varying float vH;
       .replace('#include <opaque_fragment>', `
       float fres = pow(1.0 - clamp(dot(normal, normalize(vViewPosition)), 0.0, 1.0), 4.0);
       outgoingLight = mix(outgoingLight, uSky, fres * 0.6);
-      outgoingLight += vec3(0.5) * smoothstep(0.27, 0.42, vH);   // piana tylko na najwyższych grzbietach
+      outgoingLight += vec3(0.38) * smoothstep(0.31, 0.46, vH);   // piana tylko na najwyższych grzbietach
       diffuseColor.a = mix(diffuseColor.a, 0.96, fres);
       #include <opaque_fragment>`);
   };
@@ -2889,7 +2890,7 @@ varying vec2 vLoc; varying float vH;
   const pavMat = (w, d) => {
     const m = pav.map.clone(), n = pav.normalMap.clone();
     for (const t of [m, n]) { t.needsUpdate = true; t.repeat.set(w / TILE, d / TILE); }
-    return mat('#FFFFFF', { map: m, normalMap: n, normalScale: new THREE.Vector2(0.9, 0.9), roughness: 0.88 });
+    return mat('#FFFFFF', { map: m, normalMap: n, normalScale: new THREE.Vector2(0.6, 0.6), roughness: 0.88 });
   };
   const plaza = mesh(new THREE.PlaneGeometry(PL.x * 2, PL.zf - PL.zb), pavMat(PL.x * 2, PL.zf - PL.zb), false, true);
   plaza.rotation.x = -Math.PI / 2;
@@ -2904,7 +2905,7 @@ varying vec2 vLoc; varying float vH;
   path(-(PL.x + 4), -14, 8, 3); path(PL.x + 4, -14, 8, 3);    // ścieżki do wydziałów
   path(-(PL.x + 4), -1, 8, 3); path(PL.x + 4, 3, 8, 3);
   // Granitowa opaska dookoła placu (płasko z kostką) i krawężnik promenady nad plażą
-  const borderM = mat('#9E978C', { roughness: 0.75 });
+  const borderM = mat('#9E978C', { roughness: 0.75, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
   const strip = (x, z, w, d) => { const m = mesh(new THREE.PlaneGeometry(w, d), borderM, false, true); m.rotation.x = -Math.PI / 2; m.position.set(x, GROUND_Y + 0.022, z); world.add(m); };
   strip(0, PL.zb + 0.2, PL.x * 2, 0.4); strip(-PL.x + 0.2, (PL.zb + PL.zf) / 2, 0.4, PL.zf - PL.zb); strip(PL.x - 0.2, (PL.zb + PL.zf) / 2, 0.4, PL.zf - PL.zb);
   const kerb = mesh(new THREE.BoxGeometry(BX * 2, 0.16, 0.34), mat('#DAD4CA', { roughness: 0.8 }), false, true);
@@ -3421,6 +3422,12 @@ for (let i = 0; i < TOTAL; i++) {
 }
 
 const center = mesh(new THREE.PlaneGeometry(INNER, INNER), new THREE.MeshStandardMaterial({ map: centerTexture(), roughness: 0.85 }), false, true);
+if (fontsLate) fontsLoaded.then(() => {   // czcionki doszły później: przerysuj pola i środek planszy
+  if (!fontsOk) return;
+  const swap = (m, t) => { const old = m.map; m.map = t; m.needsUpdate = true; old?.dispose(); };
+  tileTops.forEach(top => swap(top.material, tileTexture(top.userData.cell)));
+  swap(center.material, centerTexture());
+});
 center.rotation.x = -Math.PI / 2;
 center.position.y = CENTER_Y;
 board.add(center);
@@ -8051,6 +8058,10 @@ function frame() {
     for (const c of coins) { c.rotation.y += dt * 2.2; c.position.y = 0.52 + 0.02 * Math.sin(t * 2); }
   }
   controls.update();
+  // Bliska płaszczyzna odcięcia rośnie z odległością kamery od celu (dokładniejsza głębia):
+  // cienkie warstwy (napisy na polach, plac, cienie, opaska) nie migają nawet przy dalekich ujęciach
+  const near = Math.min(2, Math.max(0.1, camera.position.distanceTo(controls.target) * 0.03));
+  if (Math.abs(near - camera.near) > 0.005) { camera.near = near; camera.updateProjectionMatrix(); }
   const sh = shakeOffset(performance.now());
   if (sh) camera.position.add(sh);
   renderer.render(scene, camera);
