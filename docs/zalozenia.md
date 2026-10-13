@@ -192,16 +192,16 @@ Do ustalenia: co z Kuchnią.
 | 8 | granatowy | Sala 43, Sala 44 |
 - Do ustalenia: czy pola specjalne (np. Pracownia ceramiki) też dają wygraną, czy tylko monopole.
 
-## Prezentacja gry (zwiastun, 13.10.2026)
+## Prezentacja gry (zwiastun, 13.10.2026, wersja premium)
 
-- Przyciski: „Prezentacja gry” w menu głównym (zaraz pod „Graj”), „Zobacz prezentację gry” pod okienkiem logowania (bez logowania) i „Prezentacja” na planszy, obok „Menu”. Link z dopiskiem `?prezentacja` (np. `http://localhost:8000/?prezentacja`) otwiera zwiastun od razu, z ekranem „Odtwórz”. Przydaje się do pokazania gry opiekunowi albo na prezentacji pracy.
-- Styl reklam Apple i Nike: ciemne tło, kinowe pasy u góry i u dołu, wielkie napisy wjeżdżające od dołu, przejścia przez czerń, szklane karty z rozmyciem.
-- Kamera jedzie po prawdziwej planszy 3D z gry, więc każda zmiana planszy, pionków i budynków od razu jest w zwiastunie.
-- 16 scen, ok. 2 minuty: logo i nazwa gry, wyspa nocą z lotu ptaka („Wyspa, na której zawsze coś się dzieje”), plansza, przejazd wzdłuż pól („32 pola”), rzut kostkami z dubletem, przykładowe pytanie z minutnikiem (7 × 8, nigdy z prawdziwej bazy), budowanie od telefonu do serwerowni, czynsz (paczki pieniędzy lecą między stołami graczy), monopol (pola rozbłyskują, konfetti), 4 pionki, wachlarz kart, dziekanat, tryby gry, liczby (2 mln zł, 60 s, 5 poziomów, 7 semestrów), „Wiedza się opłaca” z deszczem pieniędzy i końcowa plansza z fajerwerkami oraz przyciskami „Zagraj teraz” i „Obejrzyj jeszcze raz”.
-- **Żywa plansza:** przez cały zwiastun trwa w tle gra czterech graczy: sale mają właścicieli (ramki, chorągiewki, budynki w kolorach graczy), na stole leżą pieniądze i karty, pionki skaczą po planszy, a czynsz przelatuje między graczami.
-- Muzyka jest generowana w kodzie (akordy, bas, arpeggio, perkusja, „whoosh” przy przejściach), bez plików i bez cudzych nagrań. Głośność bierze z ustawienia „Muzyka”, w zwiastunie jest też przycisk wyciszenia.
+- Przyciski: „Prezentacja gry” w menu głównym (zaraz pod „Graj”), „Zobacz prezentację gry” pod okienkiem logowania (bez logowania) i „Prezentacja” w pasku podglądu planszy. Link z dopiskiem `?prezentacja` (np. `http://localhost:8000/?prezentacja`) otwiera zwiastun od razu, z ekranem „Odtwórz”. Przydaje się do pokazania gry opiekunowi albo na obronie.
+- Styl reklam Apple i Nike: czarne tło, kinowe pasy, ziarno filmowe, winieta, typografia Inter Tight (napisy wjeżdżają z rozmyciem, srebrne i złote gradienty), wielkie hasła krojem Anton (pochylone, wielkie litery, cięcia do rytmu muzyki z błyskiem).
+- **Studio produktowe:** każdy pionek pokazany osobno jak produkt (czarne tło bez krawędzi, lśniąca podłoga, reflektor z góry, niebieskie i ciepłe światła konturowe, obrót na talerzu) z podpisem „Pionek 01 · Sztandar.” itd.
+- **Żywa plansza:** przez cały zwiastun trwa w tle gra czterech graczy (właściciele sal, budynki, pieniądze na stole, pionki skaczą, czynsz przelatuje między graczami). Wyspa jest nocą.
+- 18 scen, ok. 1 minuty 50 sekund: „Uczelnia, jakiej jeszcze nie znasz.”, logo i nazwa, wyspa z lotu ptaka, 4 pionki w studiu, plansza („32 pola”), kostki w zwolnionym tempie („RZUĆ.” / „DUBLET.”), przykładowe pytanie z minutnikiem (7 × 8, nigdy z prawdziwej bazy), budowanie od telefonu do serwerowni, czynsz, monopol, wachlarz kart, manifest („UCZ SIĘ. GRAJ. KUPUJ. BUDUJ. BLOKUJ. WYGRYWAJ.”), liczby (2 mln zł, 60 s, 32 pola, 7 semestrów), „Wiedza się opłaca” z deszczem pieniędzy i finał z fajerwerkami, przyciskami „Zagraj teraz” i „Obejrzyj jeszcze raz”.
+- Muzyka jest generowana w kodzie (akordy, bas, arpeggio, perkusja, uderzenia przy cięciach), bez plików i bez cudzych nagrań. Głośność bierze z ustawienia „Muzyka”, w zwiastunie jest też przycisk wyciszenia.
 - Sterowanie: pauza, poprzednia i następna scena, pasek scen (klik = skok do sceny), wyciszenie, zamknięcie. Klawisze: strzałki, spacja, Esc. Przyciski chowają się, gdy nie ruszasz myszką.
-- Kod jest w `index.html`: style z prefiksem `.pr-`, znaczniki w `<section class="promo">`, logika w bloku „Prezentacja” (lista `SCENES`: czas sceny, ujęcie kamery, napisy i zdarzenia).
+- Kod jest w `index.html`: style z prefiksem `.pr-`, znaczniki w `<section class="promo">`, logika w bloku „Prezentacja” (studio `setStudio`, lista `SCENES`: czas sceny, ujęcie kamery, napisy i zdarzenia).
 
 ## Wygląd planszy
 
