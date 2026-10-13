@@ -481,3 +481,10 @@ Prezentacja zawsze pokazuje dioramę, a po jej zamknięciu wraca wybrany wygląd
 - Sekcje: makieta kampusu (dzień i noc), liczby, świat, dwa wyglądy planszy, tura w pięciu krokach, pionki w studiu, budynki od telefonu do serwerowni, akty własności, urządzenia (komputer, tablet, telefon), kod i finał z przyciskiem „Zagraj”.
 - Zdjęcia są zrzutami z naszej gry. Krój Geist i Geist Mono (Google Fonts), jeden akcent: granat uczelni. Jasny i ciemny wygląd.
 - Uwaga: na zdjęciach jest logo uczelni (środek planszy, sztandar). Przed publicznym pokazaniem strony potrzebna jest zgoda uczelni.
+
+## Film promocyjny MP4 (od 13.10.2026)
+
+- 42,5 s, 1920x1080, po polsku, bez lektora, w stylu reklam Apple i Nike. Zrobiony w HyperFrames (HTML i GSAP renderowane do MP4) tylko ze zrzutów naszej gry.
+- Sceny cięte w rytm muzyki (130 uderzeń na minutę, cięcia na początku taktów): „Uczelnia, jakiej jeszcze nie znasz.”, makieta z tytułem, kampus nad wodą, hasła „RZUĆ. ODPOWIEDZ. KUPUJ. BUDUJ.”, cztery pionki ze studia, budynki od telefonu do serwerowni, laptop, tablet i telefon, makieta nocą z liczbami (32, 23, 4, 60 s), plansza końcowa w granacie uczelni z przyciskiem „Zagraj teraz”.
+- Muzyka: „Epic Cinematic Trailer | ELITE” (Alex-Productions, CC BY 3.0), fragment 27,5–70 s, podpis na planszy końcowej.
+- Projekt filmu: folder `film/` (`index.html`, `BRIEF.md`, `STORYBOARD.md`, zdjęcia, czcionki Geist, GSAP, muzyka). Nowy render: w folderze `film/` uruchom `npm install`, potem `npx hyperframes render --quality high --output renders/video.mp4` (potrzebny ffmpeg).
