@@ -263,7 +263,8 @@
   .m-big { font-size: 17px; padding: 16px 24px; }
 
   /* logowanie i wyjście */
-  .m-login, .m-bye { min-height: 100%; display: grid; place-items: center; padding: 32px 16px; }
+  .m-login, .m-bye { min-height: 100%; display: grid; place-items: center; align-content: center; gap: 18px; padding: 32px 16px; }
+  .m-login .m-link { margin-top: 0; }
   .m-login-card { width: min(440px, 100%); padding: 32px 28px 26px; text-align: center; }
   .m-login-card .m-primary { margin-top: 24px; }
   .m-note { margin: 10px 0 0; padding: 10px 12px; border-radius: 10px; background: var(--chip); font-size: 13px; line-height: 1.45; color: var(--ink-soft); text-align: left; }
@@ -609,6 +610,9 @@
   .m-links { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 16px; }
   .m-links .m-link { margin-top: 0; }
   .m-link.m-promo { background: linear-gradient(100deg, #00276F, #2F7FF0); color: #fff; box-shadow: 0 8px 22px rgba(0, 39, 111, .32); }
+  .m-nav .m-promo-btn { justify-content: flex-start; padding-left: 20px; background: linear-gradient(100deg, #00276F 0%, #1B5FD6 60%, #2F7FF0 100%); color: #fff; box-shadow: 0 8px 22px rgba(0, 39, 111, .3); }
+  .m-nav .m-promo-btn:hover { background: linear-gradient(100deg, #0B348F 0%, #2A6FE6 60%, #4A92FF 100%); }
+  #btnPromoBoard { background: linear-gradient(100deg, #00276F, #2F7FF0); color: #fff; }
   .m-link.m-promo:hover { background: linear-gradient(100deg, #0B348F, #4A92FF); }
   body.promo-open .hud, body.promo-open .field-card, body.promo-open .vignette, body.promo-open .toast,
   body.promo-open .menu, body.promo-open .g-hud, body.promo-open .g-layer { display: none !important; }
@@ -648,6 +652,7 @@
   .pr-scene.at-top-left::before { background: radial-gradient(75% 85% at 0% 0%, rgba(1, 5, 16, .88) 0%, rgba(1, 5, 16, .55) 45%, transparent 75%); }
   .pr-scene.at-top-right::before { background: radial-gradient(75% 85% at 100% 0%, rgba(1, 5, 16, .88) 0%, rgba(1, 5, 16, .55) 45%, transparent 75%); }
   .pr-scene.at-top::before { background: linear-gradient(180deg, rgba(1, 5, 16, .85) 0%, rgba(1, 5, 16, .45) 38%, transparent 62%); }
+  .pr-scene.at-center::before { background: radial-gradient(60% 60% at 50% 50%, rgba(1, 5, 16, .55) 0%, transparent 100%); }
   .pr-scene.split::before { background: linear-gradient(90deg, rgba(1, 5, 16, .7) 0%, rgba(1, 5, 16, .3) 50%, transparent 80%); }
   @keyframes pr-out { to { opacity: 0; filter: blur(14px); transform: translateY(-16px) scale(.985); } }
 
@@ -660,7 +665,7 @@
   .pr-h.md { font-size: clamp(38px, 6vw, 96px); }
   .pr-line { display: block; overflow: hidden; padding: .04em .06em .1em; margin: -.04em -.06em -.1em; }
   .pr-line > span { display: inline-block; animation: pr-rise 1.15s cubic-bezier(.16, 1, .3, 1) both; animation-delay: var(--d, 0s); }
-  @keyframes pr-rise { from { transform: translateY(112%) rotate(4deg); } to { transform: none; } }
+  @keyframes pr-rise { from { transform: translateY(150%) rotate(2.5deg); } to { transform: none; } }
   .pr-fade { animation: pr-fade 1.2s cubic-bezier(.16, 1, .3, 1) both; animation-delay: var(--d, 0s); }
   @keyframes pr-fade { from { opacity: 0; filter: blur(16px); transform: translateY(20px); } to { opacity: 1; filter: none; transform: none; } }
   .pr-sub { margin: 20px 0 0; max-width: 36ch; font: 500 clamp(16px, 1.55vw, 22px)/1.45 var(--body); color: rgba(255, 255, 255, .8); text-shadow: 0 2px 20px rgba(0, 6, 24, .7); text-wrap: balance; }
@@ -716,6 +721,7 @@
   }
 
   .pr-level { margin-top: auto; align-self: flex-end; text-align: right; }
+  .pr-level { filter: drop-shadow(0 4px 22px rgba(1, 5, 16, .8)); }
   .pr-level b { display: block; font: 800 clamp(72px, 10vw, 150px)/.85 var(--body); letter-spacing: -.05em; font-variant-numeric: tabular-nums; }
   .pr-level span { display: block; margin-top: 8px; font: 600 clamp(16px, 1.6vw, 22px) var(--body); color: rgba(255, 255, 255, .85); }
   .pr-level.pop { animation: pr-fade .8s cubic-bezier(.16, 1, .3, 1) both; }
@@ -728,12 +734,13 @@
     animation: pr-fade 1.1s cubic-bezier(.16, 1, .3, 1) both; animation-delay: var(--d, 0s);
   }
   .pr-tile b { display: block; font: 800 clamp(26px, 2.8vw, 44px)/1 var(--body); letter-spacing: -.03em; }
-  .pr-tile span { display: block; margin-top: 10px; font: 500 clamp(13px, 1.1vw, 16px)/1.4 var(--body); color: rgba(255, 255, 255, .75); }
+  .pr-tile > span { display: block; margin-top: 10px; font: 500 clamp(13px, 1.1vw, 16px)/1.4 var(--body); color: rgba(255, 255, 255, .75); }
   .pr-specs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(16px, 3vw, 48px); width: min(1100px, 100%); margin-top: clamp(28px, 6vh, 64px); }
   .pr-spec { animation: pr-fade 1.1s cubic-bezier(.16, 1, .3, 1) both; animation-delay: var(--d, 0s); }
-  .pr-spec b { display: block; font: 800 clamp(44px, 6.4vw, 104px)/.9 var(--body); letter-spacing: -.05em; font-variant-numeric: tabular-nums; }
-  .pr-spec span { display: block; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, .22); font: 600 clamp(13px, 1.15vw, 17px)/1.35 var(--body); color: rgba(255, 255, 255, .78); }
-  .pr-names { margin-top: auto; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 28px; font: 600 clamp(14px, 1.3vw, 19px) var(--body); color: rgba(255, 255, 255, .85); }
+  .pr-spec b small { font-size: .4em; letter-spacing: -.01em; margin-left: .12em; color: rgba(255, 255, 255, .85); }
+  .pr-spec b { white-space: nowrap; display: block; font: 800 clamp(44px, 6.4vw, 104px)/.9 var(--body); letter-spacing: -.05em; font-variant-numeric: tabular-nums; }
+  .pr-spec > span { display: block; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, .22); font: 600 clamp(13px, 1.15vw, 17px)/1.35 var(--body); color: rgba(255, 255, 255, .78); }
+  .pr-names { margin-top: 22px; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 28px; font: 600 clamp(14px, 1.3vw, 19px) var(--body); color: rgba(255, 255, 255, .85); }
   .pr-names span { animation: pr-fade 1s cubic-bezier(.16, 1, .3, 1) both; animation-delay: var(--d, 0s); }
   .pr-names i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--c); margin-right: 10px; box-shadow: 0 0 14px var(--c); }
 
@@ -826,6 +833,7 @@
     </div>
     <div class="actions">
       <button class="btn" id="btnMenu" type="button">Menu</button>
+      <button class="btn" id="btnPromoBoard" type="button">Prezentacja</button>
       <button class="btn ghost" id="btnTop" type="button">Widok z góry</button>
       <button class="btn ghost" id="btnReset" type="button">Reset widoku</button>
     </div>
@@ -869,6 +877,7 @@
           <button class="m-btn m-secondary m-wide" type="submit">Graj jako gość</button>
         </form>
       </div>
+      <button class="m-link m-promo" id="btnPromoLogin" type="button"></button>
     </div>
 
     <!-- Wyjście z gry -->
@@ -911,7 +920,6 @@
         <nav class="m-nav" id="homeNav" aria-label="Menu główne"></nav>
         <div class="m-links">
           <button class="m-link" id="btnPreview" type="button"></button>
-          <button class="m-link m-promo" id="btnPromo" type="button"></button>
         </div>
       </div>
 
@@ -2641,6 +2649,7 @@ const ICONS = {
   chev: '<path d="M6 9l6 6 6-6"/>',
   eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
   key: '<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M15 8l2 2"/>',
+  film: '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.2v5.6l4.8-2.8z" fill="currentColor"/>',
 };
 const ico = (n, cls = '') => `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]}</svg>`;
 const escHtml = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -2691,11 +2700,12 @@ $('btnStart').innerHTML = `${ico('play')}Rozpocznij grę`;
 document.querySelectorAll('.m-back').forEach(b => { b.innerHTML = `${ico('back')}Wróć`; });
 $('homeNav').innerHTML = [
   { go: 'play', label: 'Graj', icon: 'play', main: true },
+  { go: 'promo', label: 'Prezentacja gry', icon: 'film', promo: true },
   { go: 'ranking', label: 'Ranking', icon: 'trophy' },
   { go: 'rules', label: 'Zasady', icon: 'book' },
   { go: 'cards', label: 'Karty', icon: 'cards' },
   { go: 'settings', label: 'Ustawienia', icon: 'gear' },
-].map(n => `<button class="m-btn ${n.main ? 'm-primary m-big' : 'm-secondary'}" type="button" data-go="${n.go}">${ico(n.icon)}${n.label}</button>`).join('');
+].map(n => `<button class="m-btn ${n.main ? 'm-primary m-big' : n.promo ? 'm-promo-btn' : 'm-secondary'}" type="button" data-go="${n.go}">${ico(n.icon)}${n.label}</button>`).join('');
 
 // Profil w lewym górnym rogu
 function renderMe() {
@@ -2723,6 +2733,7 @@ function go(page) {
   closeDropdown();
   clearInterval(exampleTimer);
   if (page === 'cards') { closeMenu(); setView('cards'); return; }
+  if (page === 'promo') { openPromo(); return; }
   for (const [k, id] of Object.entries(PAGES)) $(id).hidden = k !== page;
   if (page === 'play') renderPlay();
   if (page === 'ranking') renderRanking();
@@ -5085,7 +5096,6 @@ const easeOut3 = t => 1 - Math.pow(1 - t, 3);
 const linear = t => t;
 const P = { on: false, idx: -1, time: 0, paused: false, muted: false, dip: null, objs: [], pawns: [], fired: new Set(), music: null, saved: null, building: null, sceneEl: null };
 const PROMO_COLOR = '#2F7FF0';
-window.__P = P; window.__goTo = i => goTo(i); // TEST-ONLY
 const BUILD_CELL = 2;          // Sala 05: na niej rosną budynki
 const Q = Math.PI / 4;         // kierunek kamery od strony pola START
 // Ujęcia kamery: funkcja u (0..1) zwraca [pozycja kamery, punkt, na który patrzy]
@@ -5097,7 +5107,7 @@ const orbit = (target, r0, r1, h0, h1, a0, a1, ease = easeSine) => u => {
 const line = (html, d) => `<span class="pr-line"><span style="--d:${d}s">${html}</span></span>`;
 const fadeP = (cls, html, d) => `<p class="${cls} pr-fade" style="--d:${d}s">${html}</p>`;
 const logoHtml = d => `<div class="pr-logo-wrap pr-fade" style="--d:${d}s"><img class="pr-logo" src="assets/logo-wsiz.png" alt=""></div>`;
-const BUILD_AT = cellTarget(BUILD_CELL).add(V3(0, 0.55, 0));
+const BUILD_AT = V3(1.6, 0.6, 5.0);   // punkt obok Sali 05: budynek wypada po prawej od napisów
 const PROMO_ICONS = {
   prev: '<path d="M15 5l-7 7 7 7"/>',
   next: '<path d="M9 5l7 7-7 7"/>',
@@ -5125,15 +5135,15 @@ const SCENES = [
   },
   {
     name: 'Plansza', dur: 7200, cut: 'soft', energy: 0,
-    cam: shot(V3(0.04, 31, 0.026), V3(0, 0, 0), V3(9.2, 7.4, 9.8), V3(-2.6, 0, 1.4)),
+    cam: shot(V3(0.04, 31, 0.026), V3(0, 0, 0), V3(5.2, 12.5, 16.5), V3(-7.2, 0, 3.2)),
     html: () => `<div class="pr-scene at-top-left">
       ${fadeP('pr-eyebrow', 'Plansza 3D', 0.7)}
-      <h2 class="pr-h">${line('Cała uczelnia.', 0.9)}${line('<span class="pr-grad">Na jednym stole.</span>', 1.15)}</h2>
+      <h2 class="pr-h md">${line('Cała uczelnia.', 0.9)}${line('<span class="pr-grad">Na jednym stole.</span>', 1.15)}</h2>
       ${fadeP('pr-sub', 'Sale wykładowe, pracownie, serwerownia i dziekanat. Obracasz planszę, jak chcesz.', 1.8)}</div>`,
   },
   {
     name: 'Pola', dur: 7000, energy: 1,
-    cam: shot(V3(6.2, 1.9, 9.8), V3(4.6, 0.15, 5.0), V3(-5.0, 1.9, 9.8), V3(-6.6, 0.15, 5.0), linear),
+    cam: shot(V3(6.2, 1.5, 9.6), V3(4.6, 1.25, 5.0), V3(-5.0, 1.5, 9.6), V3(-6.6, 1.25, 5.0), linear),
     html: () => `<div class="pr-scene at-top-left">
       ${fadeP('pr-eyebrow', 'Plansza', 0.3)}
       <div class="pr-fade" style="--d:.4s"><div class="pr-count"><span class="pr-grad" data-count="32" data-at="400">0</span><small>pól</small></div></div>
@@ -5170,7 +5180,7 @@ const SCENES = [
   },
   {
     name: 'Budowa', dur: 10500, energy: 2,
-    cam: orbit(BUILD_AT, 4.6, 3.9, 2.0, 1.5, Q + 0.55, Q - 0.05),
+    cam: orbit(BUILD_AT, 3.7, 3.2, 1.5, 1.2, 1.35, 0.8),
     events: [700, 2300, 3900, 5500, 7100].map((at, k) => [at, () => promoBuild(k + 1)]),
     html: () => `<div class="pr-scene at-top-left">
       <h2 class="pr-h">${line('Kupuj.', 0.3)}${line('Buduj.', 1.9)}${line('<span class="pr-grad">Rośnij.</span>', 5.0)}</h2>
@@ -5179,7 +5189,7 @@ const SCENES = [
   },
   {
     name: 'Pionki', dur: 7800, energy: 2,
-    cam: shot(V3(4.3, 1.25, 4.3), V3(0, 0.7, 0), V3(5.0, 2.0, 2.4), V3(0, 0.6, 0)),
+    cam: shot(V3(3.7, 1.0, 3.7), V3(0, 1.25, 0), V3(4.4, 1.3, 2.6), V3(0, 1.2, 0)),
     enter: () => {
       P.pawns = PLAYERS.map((pl, k) => {
         const obj = pl.make(PAWN_COLORS[k].hex);
@@ -5218,7 +5228,7 @@ const SCENES = [
   },
   {
     name: 'Dziekanat', dur: 6800, energy: 1,
-    cam: shot(V3(-1.0, 3.6, 9.8), V3(-4.6, 0.4, 4.8), V3(-2.2, 2.6, 8.6), V3(-5.0, 0.3, 5.0)),
+    cam: shot(V3(-8.9, 2.1, 8.4), V3(-4.4, 1.15, 4.4), V3(-7.9, 1.7, 9.0), V3(-4.6, 1.05, 4.6)),
     enter: () => {
       const obj = PLAYERS[0].make(PAWN_COLORS[0].hex);
       obj.scale.setScalar(1.2);
@@ -5259,21 +5269,21 @@ const SCENES = [
     html: () => `<div class="pr-scene at-center">
       ${fadeP('pr-eyebrow', 'WSiZ Tour w liczbach', 0.2)}
       <div class="pr-specs">${[
-        [1500, ' zł', 'na start dla każdego gracza'],
-        [60, ' s', 'na każdą odpowiedź'],
+        [1500, 'zł', 'na start dla każdego gracza'],
+        [60, 's', 'na każdą odpowiedź'],
         [5, '', 'poziomów budynków, od telefonu do serwerowni'],
         [7, '', 'semestrów pytań albo wszystkie naraz'],
-      ].map(([n, unit, s], k) => `<div class="pr-spec" style="--d:${0.4 + k * 0.15}s"><b><span class="pr-grad" data-count="${n}" data-at="${500 + k * 150}">0</span>${unit}</b><span>${s}</span></div>`).join('')}</div></div>`,
+      ].map(([n, unit, s], k) => `<div class="pr-spec" style="--d:${0.4 + k * 0.15}s"><b><span class="pr-grad" data-count="${n}" data-at="${500 + k * 150}">0</span>${unit ? `<small>${unit}</small>` : ''}</b><span>${s}</span></div>`).join('')}</div></div>`,
   },
   {
     name: 'Hasło', dur: 6800, energy: 3,
-    cam: shot(V3(7.4, 1.6, 7.4), V3(5.0, 0.3, 5.0), V3(17, 11, 17), V3(0, 0, 0)),
+    cam: shot(V3(7.4, 1.6, 7.4), V3(5.0, 0.3, 5.0), V3(16, 9.5, 16), V3(0, 3.6, 0)),
     events: [[300, () => P.music?.impact()]],
     html: () => `<div class="pr-scene at-top">
       <h2 class="pr-h xl">${line('Wiedza', 0.3)}${line('<span class="pr-gold">się opłaca.</span>', 0.6)}</h2></div>`,
   },
   {
-    name: 'Zagraj', dur: 7000, energy: 1, hold: true,
+    name: 'Zagraj', dur: 7000, energy: 1, hold: true, blur: true,
     cam: () => { const a = Q + 0.4 + P.time / 22000; return [V3(19 * Math.cos(a), 9.5, 19 * Math.sin(a)), V3(0, 0, 0)]; },
     html: () => `<div class="pr-scene at-center">
       ${logoHtml(0.2)}
@@ -5285,7 +5295,6 @@ const SCENES = [
       </div></div>`,
   },
 ];
-window.__S = SCENES; window.__V3 = V3; window.__shot = shot; window.__orbit = orbit; // TEST-ONLY
 
 // ---------------------------------------------------------------------------
 // Obiekty w scenach: budynki, pionki
@@ -5626,8 +5635,9 @@ document.addEventListener('keydown', e => {
   else return;
   idlePing();
 });
-$('btnPromo').innerHTML = `${ico('play')}Prezentacja gry`;
-$('btnPromo').addEventListener('click', () => openPromo());
+$('btnPromoLogin').innerHTML = `${ico('film')}Zobacz prezentację gry`;
+$('btnPromoLogin').addEventListener('click', () => openPromo());
+$('btnPromoBoard').addEventListener('click', () => openPromo());
 
 // Klikanie pól
 const ray = new THREE.Raycaster();

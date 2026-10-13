@@ -188,6 +188,16 @@ Do ustalenia: co z Kuchnią.
 | 8 | granatowy | Sala 43, Sala 44 |
 - Do ustalenia: czy pola specjalne (np. Pracownia ceramiki) też dają wygraną, czy tylko monopole.
 
+## Prezentacja gry (zwiastun, 13.10.2026)
+
+- Przyciski: „Prezentacja gry” w menu głównym (zaraz pod „Graj”), „Zobacz prezentację gry” pod okienkiem logowania (bez logowania) i „Prezentacja” na planszy, obok „Menu”. Link z dopiskiem `?prezentacja` (np. `http://localhost:8000/?prezentacja`) otwiera zwiastun od razu, z ekranem „Odtwórz”. Przydaje się do pokazania gry opiekunowi albo na prezentacji pracy.
+- Styl reklam Apple i Nike: ciemne tło, kinowe pasy u góry i u dołu, wielkie napisy wjeżdżające od dołu, przejścia przez czerń, szklane karty z rozmyciem.
+- Kamera jedzie po prawdziwej planszy 3D z gry, więc każda zmiana planszy, pionków i budynków od razu jest w zwiastunie.
+- 13 scen, ok. 1,5 minuty: logo i nazwa gry, plansza z lotu ptaka, przejazd wzdłuż pól („32 pola”), rzut kostkami z dubletem, przykładowe pytanie z minutnikiem (7 × 8, nigdy z prawdziwej bazy), budowanie od telefonu do serwerowni, 4 pionki, wachlarz kart, dziekanat, tryby gry, liczby (1500 zł, 60 s, 5 poziomów, 7 semestrów), „Wiedza się opłaca” i końcowa plansza z przyciskami „Zagraj teraz” i „Obejrzyj jeszcze raz”.
+- Muzyka jest generowana w kodzie (akordy, bas, arpeggio, perkusja, „whoosh” przy przejściach), bez plików i bez cudzych nagrań. Głośność bierze z ustawienia „Muzyka”, w zwiastunie jest też przycisk wyciszenia.
+- Sterowanie: pauza, poprzednia i następna scena, pasek scen (klik = skok do sceny), wyciszenie, zamknięcie. Klawisze: strzałki, spacja, Esc. Przyciski chowają się, gdy nie ruszasz myszką.
+- Kod jest w `index.html`: style z prefiksem `.pr-`, znaczniki w `<section class="promo">`, logika w bloku „Prezentacja” (lista `SCENES`: czas sceny, ujęcie kamery, napisy i zdarzenia).
+
 ## Wygląd planszy
 
 - Plansza jest płaska i ma się dać wydrukować jako gra planszowa.
