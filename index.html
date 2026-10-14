@@ -1183,7 +1183,7 @@
   <section class="cards-view" id="cardsView" hidden aria-label="Karty">
     <div class="cards-head">
       <h2>Tyły kart</h2>
-      <p>Ukośne taśmy z małych logo uczelni, od lewego dolnego do prawego górnego rogu. Ułatwienia: zielone logo na białym tle. Utrudnienia: białe logo na czerwonym tle, tak jak na polu Szansa.</p>
+      <p>Ukośne taśmy z małych logo uczelni, od lewego dolnego do prawego górnego rogu. Ułatwienia: granatowe logo na białym tle. Utrudnienia: białe logo na granatowym tle, w kolorach uczelni.</p>
     </div>
     <div class="cards-grid backs-grid" id="backsGrid"></div>
 
@@ -1285,7 +1285,7 @@ const GOLD = '#E0B04A';
 
 // Wygląd planszy: jasne pola, trawa na środku, plansza na wyspie kampusu
 const LOOK = {
-  paper: '#FFFFFF', tileBody: '#E6EAF1', tileH: 0.12, baseTop: '#F4F6FA', baseSide: '#CDD4E0', baseH: 0.45, margin: 0.5,
+  paper: '#FFFFFF', tileBody: '#E6EAF1', tileH: 0.025, baseTop: '#F4F6FA', baseSide: '#CDD4E0', baseH: 0.45, margin: 0.5,
   tone: 'neutral', exposure: 0.85, env: 0.7,
   hemi: ['#FFFFFF', '#A8C8E8', 0.55], sun: ['#FFF4E2', 2.4, [9, 18, 6]],
   bg: ['#8FD3F4', '#E6F6FF'], vignette: 0.08,
@@ -1869,11 +1869,11 @@ function logoRibbons(g, w, h, { band, bg, tape, edge, ink, inkGain, logoAlpha = 
   g.globalAlpha = 1;
 }
 
-// Tył kart w kolorach pola „Szansa”: ułatwienia białe z zielonym logo, utrudnienia czerwone z białym logo.
+// Tył kart w kolorach uczelni: ułatwienia białe z granatowym logo, utrudnienia granatowe z białym logo.
 // Jak na kartach do gry: gładki margines, w środku ukośne taśmy z logo, podwójna ramka.
 const CARD_BACKS = {
-  ulatwienia: { bg: '#FFFFFF', tape: '#E6F4F0', ink: '#1F8A76', inkGain: 105, frame: '#1F8A76' },   // pełniejsze, wyraziste logo
-  utrudnienia: { bg: '#D6534F', tape: '#C4443F', ink: '#FFFFFF', frame: '#FFFFFF' },
+  ulatwienia: { bg: '#FFFFFF', tape: '#EDF1F8', ink: UNI_NAVY, inkGain: 105, frame: UNI_NAVY },   // pełniejsze, wyraziste logo
+  utrudnienia: { bg: UNI_NAVY, tape: '#0B348F', ink: '#FFFFFF', frame: '#FFFFFF' },
 };
 function drawCardBack(g, w, h, kind) {
   const b = CARD_BACKS[kind];
@@ -2339,7 +2339,7 @@ $('vignette').style.setProperty('--v', LOOK.vignette);
 // Wzdłuż jednego boku planszy jest plaża i turkusowa, przezroczysta woda (klimat wakacji),
 // z drugiej strony uniwersytet: gmach z kolumnami i wieżą zegarową, wydziały, dziedziniec,
 // boisko i parking. Boki bloku pokazują warstwy ziemi, a woda jest widoczna w przekroju.
-// Ciągle coś się dzieje: fale, żaglówki, skuter, pływacy, mewy, balon, studenci, ryby.
+// Ciągle coś się dzieje: fale, żaglówki, motorówka, mewy, balon, ryby.
 // Wszystko z prostych brył i tekstur rysowanych w kodzie, bez gotowych modeli.
 // ---------------------------------------------------------------------------
 const PLINTH_HALF = S / 2 + LOOK.margin + 3.6;            // pas placu wokół planszy: tu leżą pieniądze i karty graczy
@@ -2356,7 +2356,7 @@ const BOTTOM_Y = GROUND_Y - 8.4;
 const WZ0 = SHORE_Z + 0.6, WD = BZF - WZ0;                // powierzchnia wody: od brzegu do przodu bloku
 // Fale Gerstnera: grzbiety ostrzejsze, doliny łagodniejsze, woda krąży po małych okręgach.
 // [kierunek x, kierunek z, długość fali, stromość]. Ta sama funkcja liczy powierzchnię w shaderze
-// i pozycję łodzi, skutera i boi, więc wszystko unosi się i przechyla razem z falą.
+// i pozycję łodzi, motorówki i boi, więc wszystko unosi się i przechyla razem z falą.
 const WAVES = [[1, 0.35, 9, 0.16], [0.6, 1, 5.5, 0.12], [-0.4, 1, 3.4, 0.09], [1, -0.6, 2.2, 0.06]]
   .map(([x, z, L, st]) => { const l = Math.hypot(x, z); return [x / l, z / l, L, st]; });
 const WAVE_SPEED = 0.55;
@@ -2767,36 +2767,205 @@ function car(color) {
   }
   return g;
 }
-// Łodzie
-function sailboat(color) {
+// Łodzie: kadłub z przekrojów (ostry dziób, płaska rufa, burty zaokrąglone ku stępce), pokład z deskami,
+// maszt z bomem i wybrzuszone żagle. Dziób na +z, linia wody na y = 0. Na pokładach nie ma ludzi.
+function hullTexture(stripe) {
+  const [c, g] = makeCanvas(64, 512);   // v: 0 stępka (dół płótna), 1 krawędź pokładu (góra płótna)
+  g.fillStyle = '#F7F9FC'; g.fillRect(0, 0, 64, 512);
+  const band = (v0, v1, col) => { g.fillStyle = col; g.fillRect(0, (1 - v1) * 512, 64, (v1 - v0) * 512 + 1); };
+  band(0, 0.54, '#A9433D');        // farba pod linią wody
+  band(0.54, 0.575, '#2B2F36');    // cienki pas przy linii wody
+  band(0.8, 0.875, stripe);        // pas burtowy w kolorze łodzi
+  band(0.965, 1, '#C3CAD4');       // listwa odbojowa
+  return tex(c);
+}
+function plankTexture(base, line) {
+  const [c, g] = makeCanvas(256, 256), r = texRng(17);
+  g.fillStyle = base; g.fillRect(0, 0, 256, 256);
+  for (let k = 0; k < 12; k++) {
+    g.fillStyle = `rgba(${r() < 0.5 ? '255,255,255' : '90,60,30'},${0.04 + r() * 0.06})`;
+    g.fillRect(0, k * 21.3, 256, 21.3);
+    g.fillStyle = line; g.fillRect(0, k * 21.3, 256, 1.6);
+  }
+  return tex(c);
+}
+function sailTexture(col) {
+  const [c, g] = makeCanvas(256, 256);
+  g.fillStyle = col; g.fillRect(0, 0, 256, 256);
+  g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 2;
+  for (let k = 1; k < 8; k++) { g.beginPath(); g.moveTo(0, k * 32); g.lineTo(256, k * 32 - 18); g.stroke(); }   // szwy paneli
+  g.strokeStyle = 'rgba(0,0,0,.12)';
+  for (let k = 1; k < 8; k++) { g.beginPath(); g.moveTo(0, k * 32 + 2); g.lineTo(256, k * 32 - 16); g.stroke(); }
+  g.fillStyle = 'rgba(0,0,0,.14)'; g.fillRect(246, 0, 10, 256); g.fillRect(0, 0, 8, 256);   // taśmy na krawędziach
+  return tex(c);
+}
+const BOAT_TEX = new Map();
+const boatTex = (key, make) => { if (!BOAT_TEX.has(key)) BOAT_TEX.set(key, make()); return BOAT_TEX.get(key); };
+function hullGeometry(L, B, H, draft, rows = 30, cols = 12) {
+  const sec = u => {
+    const w = (B / 2) * (u < 0.42 ? 0.8 + 0.2 * Math.sin((u / 0.42) * Math.PI / 2) : Math.pow(Math.max(0, Math.cos(((u - 0.42) / 0.58) * Math.PI / 2)), 0.8));   // max(0): przy samym dziobie cos bywa minimalnie ujemny
+    const top = H * (1 + 0.22 * u * u);            // pokład wznosi się ku dziobowi
+    const keel = -draft * (1 - Math.pow(u, 2.5));  // stępka wychodzi ku górze przy dziobie
+    return [w, top, keel];
+  };
+  const pos = [], uv = [], idx = [], n = 2 * cols + 1;
+  for (let i = 0; i <= rows; i++) {
+    const u = i / rows, z = -L / 2 + u * L, [w, top, keel] = sec(u);
+    for (let j = 0; j < n; j++) {
+      const v = (j - cols) / cols, th = Math.abs(v) * Math.PI / 2;
+      pos.push(Math.sign(v) * w * Math.pow(Math.sin(th), 0.55), keel + (top - keel) * (1 - Math.cos(th)), z);
+      uv.push(u, Math.abs(v));
+    }
+  }
+  for (let i = 0; i < rows; i++) for (let j = 0; j < n - 1; j++) {
+    const a = i * n + j, b = a + 1, c = a + n, d = c + 1;
+    idx.push(a, b, c, b, d, c);
+  }
+  const hull = new THREE.BufferGeometry();
+  hull.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  hull.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  hull.setIndex(idx); hull.computeVertexNormals();
+  // pokład: lekko wypukły, trochę cofnięty od burty (widać listwę)
+  const dp = [], duv = [], di = [];
+  for (let i = 0; i <= rows; i++) {
+    const u = i / rows, z = -L / 2 + u * L, [w, top] = sec(u), ww = w * 0.94, y = top - 0.012;
+    dp.push(-ww, y, z, 0, y + 0.035 * (w / (B / 2)), z, ww, y, z);
+    duv.push(u, 0, u, 0.5, u, 1);
+  }
+  for (let i = 0; i < rows; i++) {
+    const p = i * 3, q = p + 3;
+    di.push(p, q, p + 1, p + 1, q, q + 1, p + 1, q + 1, p + 2, p + 2, q + 1, q + 2);
+  }
+  const deck = new THREE.BufferGeometry();
+  deck.setAttribute('position', new THREE.Float32BufferAttribute(dp, 3));
+  deck.setAttribute('uv', new THREE.Float32BufferAttribute(duv, 2));
+  deck.setIndex(di); deck.computeVertexNormals();
+  // pawęż (płaska rufa)
+  const [w0, top0, keel0] = sec(0), sh = new THREE.Shape();
+  for (let j = 0; j < n; j++) {
+    const v = (j - cols) / cols, th = Math.abs(v) * Math.PI / 2;
+    const x = Math.sign(v) * w0 * Math.pow(Math.sin(th), 0.55), y = keel0 + (top0 - keel0) * (1 - Math.cos(th));
+    if (j === 0) sh.moveTo(x, y); else sh.lineTo(x, y);
+  }
+  sh.closePath();
+  const transom = new THREE.ShapeGeometry(sh);
+  transom.rotateY(Math.PI); transom.translate(0, 0, -L / 2);
+  return { hull, deck, transom, sec };
+}
+// Żagiel: trójkąt rozpięty między halsem, głowicą i rogiem szotowym, wybrzuszony od wiatru
+function sailGeometry(tack, head, clew, belly, roach = 0.12, rows = 12, cols = 8) {
+  const pos = [], uv = [], idx = [];
+  const a = new THREE.Vector3(), b = new THREE.Vector3(), p = new THREE.Vector3();
+  for (let i = 0; i <= rows; i++) {
+    const s = i / rows;
+    a.copy(tack).lerp(head, s);
+    b.copy(clew).lerp(head, s);
+    b.z -= roach * Math.sin(Math.PI * s);   // lekko wypukła tylna krawędź
+    for (let j = 0; j <= cols; j++) {
+      const t = j / cols;
+      p.copy(a).lerp(b, t);
+      p.x += belly * Math.sin(Math.PI * t) * (1 - 0.65 * s);
+      pos.push(p.x, p.y, p.z); uv.push(t, s);
+    }
+  }
+  for (let i = 0; i < rows; i++) for (let j = 0; j < cols; j++) {
+    const q = i * (cols + 1) + j;
+    idx.push(q, q + 1, q + cols + 1, q + 1, q + cols + 2, q + cols + 1);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  geo.setIndex(idx); geo.computeVertexNormals();
+  return geo;
+}
+const tube = (pts, r, material) => new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 24, r, 6), material);
+function railing(g, sec, L, from, to, height, material) {
+  for (const side of [-1, 1]) {
+    const pts = [];
+    for (let k = 0; k <= 8; k++) {
+      const u = from + (to - from) * (k / 8), [w, top] = sec(u);
+      pts.push(new THREE.Vector3(side * w * 0.9, top + height, -L / 2 + u * L));
+    }
+    g.add(tube(pts, 0.012, material));
+    for (let k = 0; k <= 4; k++) {
+      const u = from + (to - from) * (k / 4), [w, top] = sec(u);
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, height, 6), material);
+      post.position.set(side * w * 0.9, top + height / 2, -L / 2 + u * L);
+      g.add(post);
+    }
+  }
+}
+function sailboat(sail, stripe = sail === '#FFFFFF' ? '#2F7FF0' : sail) {
   const g = new THREE.Group();
-  const hull = mesh(new THREE.BoxGeometry(1.0, 0.45, 2.8), flat('#FFFFFF'), false, false);
-  hull.position.y = 0.2;
-  const keel = mesh(new THREE.ConeGeometry(0.5, 1.0, 4), flat('#FFFFFF'), false, false);
-  keel.rotation.x = Math.PI / 2; keel.position.set(0, 0.2, 1.85); keel.scale.set(1, 1, 0.45);
-  const stripe = mesh(new THREE.BoxGeometry(1.02, 0.1, 2.82), flat('#E5484D'), false, false);
-  stripe.position.y = 0.3;
-  const mast = mesh(new THREE.CylinderGeometry(0.04, 0.05, 3.4, 6), flat('#DDE2EA'), false, false);
-  mast.position.set(0, 2.1, 0.2);
-  const sailShape = new THREE.Shape(); sailShape.moveTo(0, 0); sailShape.lineTo(0, 3); sailShape.lineTo(-1.5, 0); sailShape.closePath();
-  const sail = new THREE.Mesh(new THREE.ShapeGeometry(sailShape), new THREE.MeshStandardMaterial({ color, side: THREE.DoubleSide, roughness: 0.7 }));
-  sail.rotation.y = Math.PI / 2; sail.position.set(0, 0.6, 0.25);
-  g.add(hull, keel, stripe, mast, sail);
+  const L = 3.0, B = 1.05, H = 0.42, draft = 0.3;
+  const { hull, deck, transom, sec } = hullGeometry(L, B, H, draft);
+  const white = mat('#F7F9FC', { roughness: 0.35 });
+  g.add(mesh(hull, new THREE.MeshStandardMaterial({ map: boatTex('hull' + stripe, () => hullTexture(stripe)), roughness: 0.32 }), false, false));
+  g.add(mesh(deck, new THREE.MeshStandardMaterial({ map: boatTex('teak', () => plankTexture('#C99A68', 'rgba(70,45,25,.55)')), roughness: 0.75 }), false, false));
+  g.add(mesh(transom, white, false, false));
+  // kabina z oknami i kokpit
+  const cabin = mesh(new RoundedBoxGeometry(0.6, 0.2, 0.95, 3, 0.07), white, false, false);
+  cabin.position.set(0, sec(0.5)[1] + 0.08, 0.05);
+  const glass = mesh(new RoundedBoxGeometry(0.62, 0.065, 0.62, 2, 0.03), mat('#2E4466', { roughness: 0.15, metalness: 0.3 }), false, false);
+  glass.position.set(0, cabin.position.y + 0.02, 0.05);
+  g.add(cabin, glass);
+  // kil i ster pod wodą
+  const fin = mesh(new THREE.BoxGeometry(0.05, 0.55, 0.62), mat('#2B2F36'), false, false);
+  fin.position.set(0, -draft - 0.24, 0.1);
+  const rudder = mesh(new THREE.BoxGeometry(0.04, 0.42, 0.24), mat('#2B2F36'), false, false);
+  rudder.position.set(0, -0.2, -L / 2 + 0.22);
+  g.add(fin, rudder);
+  // maszt, bom, olinowanie
+  const alu = mat('#D5DBE4', { roughness: 0.3, metalness: 0.6 });
+  const mz = 0.42, deckY = sec(0.5 + mz / L)[1];
+  const mast = mesh(new THREE.CylinderGeometry(0.03, 0.042, 3.7, 10), alu, false, false);
+  mast.position.set(0, deckY + 1.85, mz);
+  const boomY = deckY + 0.62;
+  const boom = mesh(new THREE.CylinderGeometry(0.028, 0.028, 1.55, 8), alu, false, false);
+  boom.rotation.x = Math.PI / 2; boom.position.set(0, boomY, mz - 0.77);
+  g.add(mast, boom);
+  const wire = mat('#9AA3B0', { roughness: 0.4, metalness: 0.5 });
+  const topY = deckY + 3.65, bowZ = L / 2 - 0.05, bowY = sec(0.985)[1];
+  g.add(tube([new THREE.Vector3(0, bowY, bowZ), new THREE.Vector3(0, topY - 0.3, mz + 0.02)], 0.008, wire));
+  g.add(tube([new THREE.Vector3(0, sec(0.02)[1], -L / 2 + 0.05), new THREE.Vector3(0, topY, mz - 0.02)], 0.008, wire));
+  railing(g, sec, L, 0.08, 0.9, 0.24, alu);
+  // grot (kolor łodzi) i fok (biały), lekko wybrzuszone
+  const main = sailGeometry(new THREE.Vector3(0, boomY + 0.03, mz - 0.05), new THREE.Vector3(0, topY - 0.05, mz - 0.04), new THREE.Vector3(0, boomY + 0.03, mz - 1.5), 0.2);
+  const jib = sailGeometry(new THREE.Vector3(0, bowY + 0.06, bowZ - 0.08), new THREE.Vector3(0, topY - 0.45, mz + 0.06), new THREE.Vector3(0, deckY + 0.45, mz - 0.25), 0.16, 0.05);
+  g.add(mesh(main, new THREE.MeshStandardMaterial({ map: boatTex('sail' + sail, () => sailTexture(sail)), side: THREE.DoubleSide, roughness: 0.75 }), false, false));
+  g.add(mesh(jib, new THREE.MeshStandardMaterial({ map: boatTex('sail#FFFFFF', () => sailTexture('#FFFFFF')), side: THREE.DoubleSide, roughness: 0.75 }), false, false));
   return g;
 }
-function jetski() {
+// Motorówka (zamiast skutera z ludzikiem): ostry kadłub, konsola z szybą, kanapy i silnik za rufą
+function motorboat(stripe = '#F2B72E') {
   const g = new THREE.Group();
-  const hull = mesh(new THREE.BoxGeometry(0.6, 0.3, 1.5), flat('#F2B72E'), false, false);
-  hull.position.y = 0.12;
-  const nose = mesh(new THREE.ConeGeometry(0.3, 0.6, 4), flat('#F2B72E'), false, false);
-  nose.rotation.x = Math.PI / 2; nose.position.set(0, 0.12, 1.0); nose.scale.set(1, 1, 0.6);
-  const seat = mesh(new THREE.BoxGeometry(0.4, 0.15, 0.6), flat(IRON), false, false);
-  seat.position.set(0, 0.35, -0.2);
-  const rider = mesh(new THREE.CylinderGeometry(0.13, 0.15, 0.45, 8), flat('#E5484D'), false, false);
-  rider.position.set(0, 0.62, -0.15);
-  const head = mesh(new THREE.SphereGeometry(0.12, 10, 8), flat('#F1C7A5'), false, false);
-  head.position.set(0, 0.95, -0.15);
-  g.add(hull, nose, seat, rider, head);
+  const L = 2.7, B = 1.15, H = 0.36, draft = 0.2;
+  const { hull, deck, transom, sec } = hullGeometry(L, B, H, draft);
+  const white = mat('#F7F9FC', { roughness: 0.35 });
+  g.add(mesh(hull, new THREE.MeshStandardMaterial({ map: boatTex('hull' + stripe, () => hullTexture(stripe)), roughness: 0.3 }), false, false));
+  g.add(mesh(deck, new THREE.MeshStandardMaterial({ map: boatTex('deckW', () => plankTexture('#EEF1F5', 'rgba(120,130,145,.35)')), roughness: 0.6 }), false, false));
+  g.add(mesh(transom, white, false, false));
+  const y0 = sec(0.5)[1];
+  const consoleM = mesh(new RoundedBoxGeometry(0.42, 0.34, 0.36, 3, 0.06), white, false, false);
+  consoleM.position.set(0, y0 + 0.17, 0.12);
+  const shield = mesh(new THREE.BoxGeometry(0.5, 0.26, 0.02), new THREE.MeshStandardMaterial({ color: '#9CC4EA', roughness: 0.05, metalness: 0.2, transparent: true, opacity: 0.55 }), false, false);
+  shield.position.set(0, y0 + 0.44, 0.31); shield.rotation.x = -0.45;
+  const seatM = mat('#E9DCC6', { roughness: 0.8 });
+  const bench = mesh(new RoundedBoxGeometry(0.85, 0.16, 0.34, 3, 0.06), seatM, false, false);
+  bench.position.set(0, y0 + 0.08, -0.72);
+  const back = mesh(new RoundedBoxGeometry(0.85, 0.3, 0.1, 3, 0.04), seatM, false, false);
+  back.position.set(0, y0 + 0.22, -0.92);
+  const chair = mesh(new RoundedBoxGeometry(0.3, 0.14, 0.3, 3, 0.05), seatM, false, false);
+  chair.position.set(0, y0 + 0.07, -0.18);
+  g.add(consoleM, shield, bench, back, chair);
+  // silnik za burtą
+  const dark = mat('#2B2F36', { roughness: 0.45, metalness: 0.2 });
+  const cowl = mesh(new RoundedBoxGeometry(0.26, 0.32, 0.3, 3, 0.07), dark, false, false);
+  cowl.position.set(0, y0 + 0.08, -L / 2 - 0.12);
+  const leg = mesh(new THREE.BoxGeometry(0.08, 0.5, 0.12), dark, false, false);
+  leg.position.set(0, y0 - 0.3, -L / 2 - 0.14);
+  g.add(cowl, leg);
+  railing(g, sec, L, 0.62, 0.97, 0.18, mat('#D5DBE4', { roughness: 0.3, metalness: 0.6 }));
   return g;
 }
 // Ślad za łodzią: pasek piany, który zanika
@@ -3287,7 +3456,7 @@ varying vec2 vLoc; varying float vH;
     worldAnim.push(t => { beam.rotation.y = t * 0.8; });
   }
 
-  // Łódki i skuter: płyną wzdłuż plaży i zawracają, za nimi ślad piany; kołyszą się na fali
+  // Żaglówki i motorówka: płyną wzdłuż plaży i zawracają, za nimi ślad piany; kołyszą się na fali
   const along = (obj, wake, z, speed, x0, x1, ph, tilt = 0.8) => {
     world.add(obj, wake);
     worldAnim.push(t => {
@@ -3303,7 +3472,7 @@ varying vec2 vLoc; varying float vH;
   along(sailboat('#E5484D'), wakeMesh(6, 1.3), SHORE_Z + 11, 0.035, -30, 22, 0);
   along(sailboat('#2F7FF0'), wakeMesh(6, 1.3), SHORE_Z + 16, 0.028, -26, 26, 0.9);
   along(sailboat('#F2B72E'), wakeMesh(6, 1.3), SHORE_Z + 19, 0.04, -30, 24, 1.5);
-  along(jetski(), wakeMesh(9, 1.0), SHORE_Z + 7.5, 0.09, -28, 26, 0.3, 1.2);
+  along(motorboat(), wakeMesh(9, 1.0), SHORE_Z + 7.5, 0.09, -28, 26, 0.3, 1.2);
   // Boje wyznaczające kąpielisko: kilka sztuk, kołyszą się na fali
   const buoy = col => {
     const g = new THREE.Group();
@@ -3319,40 +3488,80 @@ varying vec2 vLoc; varying float vH;
     worldAnim.push(t => floatOn(b, x, SHORE_Z + 5.5, 0, t, -0.05, 1.5));
   });
 
-  // Mewy krążą nad wodą
-  const gullBody = flat('#FFFFFF'), gullWing = new THREE.MeshStandardMaterial({ color: '#F4F6FA', side: THREE.DoubleSide, flatShading: true });
+  // Mewy krążą nad wodą: machają skrzydłami (ramię i dłoń osobno), a co jakiś czas szybują
+  const gullWhite = mat('#FFFFFF', { roughness: 0.55 }), gullGrey = mat('#B7C1CD', { roughness: 0.6, side: THREE.DoubleSide });
+  const gullTip = mat('#2B2F36', { roughness: 0.6, side: THREE.DoubleSide }), gullBeak = mat('#F2B72E', { roughness: 0.45 }), gullEye = mat('#1A1C20', { roughness: 0.3 });
+  const shapeGeo = pts => { const sh = new THREE.Shape(); pts.forEach(([x, z], k) => (k ? sh.lineTo(x, z) : sh.moveTo(x, z))); sh.closePath(); const g = new THREE.ShapeGeometry(sh); g.rotateX(Math.PI / 2); return g; };
+  const gullBodyGeo = new THREE.LatheGeometry([[0, -0.36], [0.035, -0.3], [0.075, -0.17], [0.11, -0.02], [0.118, 0.08], [0.1, 0.18], [0.05, 0.26], [0, 0.28]].map(([r, y]) => new THREE.Vector2(r, y)), 16);
+  gullBodyGeo.rotateX(Math.PI / 2);
+  const innerGeo = shapeGeo([[0, 0.12], [0.5, 0.1], [0.5, -0.11], [0, -0.16]]);
+  const outerGeo = shapeGeo([[0, 0.1], [0.24, 0.06], [0.24, -0.09], [0, -0.11]]);
+  const tipGeo = shapeGeo([[0.24, 0.06], [0.44, 0.0], [0.38, -0.05], [0.24, -0.09]]);
+  const tailGeo = shapeGeo([[0, 0], [0.11, -0.16], [0, -0.13], [-0.11, -0.16]]);
+  const wing = () => {
+    const shoulder = new THREE.Group(), elbow = new THREE.Group();
+    shoulder.add(new THREE.Mesh(innerGeo, gullGrey));
+    elbow.position.x = 0.5;
+    elbow.add(new THREE.Mesh(outerGeo, gullGrey), new THREE.Mesh(tipGeo, gullTip));
+    shoulder.add(elbow);
+    return [shoulder, elbow];
+  };
   for (let k = 0; k < 6; k++) {
     const gull = new THREE.Group();
-    const body = mesh(new THREE.SphereGeometry(0.16, 8, 6), gullBody, false, false); body.scale.set(1, 0.8, 2);
-    const wingShape = new THREE.Shape(); wingShape.moveTo(0, 0); wingShape.lineTo(0.75, 0.12); wingShape.lineTo(0.7, -0.15); wingShape.lineTo(0, -0.2); wingShape.closePath();
-    const wl = new THREE.Mesh(new THREE.ShapeGeometry(wingShape), gullWing); wl.rotation.x = -Math.PI / 2;
-    const wR = new THREE.Mesh(new THREE.ShapeGeometry(wingShape), gullWing); wR.rotation.x = -Math.PI / 2; wR.scale.x = -1;
-    const pl = new THREE.Group(); pl.add(wl); const pr = new THREE.Group(); pr.add(wR);
-    gull.add(body, pl, pr);
+    const body = mesh(gullBodyGeo, gullWhite, false, false);
+    const head = mesh(new THREE.SphereGeometry(0.085, 14, 10), gullWhite, false, false); head.position.set(0, 0.05, 0.27);
+    const beak = mesh(new THREE.ConeGeometry(0.024, 0.12, 8), gullBeak, false, false); beak.rotation.x = Math.PI / 2; beak.position.set(0, 0.035, 0.38);
+    const eyes = [-1, 1].map(sd => { const e = mesh(new THREE.SphereGeometry(0.013, 8, 6), gullEye, false, false); e.position.set(sd * 0.06, 0.08, 0.31); return e; });
+    const tail = new THREE.Mesh(tailGeo, gullGrey); tail.position.set(0, 0.01, -0.3);
+    const [pl, el] = wing(), [pr, er] = wing();
+    pl.position.set(0.07, 0.04, 0.02); pr.position.set(-0.07, 0.04, 0.02); pr.scale.x = -1;
+    gull.add(body, head, beak, ...eyes, tail, pl, pr);
+    gull.scale.setScalar(1.15);
     world.add(gull);
     const cx = wrr(-14, 14), cz = SHORE_Z + 12, r = wrr(6, 13), h = wrr(5, 8), sp = wrr(0.12, 0.2) * (k % 2 ? 1 : -1), a0 = wr() * 7, ph = wr() * 7;
     worldAnim.push(t => {
       const a = a0 + t * sp;
       gull.position.set(cx + r * Math.cos(a), GROUND_Y + h + 0.6 * Math.sin(t * 0.7 + ph), cz + r * 0.5 * Math.sin(a));
       gull.rotation.y = Math.atan2(-Math.sin(a) * Math.sign(sp), Math.cos(a) * 0.5 * Math.sign(sp));
-      gull.rotation.z = -0.35 * Math.sign(sp);
-      const f = 0.55 * Math.sin(t * 7 + ph);
-      pl.rotation.z = f; pr.rotation.z = -f;
+      gull.rotation.z = -0.3 * Math.sign(sp);
+      const flap = Math.max(0, Math.sin(t * 0.45 + ph)) ** 0.6;    // 0 = szybuje, 1 = macha
+      const f = (0.15 + 0.5 * flap) * Math.sin(t * 6.5 + ph);
+      pl.rotation.z = 0.12 + f; pr.rotation.z = -(0.12 + f);
+      el.rotation.z = er.rotation.z = 0.1 + 0.7 * f;
     });
   }
   // Kolorowy balon nad kampusem
   {
-    const [bc, bg] = makeCanvas(512, 256);
-    const cols = ['#E5484D', '#FFFFFF', GOLD, '#FFFFFF'];
-    for (let k = 0; k < 16; k++) { bg.fillStyle = cols[k % 4]; bg.fillRect(k * 32, 0, 32, 256); }
+    const [bc, bg] = makeCanvas(1024, 512);
+    const cols = ['#E5484D', '#FFFFFF', GOLD, '#FFFFFF', '#2F7FF0', '#FFFFFF'];
+    for (let k = 0; k < 24; k++) { bg.fillStyle = cols[k % cols.length]; bg.fillRect(k * 1024 / 24, 0, 1024 / 24 + 1, 512); }
+    bg.fillStyle = 'rgba(255,255,255,.9)'; bg.fillRect(0, 512 * 0.38, 1024, 18);   // jasny pas na wysokości „równika”
+    bg.fillStyle = 'rgba(0,0,0,.18)';
+    for (let k = 0; k < 24; k++) bg.fillRect(k * 1024 / 24, 0, 2, 512);           // szwy między pasami
+    for (let k = 1; k < 8; k++) bg.fillRect(0, k * 64, 1024, 1.5);
     const balloon = new THREE.Group();
-    const env = mesh(new THREE.SphereGeometry(2.0, 24, 18), mat('#FFFFFF', { map: tex(bc), roughness: 0.6 }), false, false);
-    env.scale.set(1, 1.15, 1);
-    const neck = mesh(new THREE.ConeGeometry(0.9, 1.3, 16, 1, true), mat('#E5484D', { side: THREE.DoubleSide }), false, false);
-    neck.position.y = -2.4; neck.rotation.x = Math.PI;
-    const basket = mesh(new THREE.BoxGeometry(0.75, 0.55, 0.75), flat('#A9764B'), false, false);
-    basket.position.y = -3.7;
-    balloon.add(env, neck, basket);
+    const prof = [[0.42, -2.3], [0.7, -1.95], [1.2, -1.35], [1.72, -0.55], [1.98, 0.2], [2.04, 0.85], [1.88, 1.5], [1.48, 2.02], [0.88, 2.38], [0.3, 2.52], [0, 2.54]];
+    const env = mesh(new THREE.LatheGeometry(prof.map(([r, y]) => new THREE.Vector2(r, y)), 48), mat('#FFFFFF', { map: tex(bc), roughness: 0.55, side: THREE.DoubleSide }), false, false);
+    const basketTex = (() => {
+      const [c, g] = makeCanvas(256, 256);
+      g.fillStyle = '#B07D4E'; g.fillRect(0, 0, 256, 256);
+      for (let y = 0; y < 256; y += 16) for (let x = 0; x < 256; x += 16) {
+        g.fillStyle = (x / 16 + y / 16) % 2 ? 'rgba(80,50,25,.35)' : 'rgba(255,230,190,.18)';
+        g.fillRect(x, y, 16, 8);
+      }
+      return tex(c);
+    })();
+    const basket = mesh(new RoundedBoxGeometry(0.8, 0.6, 0.8, 3, 0.06), mat('#FFFFFF', { map: basketTex, roughness: 0.85 }), false, false);
+    basket.position.y = -3.75;
+    const rim = mesh(new THREE.TorusGeometry(0.52, 0.04, 6, 4), mat('#6E4A2C', { roughness: 0.8 }), false, false);
+    rim.rotation.set(Math.PI / 2, 0, Math.PI / 4); rim.position.y = -3.45; rim.scale.set(1, 1, 1);
+    const burner = mesh(new THREE.CylinderGeometry(0.16, 0.2, 0.25, 12), mat('#9AA3B0', { roughness: 0.3, metalness: 0.7 }), false, false);
+    burner.position.y = -2.95;
+    const rope = mat('#6E5A44', { roughness: 0.9 });
+    for (const [x, z] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+      balloon.add(tube([new THREE.Vector3(x * 0.3, -2.25, z * 0.3), new THREE.Vector3(x * 0.36, -3.45, z * 0.36)], 0.012, rope));
+    }
+    balloon.add(env, basket, rim, burner);
     world.add(balloon);
     worldAnim.push(t => {
       const a = 2.2 + t * 0.03;
