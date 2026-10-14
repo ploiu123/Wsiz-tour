@@ -64,6 +64,7 @@ Paczkę można sprawdzić przed wysłaniem: `npm run preview` (adres http://loca
 | `src/data/` | Dane gry bez grafiki (TypeScript): plansza i pola, ekonomia, karty, kolory graczy |
 | `src/core/` | Silnik gry (TypeScript): tury, zasady, pytania, losowanie z ziarnem, boty; ten sam silnik działa na serwerze gry online |
 | `src/legacy/game.js` | Grafika 3D i interfejs: odtwarza zdarzenia silnika z animacjami i odsyła decyzje gracza |
+| `src/render/` | Jakość grafiki: poziomy od Niskiej do Ultra 4K, cienie kontaktowe, poświata, wygładzanie krawędzi |
 | `src/net/` | Połączenie z serwerem gry w trybie online (Socket.IO) |
 | `server/` | Serwer gry (Node.js, TypeScript): pokoje online, silnik gry po stronie serwera, pliki gry |
 | `src/styles/` | Wygląd: podstawy, menu, rozgrywka, prezentacja |
@@ -89,7 +90,7 @@ python3 pytania/excel-na-js.py
 
 ## Technologie i licencje
 
-- [Three.js](https://threejs.org) do grafiki 3D (licencja MIT), [Vite](https://vite.dev) do budowania paczki (MIT), [Socket.IO](https://socket.io) do trybu online (MIT).
+- [Three.js](https://threejs.org) do grafiki 3D: WebGPU, a w starszych przeglądarkach WebGL2 (licencja MIT), [Vite](https://vite.dev) do budowania paczki (MIT), [Socket.IO](https://socket.io) do trybu online (MIT).
 - Czcionki Fredoka, Figtree, Inter Tight i Anton z pakietów Fontsource, dołączone do paczki (licencja SIL Open Font License). Gra nie łączy się z Google Fonts.
 - Modele 3D, grafiki pól i ilustracje kart są rysowane w kodzie, bez gotowych plików i bez generatorów obrazów.
 - Dźwięki i muzyka zapasowa są generowane w kodzie (Web Audio). Utwory z plików i ich licencje: `assets/muzyka/AUTORZY.md`.

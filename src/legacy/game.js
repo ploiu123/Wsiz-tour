@@ -1,7 +1,9 @@
-// WSiZ Tour: cała gra w jednym module (etap 1 migracji, kod przeniesiony 1:1 z dawnego index.html).
-// Dane bez grafiki (plansza, ekonomia, karty, kolory graczy) są już w src/data. W etapie 2 logika gry
-// przejdzie do src/core, a ten plik zostanie warstwą obrazu i interfejsu.
-import * as THREE from 'three';
+// WSiZ Tour: grafika 3D i interfejs gry. Zasady gry są w src/core (silnik), dane w src/data.
+// Rysuje WebGPURenderer z Three.js: WebGPU tam, gdzie przeglądarka go ma, a w innych WebGL2.
+// Własne efekty (woda, niebo) są napisane w TSL, języku węzłów Three.js, który działa w obu.
+import * as THREE from 'three/webgpu';
+import * as TSL from 'three/tsl';
+import { Graphics, LEVELS as GFX_LEVELS } from '../render/graphics.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
@@ -62,20 +64,35 @@ const DECKS = [
 // Renderer, scena, kamera
 // ---------------------------------------------------------------------------
 const stage = $('stage');
+// Zgodność: Three.js podaje widokom tekstur pole swizzle: 'rgba' (bez zmian kanałów), a część wersji Chrome
+// zna to pole w starszej postaci i odrzuca cały widok. Domyślnej wartości nie trzeba podawać, więc ją usuwamy.
+if (globalThis.GPUTexture) {
+  const createView = GPUTexture.prototype.createView;
+  GPUTexture.prototype.createView = function (desc) {
+    if (desc?.swizzle !== 'rgba') return createView.call(this, desc);
+    const { swizzle: _, ...rest } = desc;
+    return createView.call(this, rest);
+  };
+}
 let renderer;
 try {
-  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  // ?webgl wymusza zapasowy WebGL2 (porównanie i testy)
+  renderer = new THREE.WebGPURenderer({ antialias: true, alpha: true, forceWebGL: new URLSearchParams(location.search).has('webgl') });
+  await renderer.init();
 } catch (err) {
-  $('loader').textContent = 'Ta przeglądarka nie obsługuje WebGL, więc plansza 3D się nie wyświetli.';
+  $('loader').textContent = 'Ta przeglądarka nie obsługuje grafiki 3D (WebGPU ani WebGL2), więc plansza się nie wyświetli.';
   throw err;
 }
+const GPU = renderer.backend.isWebGPUBackend ? 'webgpu' : 'webgl2';
+let gfx = null;   // jakość grafiki i efekty po renderze (tworzone niżej, gdy scena jest gotowa)
+document.documentElement.dataset.gpu = GPU;
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setClearColor(0x000000, 0);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = { neutral: THREE.NeutralToneMapping, agx: THREE.AgXToneMapping, aces: THREE.ACESFilmicToneMapping }[LOOK.tone];
 renderer.toneMappingExposure = LOOK.exposure;
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = THREE.PCFShadowMap;   // miękkie brzegi cieni: shadow.radius przy słońcu
 renderer.domElement.className = 'gl';
 renderer.domElement.setAttribute('aria-label', 'Plansza 3D');
 stage.prepend(renderer.domElement);
@@ -161,16 +178,17 @@ const sun = new THREE.DirectionalLight(LOOK.sun[0], LOOK.sun[1]);
 sun.position.set(...LOOK.sun[2]);
 sun.castShadow = true;
 const lowEnd = matchMedia('(pointer: coarse)').matches || (navigator.hardwareConcurrency || 8) <= 4;
-sun.shadow.mapSize.set(lowEnd ? 2048 : 4096, lowEnd ? 2048 : 4096);
+sun.shadow.mapSize.set(lowEnd ? 2048 : 4096, lowEnd ? 2048 : 4096);   // poziom jakości (gfx) ustawia to później
 Object.assign(sun.shadow.camera, { left: -12, right: 12, top: 12, bottom: -12, near: 1, far: 50 });
 sun.shadow.bias = -0.0004;
 sun.shadow.normalBias = 0.02;
+sun.shadow.radius = 3;
 scene.add(sun);
 
 // ---------------------------------------------------------------------------
 // Pomocnicze
 // ---------------------------------------------------------------------------
-const maxAniso = renderer.capabilities.getMaxAnisotropy();
+const maxAniso = renderer.getMaxAnisotropy();
 function mat(color, o = {}) { return new THREE.MeshStandardMaterial({ color, roughness: 0.55, metalness: 0, ...o }); }
 function mesh(geo, material, cast = true, receive = false) {
   const m = new THREE.Mesh(geo, material);
@@ -1708,45 +1726,42 @@ function wakeMesh(len = 6, w = 1.4) {
   world.add(wet);
 
   // Woda: przezroczysta jak galaretka, z falami na powierzchni i widoczna w przekroju
-  const waterU = {
-    uTime: { value: 0 }, uCz: { value: WZ0 + WD / 2 }, uSky: { value: new THREE.Color('#DCE6EF') },
-    uWaves: { value: WAVES.map(([x, z, L, st]) => new THREE.Vector4(x, z, L, st)) },
-  };
+  const {
+    Fn, uniform, vec3, vec4, float, uv, positionLocal, positionWorld, normalLocal, normalView, positionViewDirection,
+    smoothstep, mix, sin, cos, cross, normalize, pow, clamp, dot, varyingProperty, output, select,
+  } = TSL;
+  const waterU = { uTime: uniform(0), uSky: uniform(new THREE.Color('#DCE6EF')) };
   // gładka powierzchnia (bez płaskich trójkątów), połysk słońca, odbicie nieba pod małym kątem (Fresnel),
   // płytko turkus, głęboko granat morza, biała piana na grzbietach fal
-  const waterMat = new THREE.MeshStandardMaterial({ color: '#1C8FC0', roughness: 0.07, metalness: 0, transparent: true, opacity: 0.8, envMapIntensity: 1 });
-  waterMat.onBeforeCompile = sh => {
-    Object.assign(sh.uniforms, waterU);
-    sh.vertexShader = `uniform float uTime; uniform float uCz; uniform vec4 uWaves[4];
-varying vec2 vLoc; varying float vH;
-` + sh.vertexShader
-      .replace('#include <beginnormal_vertex>', `
-      vLoc = uv;
-      vec2 wp = vec2(position.x, uCz - position.y);
-      float wAmp = smoothstep(0.0, 0.035, uv.x) * smoothstep(0.0, 0.035, 1.0 - uv.x) * smoothstep(0.0, 0.05, uv.y) * (0.4 + 0.6 * (1.0 - smoothstep(0.72, 1.0, uv.y)));
-      vec3 wDisp = vec3(0.0), wT = vec3(1.0, 0.0, 0.0), wB = vec3(0.0, 0.0, 1.0);
-      for (int i = 0; i < 4; i++) {
-        vec4 w = uWaves[i];
-        float k = 6.2831853 / w.z, c = sqrt(9.8 / k) * ${WAVE_SPEED.toFixed(2)};
-        float f = k * (dot(w.xy, wp) - c * uTime), st = w.w * wAmp, a = st / k;
-        wDisp += vec3(w.x * a * cos(f), a * sin(f), w.y * a * cos(f));
-        wT += vec3(-w.x * w.x * st * sin(f), w.x * st * cos(f), -w.x * w.y * st * sin(f));
-        wB += vec3(-w.x * w.y * st * sin(f), w.y * st * cos(f), -w.y * w.y * st * sin(f));
-      }
-      vec3 wN = normalize(cross(wB, wT));
-      vH = wDisp.y;
-      vec3 objectNormal = vec3(wN.x, -wN.z, wN.y);`)
-      .replace('#include <begin_vertex>', 'vec3 transformed = vec3(position) + vec3(wDisp.x, -wDisp.z, wDisp.y);');
-    sh.fragmentShader = 'uniform vec3 uSky;\nvarying vec2 vLoc; varying float vH;\n' + sh.fragmentShader
-      .replace('vec4 diffuseColor = vec4( diffuse, opacity );',
-        'vec4 diffuseColor = vec4( mix(vec3(0.02, 0.27, 0.46), vec3(0.24, 0.80, 0.78), smoothstep(0.3, 0.98, vLoc.y)), opacity );')
-      .replace('#include <opaque_fragment>', `
-      float fres = pow(1.0 - clamp(dot(normal, normalize(vViewPosition)), 0.0, 1.0), 4.0);
-      outgoingLight = mix(outgoingLight, uSky, fres * 0.6);
-      outgoingLight += vec3(0.38) * smoothstep(0.31, 0.46, vH);   // piana tylko na najwyższych grzbietach
-      diffuseColor.a = mix(diffuseColor.a, 0.96, fres);
-      #include <opaque_fragment>`);
-  };
+  const waterMat = new THREE.MeshStandardNodeMaterial({ roughness: 0.07, metalness: 0, transparent: true, opacity: 0.8 });
+  const waveH = varyingProperty('float', 'vWaveH');
+  // fale Gerstnera liczone na karcie graficznej: przesunięcie powierzchni i nowa normalna
+  waterMat.positionNode = Fn(() => {
+    const p = positionLocal, u = uv();
+    const wp = vec3(p.x, float(WZ0 + WD / 2).sub(p.y), 0);
+    const wAmp = smoothstep(0, 0.035, u.x).mul(smoothstep(0, 0.035, u.x.oneMinus())).mul(smoothstep(0, 0.05, u.y))
+      .mul(smoothstep(0.72, 1, u.y).oneMinus().mul(0.6).add(0.4));
+    let disp = vec3(0), tan = vec3(1, 0, 0), bin = vec3(0, 0, 1);
+    for (const [dx, dz, L, st0] of WAVES) {
+      const k = 2 * Math.PI / L, c = Math.sqrt(9.8 / k) * WAVE_SPEED;
+      const f = wp.x.mul(dx).add(wp.y.mul(dz)).sub(waterU.uTime.mul(c)).mul(k);
+      const st = wAmp.mul(st0), a = st.div(k), sf = sin(f), cf = cos(f);
+      disp = disp.add(vec3(a.mul(cf).mul(dx), a.mul(sf), a.mul(cf).mul(dz)));
+      tan = tan.add(vec3(st.mul(sf).mul(-dx * dx), st.mul(cf).mul(dx), st.mul(sf).mul(-dx * dz)));
+      bin = bin.add(vec3(st.mul(sf).mul(-dx * dz), st.mul(cf).mul(dz), st.mul(sf).mul(-dz * dz)));
+    }
+    const n = normalize(cross(bin, tan));
+    normalLocal.assign(vec3(n.x, n.z.negate(), n.y));
+    waveH.assign(disp.y);
+    return p.add(vec3(disp.x, disp.z.negate(), disp.y));
+  })();
+  waterMat.colorNode = mix(vec3(0.02, 0.27, 0.46), vec3(0.24, 0.80, 0.78), smoothstep(0.3, 0.98, uv().y));
+  // po oświetleniu: odbicie nieba pod małym kątem i piana tylko na najwyższych grzbietach
+  const fres = pow(clamp(dot(normalView, positionViewDirection), 0, 1).oneMinus(), 4);
+  waterMat.outputNode = vec4(
+    mix(output.rgb, waterU.uSky, fres.mul(0.6)).add(smoothstep(0.31, 0.46, waveH).mul(0.38)),
+    mix(output.a, 0.96, fres),
+  );
   const water = new THREE.Mesh(new THREE.PlaneGeometry(BX * 2, WD, 220, 90), waterMat);
   water.rotation.x = -Math.PI / 2;
   water.position.set(0, WATER_Y, WZ0 + WD / 2);
@@ -1779,19 +1794,13 @@ varying vec2 vLoc; varying float vH;
     foamMat.opacity = 0.62 + 0.25 * (0.5 + 0.5 * w);
   });
   // przekrój wody: z przodu i po bokach, jaśniejszy przy powierzchni, ciemniejszy w głębi
-  const sideWaterMat = new THREE.ShaderMaterial({
-    transparent: true, depthWrite: false,
-    uniforms: { top: { value: WATER_Y }, bot: { value: FLOOR_Y } },
-    vertexShader: 'varying float vY; void main() { vec4 w = modelMatrix * vec4(position, 1.0); vY = w.y; gl_Position = projectionMatrix * viewMatrix * w; }',
-    fragmentShader: `uniform float top; uniform float bot; varying float vY;
-      void main() {
-        float k = clamp((vY - bot) / (top - bot), 0.0, 1.0);
-        vec3 c = mix(vec3(0.02, 0.33, 0.46), vec3(0.36, 0.88, 0.86), pow(k, 1.4));
-        float a = mix(0.86, 0.6, k);
-        if (k > 0.975) { c = mix(c, vec3(0.92, 1.0, 1.0), 0.65); a = 0.9; }
-        gl_FragColor = vec4(c, a);
-      }`,
-  });
+  const sideWaterMat = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, fog: false });
+  {
+    const k = clamp(positionWorld.y.sub(FLOOR_Y).div(WATER_Y - FLOOR_Y), 0, 1), edge = k.greaterThan(0.975);
+    const c = mix(vec3(0.02, 0.33, 0.46), vec3(0.36, 0.88, 0.86), pow(k, 1.4));
+    sideWaterMat.colorNode = select(edge, mix(c, vec3(0.92, 1, 1), 0.65), c);
+    sideWaterMat.opacityNode = select(edge, float(0.9), mix(0.86, 0.6, k));
+  }
   const frontW = new THREE.Mesh(new THREE.PlaneGeometry(BX * 2, WATER_Y - FLOOR_Y), sideWaterMat);
   frontW.position.set(0, (WATER_Y + FLOOR_Y) / 2, BZF + 0.01);
   frontW.renderOrder = 3;
@@ -2290,12 +2299,10 @@ varying vec2 vLoc; varying float vH;
 }
 
 // Tło: jasne i czyste jak na zdjęciu makiety (nocą granat)
-const skyU = { top: { value: new THREE.Color('#DCE6EF') }, bottom: { value: new THREE.Color('#F4F1EB') } };
-const sky = new THREE.Mesh(new THREE.SphereGeometry(190, 32, 16), new THREE.ShaderMaterial({
-  uniforms: skyU, side: THREE.BackSide, depthWrite: false, fog: false,
-  vertexShader: 'varying vec3 vP; void main() { vP = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-  fragmentShader: 'uniform vec3 top; uniform vec3 bottom; varying vec3 vP; void main() { float h = clamp(vP.y * 1.6 + 0.08, 0.0, 1.0); gl_FragColor = vec4(mix(bottom, top, pow(h, 0.8)), 1.0); }',
-}));
+const skyU = { top: TSL.uniform(new THREE.Color('#DCE6EF')), bottom: TSL.uniform(new THREE.Color('#F4F1EB')) };
+const skyMat = new THREE.MeshBasicNodeMaterial({ side: THREE.BackSide, depthWrite: false, fog: false });
+skyMat.colorNode = TSL.mix(skyU.bottom, skyU.top, TSL.normalize(TSL.positionLocal).y.mul(1.6).add(0.08).clamp(0, 1).pow(0.8));
+const sky = new THREE.Mesh(new THREE.SphereGeometry(190, 32, 16), skyMat);
 sky.renderOrder = -1;
 world.add(sky);
 const DAY = { top: '#DCE6EF', bottom: '#F4F1EB' };
@@ -2306,6 +2313,7 @@ function setWorldMood(night) {
   worldNight = night;
   const m = night ? NIGHT : DAY;
   skyU.top.value.set(m.top); skyU.bottom.value.set(m.bottom);
+  gfx?.setNight(night);
   scene.fog = null;
   for (const [mt, on, off = 0, prop = 'emissiveIntensity'] of nightMats) mt[prop] = night ? on : off;
 }
@@ -2734,7 +2742,7 @@ const chipHtml = (label, attrs, pressed, disabled = false) =>
 let profile = store.get('profil', null);
 // statystyki z gier sprzed zmiany skali (kwoty były w tysiącach): przelicz na nowe kwoty
 if (profile?.stats?.wealth > 200000) { profile.stats.wealth = Math.round(profile.stats.wealth / 1000); store.set('profil', profile); }
-const prefs = Object.assign({ theme: 'system', music: 60, effects: 80, scale: 1, spin: true, skin: 'diorama' }, store.get('preferencje', {}));
+const prefs = Object.assign({ theme: 'system', music: 60, effects: 80, scale: 1, spin: true, skin: 'diorama', gfx: 'auto' }, store.get('preferencje', {}));
 const savePrefs = () => store.set('preferencje', prefs);
 const defaultSlots = () => [
   { kind: 'me' },
@@ -3219,6 +3227,7 @@ function renderSettingsPage() {
     <div class="m-set"><span>Efekty dźwiękowe<small>Np. rzut kostkami</small></span><div class="m-range"><input type="range" id="volFx" min="0" max="100" step="5" value="${prefs.effects}" aria-label="Głośność efektów"><output id="volFxOut">${prefs.effects}%</output></div></div>
     <div class="m-set"><span>Autorzy muzyki<small>Licencje: assets/muzyka/AUTORZY.md</small></span><p class="m-credits">Prezentacja: „Epic Cinematic Trailer | ELITE”, Alex-Productions (onsound.eu), licencja CC BY 3.0, źródło chosic.com.<br>Menu i gra: „Tropical Sun”, All Good Folks oraz „New Life”, Moire (Uppbeat), gdy pliki są w folderze gry. Bez nich gra muzyka napisana w kodzie.</p></div>
     <div class="m-set"><span>Rozmiar elementów</span>${chips([[0.9, 'Mały'], [1, 'Średni'], [1.15, 'Duży']], prefs.scale, 'data-scale')}</div>
+    <div class="m-set"><span>Jakość grafiki<small id="gfxInfo">${gfx.describe()}</small></span>${chips(GFX_LEVELS, prefs.gfx, 'data-gfx')}</div>
     <div class="m-set"><span>Wygląd planszy</span>${chips(SKIN_NAMES, prefs.skin, 'data-skin')}</div>
     <div class="m-set"><span>Obracanie planszy w menu</span>${chips([[1, 'Włączone'], [0, 'Wyłączone']], prefs.spin ? 1 : 0, 'data-spin')}</div>`;
 }
@@ -3229,6 +3238,7 @@ $('settingsBox').addEventListener('click', e => {
   if (d.themeSet) { prefs.theme = d.themeSet; applyTheme(); }
   else if (d.scale) { prefs.scale = +d.scale; applyScale(); }
   else if (d.skin) { prefs.skin = d.skin; applySkin(prefs.skin); }
+  else if (d.gfx) { prefs.gfx = d.gfx; gfx.set(d.gfx); }
   else if (d.spin !== undefined) { prefs.spin = d.spin === '1'; controls.autoRotate = menuOpen && prefs.spin && !reduceMotion; }
   else return;
   savePrefs();
@@ -5919,12 +5929,11 @@ function fxFirework(pos, color) {
       const u = Math.random() * 2 - 1, a = Math.random() * Math.PI * 2, r = Math.sqrt(1 - u * u), sp = 5 + Math.random() * 2.5;
       vel.push([r * Math.cos(a) * sp, u * sp, r * Math.sin(a) * sp]);
     }
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(posA, 3));
-    const m = new THREE.PointsMaterial({ size: 0.9, map: sparkDot, color, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false });
-    const pts = new THREE.Points(geo, m);
+    // iskry jako małe sprite'y (WebGPU nie rysuje punktów większych niż 1 piksel)
+    const m = new THREE.SpriteMaterial({ map: sparkDot, color, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false });
+    const pts = new THREE.Group(), sparks = [];
+    for (let k = 0; k < n; k++) { const sp = new THREE.Sprite(m); sp.scale.setScalar(0.3); sparks.push(sp); pts.add(sp); }
     pts.position.copy(pos);
-    pts.frustumCulled = false;
     fxLayer.add(pts);
     P.music?.thump();
     tween(1700, t => {
@@ -5932,10 +5941,10 @@ function fxFirework(pos, color) {
       for (let k = 0; k < n; k++) {
         posA[k * 3] = vel[k][0] * drag; posA[k * 3 + 1] = vel[k][1] * drag - 1.2 * s * s; posA[k * 3 + 2] = vel[k][2] * drag;
       }
-      geo.attributes.position.needsUpdate = true;
+      const sz = 0.3 * (1 - t * 0.5);
+      for (let k = 0; k < n; k++) { sparks[k].position.fromArray(posA, k * 3); sparks[k].scale.setScalar(sz); }
       m.opacity = 1 - t * t;
-      m.size = 0.9 * (1 - t * 0.5);
-    }).then(() => { fxLayer.remove(pts); geo.dispose(); m.dispose(); });
+    }).then(() => { fxLayer.remove(pts); m.dispose(); });
   });
 }
 function fireworksShow(count = 6, gap = 520) {
@@ -6605,30 +6614,24 @@ panelWatch.observe($('gPlayers'));
 panelWatch.observe($('gSide'));
 jumpTo(presetBoard());
 
-const clock = new THREE.Clock();
+// ?rtonly (tylko paczka testowa): gra rysuje do tekstury zamiast na ekran. Programowy WebGPU w testach
+// gubi kartę graficzną przy pokazywaniu klatki na ekranie, a tak można odczytać obraz i sprawdzić shadery.
+const testTarget = __TEST_HOOKS__ && new URLSearchParams(location.search).has('rtonly')
+  ? new THREE.RenderTarget(1, 1, { colorSpace: THREE.SRGBColorSpace, type: THREE.UnsignedByteType, samples: 4 }) : null;
+const timer = new THREE.Timer();
+timer.connect(document);   // karta w tle nie daje potem jednego wielkiego skoku czasu
 // Płynność: gdy przez dłuższą chwilę klatki są wolne, gra rysuje w trochę mniejszej rozdzielczości;
 // gdy znów jest płynnie, wraca do pełnej jakości. Działa sama, bez ustawień.
-const quality = { max: Math.min(window.devicePixelRatio, 2), ratio: Math.min(window.devicePixelRatio, 2), acc: 0, n: 0, wait: 0 };
-function adaptQuality(ms) {
-  if (ms > 250) return;   // karta była w tle albo przeglądarka zamarła: pomijamy
-  quality.acc += ms; quality.n++;
-  if (quality.acc < 2500) return;
-  const avg = quality.acc / quality.n;
-  quality.acc = 0; quality.n = 0;
-  if (performance.now() < quality.wait) return;
-  let r = quality.ratio;
-  if (avg > 24 && r > 1) r = Math.max(1, r - 0.25);
-  else if (avg < 13 && r < quality.max) r = Math.min(quality.max, r + 0.25);
-  if (r === quality.ratio) return;
-  quality.ratio = r;
-  renderer.setPixelRatio(r);
-  resize();
-  quality.wait = performance.now() + 4000;
-}
+// Jakość grafiki (src/render/graphics.js): gęstość pikseli, cienie i efekty; w trybie Automatyczna
+// dopasowuje się do płynności (gdy klatki są wolne, najpierw spada rozdzielczość, potem efekty)
+gfx = new Graphics(renderer, scene, camera, { sun, mobile: lowEnd, onResize: () => resize() });
+gfx.set(GFX_LEVELS.some(([v]) => v === prefs.gfx) ? prefs.gfx : 'auto');
+gfx.setNight(worldNight);
 function frame() {
-  const raw = clock.getDelta(), dt = Math.min(raw, 0.05);
-  adaptQuality(raw * 1000);
-  const t = clock.elapsedTime;
+  timer.update();
+  const raw = timer.getDelta(), dt = Math.min(raw, 0.05);
+  gfx.frame(raw * 1000);
+  const t = timer.getElapsed();
   runTweens(performance.now());
   if (P.on) promoTick(dt);
   sky.position.copy(camera.position);
@@ -6657,7 +6660,13 @@ function frame() {
   if (Math.abs(near - camera.near) > 0.005) { camera.near = near; camera.updateProjectionMatrix(); }
   const sh = shakeOffset(performance.now());
   if (sh) camera.position.add(sh);
-  renderer.render(scene, camera);
+  if (__TEST_HOOKS__ && testTarget) {   // testy WebGPU bez karty graficznej: klatka w pamięci
+    const sz = renderer.getDrawingBufferSize(new THREE.Vector2());
+    if (testTarget.width !== sz.x || testTarget.height !== sz.y) testTarget.setSize(sz.x, sz.y);
+    renderer.setRenderTarget(testTarget);
+  }
+  gfx.render();
+  if (__TEST_HOOKS__ && testTarget) renderer.setRenderTarget(null);
   if (P.on && SCENES[P.idx]?.mirror) mirrorDevices();
   if (sh) camera.position.sub(sh);
   if (view === 'models') labelRenderer.render(scene, camera);
@@ -6685,5 +6694,5 @@ if (new URLSearchParams(location.search).has('prezentacja')) openPromo(true);
 
 // Testy automatyczne (Playwright) dostają dostęp do sceny i prezentacji. W paczce na serwer tego kodu nie ma.
 if (__TEST_HOOKS__) {
-  window.__t = { camera, controls, scene, renderer, setView, setStudio, setWorldMood, applySkin, demoStart, demoStop, throwDice, fxConfetti, fxText, fxFirework, fxMonopoly, fxRing, V3, P, SCENES, goTo: i => goTo(i), enterScene, setPaused, STUDIO_AT, cellTarget, MONO_AT, BUILD_AT, showWorld, board, world, studio, DEMO, Q, GOLD, G: () => G, presetBoard, presetShow, jumpTo, applyView, createMusic, bgmOn: () => !!bgm, quality };
+  window.__t = { THREE, testTarget, camera, controls, scene, renderer, setView, setStudio, setWorldMood, applySkin, demoStart, demoStop, throwDice, fxConfetti, fxText, fxFirework, fxMonopoly, fxRing, V3, P, SCENES, goTo: i => goTo(i), enterScene, setPaused, STUDIO_AT, cellTarget, MONO_AT, BUILD_AT, showWorld, board, world, studio, DEMO, Q, GOLD, G: () => G, presetBoard, presetShow, jumpTo, applyView, createMusic, bgmOn: () => !!bgm, gfx, quality: { get ratio() { return gfx.ratio; }, get max() { return gfx.targetRatio(); } } };
 }

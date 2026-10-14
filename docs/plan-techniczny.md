@@ -28,7 +28,7 @@ Cel: gra przeglądarkowa o jakości wizualnej „AAA”, ostra na monitorach 4K,
 | 1. Vite i struktura | Vite, TypeScript, ESLint, Prettier; `index.html` rozdzielony na szkielet, style (`src/styles`), dane gry (`src/data`, TypeScript) i moduł gry (`src/legacy/game.js`); Three.js z npm; czcionki z Fontsource w paczce; paczka `dist/` z kompresją Brotli i gzip; testy Vitest i Playwright | **zrobione 14.10.2026** |
 | 2. Logika osobno | `src/core` w TypeScript: silnik tury (`engine.ts`) ze stanem jako JSON, decyzjami gracza i zdarzeniami, zasady (`rules.ts`), pytania (`questions.ts`), losowanie z ziarnem (`rng.ts`), sterownik gry lokalnej (`local-driver.ts`); przeglądarka tylko odtwarza zdarzenia i odsyła decyzje; testy silnika (pełne gry botów, powtarzalność, sprawdzanie decyzji) i symulacja `npm run sim` | **zrobione 14.10.2026** |
 | 3. Serwer | `server/`: Node.js, TypeScript, WebSocket (Socket.IO), pokoje z kodem, serwer decyduje o rzutach, pieniądzach i czasie, pytania bez odpowiedzi w przeglądarce, `.env` na klucz uczelni; w przeglądarce `src/net/online.ts` (połączenie i sterownik gry online) i poczekalnia party w menu | **zrobione 14.10.2026** |
-| 4. Renderer i scena 4K | renderer WebGPU z zapasowym WebGL2, pokój ze stołem, pełny `devicePixelRatio`, dynamiczna rozdzielczość, poziomy jakości (Niska, Średnia, Wysoka, Ultra 4K) | następny |
+| 4. Renderer i scena 4K | renderer WebGPU z zapasowym WebGL2, pokój ze stołem, pełny `devicePixelRatio`, dynamiczna rozdzielczość, poziomy jakości (Niska, Średnia, Wysoka, Ultra 4K) | w trakcie: renderer, poziomy jakości i pierwsze efekty zrobione 14.10.2026, pokój ze stołem następny |
 | 5. Zasoby i PBR | skrypt wypiekający modele do GLB (meshopt, tekstury KTX2 do 4K, LOD), lakier, metal, szkło, drewno, papier, mapa HDR | |
 | 6. Fizyka kości | Rapier: kości z masą, tarciem i odbiciem; wynik zawsze z logiki albo serwera (kość obrócona tak, żeby wypadła wylosowana ścianka) | |
 | 7. Efekty i kamera | AO, bloom, SMAA albo TAA, korekcja kolorów, głębia ostrości przy rzucie, najazdy kamery na kupowane pole | |
@@ -55,4 +55,22 @@ Prezentację gry, film i stronę-wizytówkę przenosimy po etapie 7.
 - **Powrót:** przeglądarka pamięta kod party i token (3 godziny). Po odświeżeniu strony albo zerwanym połączeniu wraca na swoje miejsce i odbudowuje widok ze stanu serwera.
 - **Bezpieczeństwo:** dane z sieci są sprawdzane (ustawienia pokoju, nick 2–20 znaków, numery decyzji), wiadomości mają limit 64 KB, pokój bez graczy znika po 10 minutach. Klucz uczelni będzie tylko w `.env` na serwerze.
 - **Testy:** 4 testy serwera (złe ustawienia, gra gospodarza i gościa z botami, gracz przy komputerze gospodarza, powrót po rozłączeniu) i test w dwóch przeglądarkach (`tests/e2e/online.spec.js`: party, dołączenie kodem, gra, odświeżenie strony, koniec gry przez gospodarza).
+
+## Etap 4: renderer WebGPU i jakość grafiki (14.10.2026)
+
+- **Three.js 0.186** (z 0.169) i **WebGPURenderer**: przeglądarka z WebGPU (Chrome, Edge, Brave, Safari 26) rysuje przez WebGPU, pozostałe przez WebGL2, ten sam kod. Adres z `?webgl` wymusza WebGL2 (porównania). Dodatki Three.js dostają tę samą kopię biblioteki (alias `three` → `three/webgpu` w `vite.config.js`).
+- **Własne efekty w TSL** (język węzłów Three.js, działa w obu silnikach): woda z falami Gerstnera liczonymi na karcie graficznej, z odbiciem nieba (Fresnel) i pianą na grzbietach, przekrój wody i niebo. Iskry fajerwerków to małe sprite'y (WebGPU nie rysuje punktów większych niż 1 piksel).
+- **Poprawka zgodności:** część wersji Chrome odrzuca pole `swizzle` w widokach tekstur, które Three.js podaje zawsze. Gra usuwa je, gdy ma wartość domyślną (`GPUTexture.prototype.createView` na początku `game.js`).
+- **Jakość grafiki** (`src/render/graphics.js`, Ustawienia → Jakość grafiki):
+
+| Poziom | Gęstość pikseli | Wygładzanie | Cienie kontaktowe (GTAO) | Poświata (bloom) | Mapa cieni |
+|---|---|---|---|---|---|
+| Niska | 1x | MSAA na ekranie | nie | nie | 1024 |
+| Średnia | do 1,5x | MSAA 4x | nie | tak | 2048 |
+| Wysoka | do 2x (Retina) | MSAA 4x | tak, pół rozdzielczości | tak | 4096 |
+| Ultra 4K | od 2x do 3x (na ekranie Full HD obraz liczony w 4K) | MSAA 4x | tak, pełna rozdzielczość | tak | 4096 |
+
+  Automatyczna wybiera Wysoką na komputerze i Średnią na telefonie, tablecie i komputerze z 4 rdzeniami; gdy klatki są wolne, najpierw zmniejsza gęstość pikseli, potem poziom (i wraca, gdy jest płynnie). Cienie kontaktowe działają w świetle otoczenia (jak w grach AAA) i lżej w świetle słońca. Poświata w dzień tylko na odblaskach, nocą także na oknach i latarniach. Mapa cieni zmienia rozmiar tylko przy starcie gry.
+- **Testy:** w testach automatycznych (bez karty graficznej) gra działa przez WebGL2. Ścieżkę WebGPU sprawdza programowy WebGPU (SwiftShader) z trybem `?rtonly` paczki testowej: klatka trafia do tekstury i jest odczytywana, bo programowy WebGPU gubi kartę graficzną przy pokazywaniu obrazu na ekranie.
+- **Paczka:** JS 1,27 MB (Brotli ok. 300 KB), bo WebGPURenderer zawiera system węzłów TSL; kod trybu online (Socket.IO) jest w osobnym pliku i wczytuje się dopiero po wybraniu gry online.
 

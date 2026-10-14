@@ -232,7 +232,7 @@ Do ustalenia: co z Kuchnią.
 - **Ranking:** podium z medalami i tabela: rozegrane, wygrane, procent wygranych, dobre odpowiedzi, najlepsza gra, najwyższy majątek. Sortowanie: wygrane, skuteczność, rozegrane, majątek. Dane innych graczy są przykładowe do czasu serwera gry. Twój wiersz liczy się z gier rozegranych w tej przeglądarce.
 - **Zasady:** 8 ponumerowanych kart (wersja robocza) i przykładowe pytanie z matematyki z minutnikiem, które nigdy nie pada w grze.
 - **Profil:** nick, pionek, kolor i statystyki.
-- **Ustawienia:** motyw (systemowy, jasny, ciemny), głośność muzyki i efektów (dźwięki dojdą z rozgrywką), rozmiar elementów (mały, średni, duży), wygląd planszy, środek planszy, obracanie planszy w menu.
+- **Ustawienia:** motyw (systemowy, jasny, ciemny), głośność muzyki i efektów (dźwięki dojdą z rozgrywką), rozmiar elementów (mały, średni, duży), jakość grafiki (Automatyczna, Niska, Średnia, Wysoka, Ultra 4K; pod nazwą widać silnik WebGPU albo WebGL2 i rozmiar obrazu), wygląd planszy, środek planszy, obracanie planszy w menu.
 - Profil, ustawienia i ustawienia nowej gry zapisują się w przeglądarce gracza.
 
 ## Tyły kart ułatwień i utrudnień

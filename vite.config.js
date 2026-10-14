@@ -30,6 +30,9 @@ function copyStatic() {
 export default defineConfig(({ mode }) => ({
   base: './',   // paczka działa w dowolnym folderze serwera (np. uczelnia.pl/gra/)
   define: { __TEST_HOOKS__: JSON.stringify(mode === 'test') },
+  // dodatki Three.js (OrbitControls, RoomEnvironment) importują „three”: dajemy im wersję z WebGPURenderer,
+  // żeby w paczce nie było drugiej kopii biblioteki
+  resolve: { alias: [{ find: /^three$/, replacement: 'three/webgpu' }] },
   build: {
     target: 'es2022',   // gra czeka na czcionki i logo na najwyższym poziomie modułu (top-level await)
     outDir: mode === 'test' ? 'dist-test' : 'dist',
