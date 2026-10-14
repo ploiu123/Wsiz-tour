@@ -68,17 +68,17 @@ Rozgrywka działa w `index.html` od 13.10.2026 (opis niżej, w sekcji „Rozgryw
 
 Tam, gdzie autor jeszcze nie zdecydował, przyjęte są ustawienia tymczasowe. Wszystkie kwoty są w jednym miejscu w `index.html` (obiekty `ECON`, `GROUP_PRICE`, `RENT_MULT`, `BUILD_MULT`, `BOT`), więc łatwo je zmienić.
 
-**Pieniądze (jak w Business Tour, od 13.10.2026)**
-- Waluta: zł, w skali Business Tour. Na ekranie kwoty są skracane: „250 tys. zł”, „2 mln zł”. Czynsze i koszty są zaokrąglone do pełnych tysięcy.
-- Na start każdy ma **2 mln zł**.
-- START: 250 tys. zł i premia za okrążenie (procent dobrych odpowiedzi z tego okrążenia × 250 tys. zł).
-- Ceny sal według grup: 1: 80 tys., 2: 120 tys., 3: 160 tys., 4: 200 tys., 5: 260 tys., 6: 300 tys., 7: 350 tys., 8: 400 tys. zł.
-- Czynsz za salę: cena × 0,12 bez budynku (×2 przy monopolu), × 0,5 telefon, × 1 laptop, × 1,8 komputer, × 2,6 szafa rack, × 3,6 serwerownia (hotel). Przykład: Sala 44 (400 tys.) z serwerownią: 1,44 mln zł.
+**Pieniądze (proporcje Business Tour, zwykłe kwoty, od 14.10.2026)**
+- Waluta: zł. Kwoty są małe i pełne, bez skrótów „tys.” i „mln” (autor: duże kwoty wyglądały dziwnie). Proporcje zostały jak wcześniej, więc gra jest tak samo zbalansowana. Czynsze i koszty są zaokrąglone do pełnych złotych. Skalę wszystkich kwot ustawia stała `K` w `index.html` (teraz 1).
+- Na start każdy ma **2000 zł**.
+- START: 250 zł i premia za okrążenie (procent dobrych odpowiedzi z tego okrążenia × 250 zł). Przykład: 50% dobrych odpowiedzi to razem 375 zł.
+- Ceny sal według grup: 1: 80, 2: 120, 3: 160, 4: 200, 5: 260, 6: 300, 7: 350, 8: 400 zł.
+- Czynsz za salę: cena × 0,12 bez budynku (×2 przy monopolu), × 0,5 telefon, × 1 laptop, × 1,8 komputer, × 2,6 szafa rack, × 3,6 serwerownia (hotel). Przykład: Sala 44 (400 zł) z serwerownią: 1440 zł.
 - Budowa: każdy poziom od 1 do 4 kosztuje pół ceny sali, serwerownia całą cenę.
-- Parkingi: cena 250 tys. zł, czynsz 60 tys. za jeden parking właściciela, 150 tys. za oba. Bonus 60 tys., gdy staniesz na swoim parkingu.
-- Pola specjalne: cena 300 tys. zł, czynsz 80, 170, 280 albo 400 tys. zł zależnie od liczby pól specjalnych właściciela.
-- Czesne: 150 tys. zł do puli. „Zapłać za warunek” w dziekanacie: 150 tys. zł do puli. Stypendium rektorskie zabiera całą pulę.
-- Karty: Stypendium naukowe 250 tys. (×2: 500 tys.), Zwrot czesnego 150 tys. z puli (×2: 300 tys.), Praca w samorządzie po 60 tys. (×2: 120 tys.), Warunek 150 tys. (×2: 300 tys.), Opłaty za sprzęt 25 tys. za budynek i 125 tys. za serwerownię (×2: podwójnie).
+- Parkingi: cena 250 zł, czynsz 60 zł za jeden parking właściciela, 150 zł za oba. Bonus 60 zł, gdy staniesz na swoim parkingu.
+- Pola specjalne: cena 300 zł, czynsz 80, 170, 280 albo 400 zł zależnie od liczby pól specjalnych właściciela.
+- Czesne: 150 zł do puli. „Zapłać za warunek” w dziekanacie: 150 zł do puli. Stypendium rektorskie zabiera całą pulę.
+- Karty: Stypendium naukowe 250 zł (×2: 500 zł), Zwrot czesnego 150 zł z puli (×2: 300 zł), Praca w samorządzie po 60 zł (×2: 120 zł), Warunek 150 zł (×2: 300 zł), Opłaty za sprzęt 25 zł za budynek i 125 zł za serwerownię (×2: podwójnie).
 - Gdy gracz nie ma czym zapłacić, gra sama sprzedaje bankowi jego budynki, a potem sale, za połowę wartości. Jeśli to nie wystarczy, gracz bankrutuje i jego sale wracają do banku.
 - Do ustalenia: przejęcie (odkupienie) pola przeciwnika jak w Business Tour. W kodzie jest przygotowana stawka `takeoverRate` (dwukrotność wartości), ale gra jeszcze tego nie robi.
 - Wszystkie kwoty są w jednym miejscu w `index.html` (`ECON`, `GROUP_PRICE`, `RENT_MULT`, `BUILD_MULT`).
@@ -199,7 +199,7 @@ Do ustalenia: co z Kuchnią.
 - **Interpunkcja:** kropka tylko na końcu pełnego zdania. Pojedyncze słowa i hasła („Rzuć”, „Dublet”, „Kupuj”, „Buduj”, „Rośnij”, nazwy pionków, napisy „KUPIONE” i „MONOPOL”) są bez kropek i bez wykrzykników.
 - **Studio produktowe:** każdy pionek pokazany osobno jak produkt (jasne tło i matowa podłoga lekko w kolorze gracza, bez widocznej krawędzi, reflektor z góry, plama światła i poświata w kolorze gracza, obrót na talerzu; na telefonie pionek stoi na środku nad napisem) z granatowym podpisem i krótkim opisem dla kogo jest (Sztandar: „Dla tych, którzy prowadzą.”, Drukarka 3D: „Dla tych, którzy budują.”, Koparka: „Dla tych, którzy liczą.”, Ekspres: „Dla tych, którzy nie śpią przed sesją.”).
 - **Żywa plansza:** przez cały zwiastun trwa w tle gra czterech graczy (właściciele sal, budynki, pieniądze na stole, pionki skaczą, czynsz przelatuje między graczami). Wyspa jest w dzień, jak w grze.
-- 19 scen, ok. 2 minut: „Uczelnia, jakiej jeszcze nie znasz”, logo i nazwa, makieta z lotu ptaka („Uniwersytet z jednej strony, wakacje z drugiej”), 4 pionki w studiu, plansza („32 pola”), kostki w zwolnionym tempie („Rzuć”, „Dublet”), przykładowe pytanie z minutnikiem (7 × 8, nigdy z prawdziwej bazy), budowanie od telefonu do serwerowni („Kupuj”, „Buduj”, „Rośnij”), czynsz, monopol, wachlarz kart, manifest („Ucz się”, „Graj”, „Kupuj”, „Buduj”, „Blokuj”, „Wygrywaj”), liczby (2 mln zł, 60 s, 32 pola, 7 semestrów), „Wiedza się opłaca.” z deszczem pieniędzy, „Graj, gdzie chcesz i kiedy chcesz.” (laptop, tablet i telefon, na których ekranach widać żywą planszę z uproszczonym interfejsem gry) i finał z fajerwerkami, przyciskami „Zagraj teraz” i „Obejrzyj jeszcze raz”.
+- 19 scen, ok. 2 minut: „Uczelnia, jakiej jeszcze nie znasz”, logo i nazwa, makieta z lotu ptaka („Uniwersytet z jednej strony, wakacje z drugiej”), 4 pionki w studiu, plansza („32 pola”), kostki w zwolnionym tempie („Rzuć”, „Dublet”), przykładowe pytanie z minutnikiem (7 × 8, nigdy z prawdziwej bazy), budowanie od telefonu do serwerowni („Kupuj”, „Buduj”, „Rośnij”), czynsz, monopol, wachlarz kart, manifest („Ucz się”, „Graj”, „Kupuj”, „Buduj”, „Blokuj”, „Wygrywaj”), liczby (2000 zł, 60 s, 32 pola, 7 semestrów), „Wiedza się opłaca.” z deszczem pieniędzy, „Graj, gdzie chcesz i kiedy chcesz.” (laptop, tablet i telefon, na których ekranach widać żywą planszę z uproszczonym interfejsem gry) i finał z fajerwerkami, przyciskami „Zagraj teraz” i „Obejrzyj jeszcze raz”.
 - Muzyka jest generowana w kodzie, bez plików i bez cudzych nagrań (zob. „Muzyka”). W zwiastunie utwór rośnie razem ze scenami: pad i pianino, potem bas i arpeggio, potem bit, a w finale pełny bit z melodią. Głośność bierze z ustawienia „Muzyka”, w zwiastunie jest też przycisk wyciszenia.
 - Sterowanie: pauza, poprzednia i następna scena, pasek scen (klik = skok do sceny), wyciszenie, zamknięcie. Klawisze: strzałki, spacja, Esc. Przyciski chowają się, gdy nie ruszasz myszką.
 - Kod jest w `index.html`: style z prefiksem `.pr-`, znaczniki w `<section class="promo">`, logika w bloku „Prezentacja” (studio `setStudio`, lista `SCENES`: czas sceny, ujęcie kamery, napisy i zdarzenia).
@@ -346,7 +346,7 @@ Prezentacja zawsze pokazuje dioramę, a po jej zamknięciu wraca wybrany wygląd
 ## Pieniądze i karty graczy obok planszy (od 13.10.2026)
 
 - Rogi „KARTY GRACZA” zniknęły ze środka planszy.
-- Każdy gracz ma swoje miejsce na placu (w tekturze: na stole) przy boku planszy, który zaczyna się w jego rogu: paczki banknotów (każda to 100 tys. zł, w czterech stosach), monety (po 10 tys. zł) i karty ułatwień i utrudnień tyłem do góry. Każdy widzi, kto ile ma i że ktoś ma karty, ale nie widzi, jakie.
+- Każdy gracz ma swoje miejsce na placu (w tekturze: na stole) przy boku planszy, który zaczyna się w jego rogu: paczki banknotów (każda to 100 zł, w czterech stosach), monety (po 10 zł) i karty ułatwień i utrudnień tyłem do góry. Każdy widzi, kto ile ma i że ktoś ma karty, ale nie widzi, jakie.
 - Gdy gracz płaci, paczki lecą łukiem z jego stosu na stos właściciela pola, do puli na środku albo do banku (w górę). Pieniądze z banku spadają z nieba, za START lecą z pola START, a pula leci ze środka planszy.
 
 ## Ikony, awatary i pionki w kolorach uczelni (od 13.10.2026)

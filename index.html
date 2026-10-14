@@ -871,7 +871,7 @@
   }
   .pr-tile b { display: block; font: 800 clamp(26px, 2.8vw, 44px)/1 var(--body); letter-spacing: -.03em; }
   .pr-tile > span { display: block; margin-top: 10px; font: 500 clamp(13px, 1.1vw, 16px)/1.4 var(--body); color: rgba(255, 255, 255, .75); }
-  .pr-specs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(10px, 1.6vw, 24px); width: min(1100px, 100%); margin-top: clamp(28px, 6vh, 64px); }
+  .pr-specs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(10px, 1.6vw, 24px); width: min(1240px, 100%); margin-top: clamp(28px, 6vh, 64px); }
   .pr-spec {
     padding: clamp(16px, 1.8vw, 26px); border-radius: 26px; text-align: left; min-width: 0;
     background: linear-gradient(160deg, rgba(255, 255, 255, .18), rgba(255, 255, 255, .05)); border: 1px solid rgba(255, 255, 255, .2);
@@ -879,7 +879,7 @@
     animation: pr-fade 1.1s cubic-bezier(.16, 1, .3, 1) both; animation-delay: var(--d, 0s);
   }
   .pr-spec b small { font-size: .4em; letter-spacing: -.01em; margin-left: .12em; color: rgba(255, 255, 255, .85); }
-  .pr-spec b { white-space: nowrap; display: block; font: 800 clamp(38px, 5.2vw, 88px)/.9 var(--body); letter-spacing: -.05em; font-variant-numeric: tabular-nums; }
+  .pr-spec b { white-space: nowrap; display: block; font: 800 clamp(36px, 4.8vw, 82px)/.9 var(--body); letter-spacing: -.05em; font-variant-numeric: tabular-nums; }
   .pr-spec > span { display: block; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, .22); font: 600 clamp(13px, 1.15vw, 17px)/1.35 var(--body); color: rgba(255, 255, 255, .78); }
   .pr-names { margin-top: 22px; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 28px; font: 600 clamp(14px, 1.3vw, 19px) var(--body); color: rgba(255, 255, 255, .85); }
   .pr-names span { animation: pr-fade 1s cubic-bezier(.16, 1, .3, 1) both; animation-delay: var(--d, 0s); }
@@ -3853,6 +3853,8 @@ const chipHtml = (label, attrs, pressed, disabled = false) =>
 const randomCode = () => Array.from({ length: 6 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)]).join('');
 
 let profile = store.get('profil', null);
+// statystyki z gier sprzed zmiany skali (kwoty były w tysiącach): przelicz na nowe kwoty
+if (profile?.stats?.wealth > 200000) { profile.stats.wealth = Math.round(profile.stats.wealth / 1000); store.set('profil', profile); }
 const prefs = Object.assign({ theme: 'system', music: 60, effects: 80, scale: 1, spin: true, skin: 'diorama' }, store.get('preferencje', {}));
 const savePrefs = () => store.set('preferencje', prefs);
 const defaultSlots = () => [
@@ -4110,8 +4112,8 @@ const RULES = [
   { t: 'Tura i kostki', b: '<ul><li>Rzucasz dwiema kostkami i idziesz o sumę oczek.</li><li>Dublet: rzucasz jeszcze raz.</li><li>Trzeci dublet z rzędu: idziesz do dziekanatu.</li></ul>' },
   { t: 'Pytania', wide: true, q: true, b: '<p>Przed grą wybierasz semestr od 1 do 7 albo pytania mieszane. Na każde pytanie masz minutę i 4 odpowiedzi do wyboru. Pytania przygotowują wykładowcy. Tutaj pokazujemy tylko przykład, który nie pada w grze:</p>' },
   { t: 'Kupowanie i budowanie', b: '<ul><li>Pierwsza wizyta na wolnej sali: po dobrej odpowiedzi kupujesz salę.</li><li>Każda kolejna wizyta na Twojej sali: po dobrej odpowiedzi budujesz najwyżej 2 poziomy. Kolejno: telefon, laptop, komputer, szafa rack i serwerownia.</li><li>Zła odpowiedź: kupisz albo zbudujesz na początku następnej tury, chyba że ktoś inny Cię uprzedzi.</li><li>Serwerownia chroni salę: nie da się jej zburzyć, odebrać ani wyłączyć.</li></ul>' },
-  { t: 'Premia za START', b: '<p>Gra liczy Twoje odpowiedzi w każdym okrążeniu. Na polu START dostajesz zwykłą kwotę i premię równą procentowi dobrych odpowiedzi z tego okrążenia. Przykład: 200 i 50% dobrych odpowiedzi to razem 300.</p>' },
-  { t: 'Pieniądze i pola', b: '<ul><li>Na start masz 2 mln zł.</li><li>Na cudzej sali płacisz czynsz. Monopol, czyli cała grupa sal w jednych rękach, podwaja czynsz za salę bez budynku.</li><li>Parkingi i pola specjalne kupujesz tak jak sale. Im więcej takich pól masz, tym wyższy czynsz.</li><li>Czesne i kary trafiają do puli na środku. Kto stanie na Stypendium rektorskim, zabiera całą pulę.</li></ul>' },
+  { t: 'Premia za START', b: '<p>Gra liczy Twoje odpowiedzi w każdym okrążeniu. Na polu START dostajesz zwykłą kwotę i premię równą procentowi dobrych odpowiedzi z tego okrążenia. Przykład: 250 zł i 50% dobrych odpowiedzi to razem 375 zł.</p>' },
+  { t: 'Pieniądze i pola', b: '<ul><li>Na start masz 2000 zł.</li><li>Na cudzej sali płacisz czynsz. Monopol, czyli cała grupa sal w jednych rękach, podwaja czynsz za salę bez budynku.</li><li>Parkingi i pola specjalne kupujesz tak jak sale. Im więcej takich pól masz, tym wyższy czynsz.</li><li>Czesne i kary trafiają do puli na środku. Kto stanie na Stypendium rektorskim, zabiera całą pulę.</li></ul>' },
   { t: 'Dziekanat', b: '<ul><li>Stajesz na polu Dziekanat: dostajesz pytanie dziekanatu. Zła odpowiedź to 1 kolejka postoju.</li><li>Pole „Udaj się do dziekanatu” albo trzeci dublet: 2 kolejki. Wcześniej wyjdziesz, płacąc za warunek, rzucając dubletem po dobrej odpowiedzi albo kartą „Wyjście z dziekanatu”.</li></ul>' },
   { t: 'Szansa i karty', b: '<p>Na polu Szansa odpowiadasz na pytanie. Dobra odpowiedź daje kartę ułatwienia, zła kartę utrudnienia. Drugie pytanie może podwoić działanie karty.</p>' },
   { t: '2 na 2 i boty', b: '<ul><li>W drużynie nie płacisz czynszu partnerowi. Możesz rozbudować jego salę, ale sala i czynsz zostają jego.</li><li>Boty mają 3 poziomy: łatwy, średni i trudny. Im trudniejszy bot, tym częściej odpowiada dobrze i rozsądniej wydaje pieniądze.</li></ul>' },
@@ -4552,9 +4554,9 @@ const BONUS_CARDS = [
   { name: 'Ochrona mienia', icon: 'shieldRoom', tag: 'tarcza', text: 'Połóż tarczę na swojej sali. Blokuje jeden atak na tę salę.', x2: 'Tarcza na 2 sale.' },
   { name: 'Ubezpieczenie studenckie', icon: 'shieldPerson', tag: 'tarcza', text: 'Przez 3 tury przeciwnicy nie mogą atakować Twoich sal.', x2: 'Ochrona przez 6 tur.' },
   { name: 'Grant badawczy', icon: 'grant', text: 'Ulepsz za darmo swój budynek o 1 poziom.', x2: 'Ulepsz o 2 poziomy.' },
-  { name: 'Stypendium naukowe', icon: 'coins', text: 'Dostajesz 250 tys. zł z banku.', x2: 'Dostajesz 500 tys. zł.' },
-  { name: 'Zwrot czesnego', icon: 'refund', text: 'Weź 150 tys. zł z puli na środku planszy.', x2: 'Weź 300 tys. zł z puli.' },
-  { name: 'Praca w samorządzie', icon: 'people', text: 'Każdy gracz płaci Ci 60 tys. zł.', x2: 'Każdy gracz płaci Ci 120 tys. zł.' },
+  { name: 'Stypendium naukowe', icon: 'coins', text: 'Dostajesz 250 zł z banku.', x2: 'Dostajesz 500 zł.' },
+  { name: 'Zwrot czesnego', icon: 'refund', text: 'Weź 150 zł z puli na środku planszy.', x2: 'Weź 300 zł z puli.' },
+  { name: 'Praca w samorządzie', icon: 'people', text: 'Każdy gracz płaci Ci 60 zł.', x2: 'Każdy gracz płaci Ci 120 zł.' },
   { name: 'Wcześniejsza sesja', icon: 'forward', text: 'Przesuń się o 3 pola do przodu.', x2: 'Wybierz: 3 albo 6 pól.' },
   { name: 'Notatki od kolegi', icon: 'notes', tag: 'zachowaj', text: 'Przy następnym pytaniu znikają 2 złe odpowiedzi.' },
 ];
@@ -4563,8 +4565,8 @@ const PENALTY_CARDS = [
   { name: 'Cięcia budżetowe', icon: 'scissors', tag: 'atak', text: 'Sprzedaj bankowi jedną swoją salę za pół ceny.' },
   { name: 'Zmiana planu zajęć', icon: 'swap', tag: 'atak', text: 'Losowa Twoja sala przechodzi do losowego przeciwnika.' },
   { name: 'Brak prądu', icon: 'bulb', tag: 'atak', text: 'Twoja sala nie pobiera czynszu przez 3 tury.' },
-  { name: 'Opłaty za sprzęt', icon: 'wrench', text: 'Zapłać 25 tys. zł za każdy budynek i 125 tys. zł za serwerownię.', x2: 'Podwójne kwoty.' },
-  { name: 'Warunek', icon: 'exam', text: 'Zapłać 150 tys. zł do puli na środku planszy.', x2: 'Zapłać 300 tys. zł.' },
+  { name: 'Opłaty za sprzęt', icon: 'wrench', text: 'Zapłać 25 zł za każdy budynek i 125 zł za serwerownię.', x2: 'Podwójne kwoty.' },
+  { name: 'Warunek', icon: 'exam', text: 'Zapłać 150 zł do puli na środku planszy.', x2: 'Zapłać 300 zł.' },
   { name: 'Spóźnienie na zajęcia', icon: 'clock', text: 'Cofnij się o 3 pola.', x2: 'Cofnij się o 6 pól.' },
   { name: 'Udaj się do dziekanatu', icon: 'door', text: 'Idziesz od razu do dziekanatu.', x2: 'Nie możesz użyć karty wyjścia.' },
   { name: 'Kolokwium poprawkowe', icon: 'hourglass', text: 'Tracisz 1 kolejkę.', x2: 'Tracisz 2 kolejki.' },
@@ -4915,16 +4917,15 @@ if (window.KartyPytan) {
 // Rozgrywka: tury, kostki, pytania, kupowanie i budowanie, karty, dziekanat, boty, koniec gry.
 // Kwoty i ustawienia, których autor jeszcze nie ustalił, są w jednym miejscu (ECON i niżej).
 // ---------------------------------------------------------------------------
-// Ekonomia jak w Business Tour: kwoty w złotych, na start 2 mln zł. Na ekranie skrót „250 tys. zł”, „2 mln zł”.
+// Ekonomia w proporcjach Business Tour, ale w zwykłych kwotach: na start 2000 zł, sale od 80 do 400 zł.
+// Na ekranie pełna kwota bez skrótów („250 zł”, „12 500 zł”). K to skala wszystkich kwot (1 = złote).
 const CUR = 'zł';
-const K = 1000;
+const K = 1;
 function money(v) {
   const x = Math.round(Math.abs(v)), sign = v < 0 ? '−' : '';
-  if (x >= 1e6) return `${sign}${(x / 1e6).toLocaleString('pl-PL', { maximumFractionDigits: 2 })} mln ${CUR}`;
-  if (x >= 1e3) return `${sign}${(x / 1e3).toLocaleString('pl-PL', { maximumFractionDigits: 1 })} tys. ${CUR}`;
-  return `${sign}${x} ${CUR}`;
+  return `${sign}${x.toLocaleString('pl-PL')} ${CUR}`;
 }
-const roundK = v => Math.round(v / K) * K;   // czynsze i koszty zaokrąglone do pełnych tysięcy
+const roundK = v => Math.round(v / K) * K;   // czynsze i koszty zaokrąglone do pełnych złotych
 const ECON = {
   startCash: 2000 * K,             // gotówka na początek
   startPay: 250 * K,               // zwykła kwota za przejście przez START (do tego premia za odpowiedzi)
@@ -6472,8 +6473,8 @@ function playerCards(p) {
   if (off) out.push({ card: findCard('bulb', 'penalty'), note: `bez prądu: ${off}` });
   return out;
 }
-// Pieniądze i karty graczy leżą na stole obok planszy, w rogu gracza: paczki banknotów (po 100 tys. zł),
-// monety (po 10 tys. zł) i karty ułatwień i utrudnień tyłem do góry. Każdy widzi, kto ile ma.
+// Pieniądze i karty graczy leżą na stole obok planszy, w rogu gracza: paczki banknotów (po 100 zł),
+// monety (po 10 zł) i karty ułatwień i utrudnień tyłem do góry. Każdy widzi, kto ile ma.
 const NOTE = 100 * K, COIN = 10 * K;
 const BUNDLE_W = 0.86, BUNDLE_D = 0.43, BUNDLE_H = 0.062;
 const PILES = [[-1.35, 0], [-0.45, 0], [0.45, 0], [1.35, 0]];
@@ -6487,7 +6488,7 @@ function noteTexture() {
   for (let k = 0; k < 18; k++) { g.beginPath(); g.arc(120, 128, 20 + k * 6, 0, Math.PI * 2); g.stroke(); }
   g.fillStyle = 'rgba(255,255,255,.85)'; g.beginPath(); g.arc(120, 128, 62, 0, Math.PI * 2); g.fill();
   g.fillStyle = '#1F6B45'; g.font = '700 54px Fredoka, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
-  g.fillText('100', 120, 120); g.font = '700 22px Fredoka, sans-serif'; g.fillText('tys. zł', 120, 160);
+  g.fillText('100', 120, 120); g.font = '700 26px Fredoka, sans-serif'; g.fillText('zł', 120, 160);
   g.font = '700 70px Fredoka, sans-serif'; g.fillStyle = 'rgba(255,255,255,.9)'; g.fillText('100', 390, 128);
   // banderola paczki: kremowy papier ze złotymi brzegami
   g.fillStyle = '#F6EED9'; g.fillRect(232, 0, 52, 256);
@@ -7333,7 +7334,7 @@ const SCENES = [
     html: () => `<div class="pr-scene at-center">
       ${fadeP('pr-eyebrow', 'WSiZ Tour w liczbach', 0.2)}
       <div class="pr-specs">${[
-        [2, 'mln zł', 'na start dla każdego gracza'],
+        [2000, 'zł', 'na start dla każdego gracza'],
         [60, 's', 'na każdą odpowiedź'],
         [32, '', 'pola, od dziekanatu po salę balową'],
         [7, '', 'semestrów pytań albo wszystkie naraz'],
