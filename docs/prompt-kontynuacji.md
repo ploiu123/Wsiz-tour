@@ -42,13 +42,13 @@ Robię grę **WSiZ Tour** jako pracę inżynierską. To gra planszowa 3D w przeg
 
 Pierwsza pełna wersja rozgrywki jest gotowa (13.10.2026). Opis i wszystkie przyjęte ustawienia są w `docs/zalozenia.md`, w sekcjach „Baza pytań” i „Rozgrywka: co działa i jakie ustawienia przyjęliśmy”. Zanim zaczniesz coś nowego, zapytaj mnie, czy mam poprawki do rozgrywki i czy potwierdzam ustawienia tymczasowe.
 
-Realizujemy plan z `docs/plan-techniczny.md`. Etap 1 (Vite) jest zrobiony, następny jest etap 2 (logika gry w `src/core`). Kod rozgrywki jest teraz w `src/legacy/game.js`, w bloku „Rozgrywka”. Najważniejsze miejsca:
-- ustawienia: `ECON`, `GROUP_PRICE`, `RENT_MULT`, `BUILD_MULT`, `BOT`, `SHOW_CORRECT`, `DICE_SOUND_FILE`,
-- przebieg: `startGame` → `runGame` → `playTurn` (kostki `rollDice`, ruch `movePlayer`, pole `landOn`),
+Realizujemy plan z `docs/plan-techniczny.md`. Etapy 1 (Vite) i 2 (silnik gry w `src/core`) są zrobione, następny jest etap 3 (serwer gry). Zasady gry są w `src/core/engine.ts` i `src/core/rules.ts`; `src/legacy/game.js` odtwarza zdarzenia silnika (blok „Odtwarzanie zdarzeń silnika”). Najważniejsze miejsca:
+- ustawienia: `ECON`, `GROUP_PRICE`, `RENT_MULT`, `BUILD_MULT`, `BOT` (w `src/data/economy.ts`), `DICE_SOUND_FILE` (w `src/legacy/game.js`),
+- przebieg: `startGame` (przeglądarka) → `GameEngine.run` → `playTurn` (kostki `rollDice`, ruch `movePlayer`, pole `landOn`),
 - pola: `landProperty` (kupno, budowa, czynsz), `chance` i `applyCard` (karty), `jailTurn` i `landJail` (dziekanat),
-- okna: `banner` (duże komunikaty), `choose` (wybór, bot wybiera sam), `askQuestion` (pytanie z minutnikiem),
-- koniec: `endGame` (wynik, Prymus, zapis statystyk w profilu), `quitGame` (sprzątanie planszy).
-Funkcja `w()` przerywa turę, gdy gra się skończyła albo gracz wyszedł do menu. Każde `await` w turze idzie przez `w()`.
+- decyzje: `choose` (wybór), `askQuestion` (pytanie z minutnikiem), `ack` (karta); w przeglądarce okna `chooseModal`, `questionModal`, `cardModal`,
+- koniec: `endGame` w silniku (wynik i Prymus z `scoreGame`), `showEnd` w przeglądarce (ekran wyniku, zapis statystyk w profilu), `quitGame` (sprzątanie planszy).
+Po końcu gry silnik przerywa turę wyjątkiem `STOP`. Symulacja wielu gier botów: `npm run sim -- 300`.
 
 ## Następne kroki (propozycja)
 
@@ -95,3 +95,4 @@ Funkcja `w()` przerywa turę, gdy gra się skończyła albo gracz wyszedł do me
 - **14.10.2026, interpunkcja i świeży wygląd:** kropki tylko po pełnych zdaniach (prezentacja, komunikaty w grze, film i strona-wizytówka). Ekran gry jak w Business Tour: karty graczy w czterech rogach ekranu, pula i menu na górze, karty i opis ruchu na dole. Prezentacja w dzień (noc tylko w finale z fajerwerkami), granat uczelni zamiast czerni, bez kinowych pasów i ziarna, jasne studio pionków z poświatą w kolorze gracza, pytanie na białej karcie z kolorowymi literami, liczby na szklanych kafelkach, szklane sterowanie.
 - **14.10.2026, mniejsze kwoty:** pieniądze w zwykłych złotych zamiast tysięcy i milionów (2000 zł na start, sale od 80 do 400 zł, START 250 zł), te same proporcje. Pełne kwoty na ekranie, banknoty po 100 zł, karty, zasady, prezentacja i strona-wizytówka przeliczone. Stare statystyki profilu przeliczają się same.
 - **14.10.2026, etap 1 planu technicznego (Vite):** projekt przeniesiony z jednego pliku na Vite. Szkielet strony w `index.html`, style w `src/styles`, dane gry w TypeScript w `src/data` (plansza, ekonomia, karty, kolory graczy), gra w `src/legacy/game.js`. Three.js z npm zamiast CDN, czcionki w paczce (bez Google Fonts), paczka `dist/` z kompresją Brotli i gzip (JS 827 KB, po Brotli 189 KB), lokalne utwory z Uppbeat nie trafiają na serwer. ESLint, TypeScript, testy Vitest (11) i Playwright (4: menu, gra z rzutem, prezentacja, telefon). Wygląd i zachowanie gry bez zmian. Plan rozwoju w `docs/plan-techniczny.md`, wdrożenie w `docs/wdrozenie.md`.
+- **14.10.2026, etap 2 planu technicznego (silnik gry):** zasady gry przeniesione do `src/core` (TypeScript): silnik tury ze stanem jako JSON, decyzjami i zdarzeniami, zasady jako czyste funkcje, pytania z talią, losowanie z ziarnem (ta sama gra przy tym samym seedzie), sterownik gry lokalnej z zegarem, pauzą i „namysłem” botów. Przeglądarka nie zna już dobrych odpowiedzi; odtwarza zdarzenia z animacjami i odsyła decyzje. Testy: 16 jednostkowych (w tym pełne gry botów i tryb 2 na 2) i 5 w przeglądarce (w tym 5 minut gry jak człowiek i koniec z pauzy). Nowe polecenie `npm run sim` pokazało, że gry są za długie (średnio 438 tur); ekonomię dostroimy po filmie wzorcowym.

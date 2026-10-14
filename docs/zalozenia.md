@@ -496,3 +496,5 @@ Prezentacja zawsze pokazuje dioramę, a po jej zamknięciu wraca wybrany wygląd
 - **Scena:** główna scena będzie pokojem ze stołem, makieta kampusu nad wodą zostaje jako drugi wygląd.
 - **Etap 1 zrobiony:** projekt na Vite (TypeScript, ESLint, testy Vitest i Playwright), czcionki w paczce, paczka na serwer w `dist/` z kompresją. Uruchamianie: `npm install`, potem `npm run dev`. Wdrożenie: `docs/wdrozenie.md`.
 - **Gra wieloosobowa:** logika gry przejdzie do `src/core` (etap 2), serwer Node.js z WebSocket w `server/` (etap 3). Serwer decyduje o rzutach i pieniądzach; poprawne odpowiedzi na pytania nie trafiają do przeglądarki.
+- **Etap 2 zrobiony (14.10.2026):** zasady gry działają w osobnym silniku (`src/core`), z którego skorzysta też serwer. Przeglądarka nie zna dobrych odpowiedzi na pytania. Każdą grę da się powtórzyć z tym samym seedem.
+- **Ekonomia do strojenia:** symulacja 300 gier botów pokazała, że gry trwają za długo (średnio 438 tur, 39% bez rozstrzygnięcia przed limitem 600 tur). Autor przyśle film z grą wzorcową (styl gotówki, pól, mechanik i ekonomii); na jego podstawie zmienimy kwoty i czynsze w `src/data/economy.ts`.
