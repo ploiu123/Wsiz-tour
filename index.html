@@ -135,6 +135,23 @@
         </div>
       </div>
 
+      <div class="m-page" id="pgLobby" hidden>
+        <div class="m-head"><button class="m-back" type="button" id="lobbyLeave"></button><h2>Party online</h2><span class="m-pill" id="lobbyPill">Poczekalnia</span></div>
+        <div class="m-card m-section">
+          <h3>Kod party</h3>
+          <div class="row"><span class="m-code" id="lobbyCode"></span><button class="m-btn m-secondary" id="lobbyCopy" type="button">Kopiuj kod</button></div>
+          <p class="m-hint" id="lobbyInfo" style="margin-top: 12px"></p>
+        </div>
+        <div class="m-card m-section">
+          <h3>Gracze</h3>
+          <div class="m-slots" id="lobbySeats"></div>
+        </div>
+        <div class="m-actions">
+          <p class="m-hint" id="lobbyHint" aria-live="polite"></p>
+          <button class="m-btn m-primary m-big" id="btnLobbyStart" type="button"></button>
+        </div>
+      </div>
+
       <div class="m-page" id="pgRanking" hidden>
         <div class="m-head"><button class="m-back" type="button" data-go="home"></button><h2>Ranking</h2><span class="m-pill">Dane przykładowe</span></div>
         <div class="m-podium" id="podium"></div>

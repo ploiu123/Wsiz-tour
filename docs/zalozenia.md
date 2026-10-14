@@ -114,7 +114,9 @@ Tam, gdzie autor jeszcze nie zdecydował, przyjęte są ustawienia tymczasowe. W
 - Wyniki gracza „Ty” zapisują się w przeglądarce (profil i wiersz w rankingu).
 
 **Tryby i boty**
-- Solo: gracze przy jednym komputerze grają na zmianę, puste miejsca mogą zająć boty. Tryb online zadziała po uruchomieniu serwera gry. Do tego czasu miejsca „Gracz online” grają przy tym samym komputerze.
+- Solo: gracze przy jednym komputerze grają na zmianę, puste miejsca mogą zająć boty.
+- Online (od 14.10.2026): gospodarz tworzy party na serwerze gry i dostaje 6-znakowy kod, znajomi dołączają tym kodem. Gospodarz ustawia miejsca (gracze online, gracz przy jego komputerze, boty), semestr i czas gry, a grę zaczyna, gdy wszyscy dołączą. Rzuty, pieniądze, czas i boty liczy serwer, przeglądarki tylko pokazują przebieg i odsyłają decyzje swoich graczy. Dobre odpowiedzi nigdy nie trafiają do przeglądarki, a karty innych graczy widać tylko od tyłu.
+- Gra online nie ma pauzy: menu w trakcie gry tylko przykrywa planszę. Grę dla wszystkich kończy gospodarz. Kto wyjdzie z gry, za tego dalej gra bot. Po odświeżeniu strony albo zerwanym połączeniu gracz wraca na swoje miejsce. Gracz, który nie reaguje 2 minuty (rozłączony: 20 sekund), traci decyzję na rzecz bota.
 - 2 na 2: drużyna A to miejsca 1 i 3, drużyna B to 2 i 4. Partner nie płaci czynszu. Partner może rozbudować salę kolegi z drużyny: płaci sam, a sala i czynsz zostają właściciela.
 - Boty: łatwy (ok. 45% dobrych odpowiedzi), średni (65%), trudny (85%). Trudniejsze boty zostawiają większą rezerwę gotówki i chętniej domykają monopole.
 
@@ -313,7 +315,7 @@ Ilustracje kart są wektorowe (SVG), rysowane w kodzie przez asystenta AI (Claud
 
 - Stosy ułatwień i utrudnień leżą po bokach logo. Każdy gracz ma swój róg planszy: róg przy START dla miejsca 1, dalej zgodnie z ruchem pionków.
 - Karty, które gracz trzyma (np. „Wyjście z dziekanatu”, „Notatki od kolegi”), i działające na niego efekty (ubezpieczenie, tarcze, utracona kolejka, brak prądu) leżą na stole przy jego boku planszy tyłem do góry (zob. „Pieniądze i karty graczy na stole”). Każdy widzi, że ktoś ma ułatwienia albo utrudnienia, ale nie widzi, jakie.
-- **Kamera z perspektywy gracza:** ekran patrzy od strony rogu gracza, który jest przy komputerze (pierwszy gracz przy tym komputerze). Kamera nie obraca się sama w trakcie gry. W trybie online każdy będzie miał swój róg na dole ekranu.
+- **Kamera z perspektywy gracza:** ekran patrzy od strony rogu gracza, który jest przy komputerze (pierwszy gracz przy tym komputerze). Kamera nie obraca się sama w trakcie gry. W trybie online każdy ma swój róg na dole ekranu.
 - **Panel „Twoje karty”** w prawym dolnym rogu ekranu: miniatury aktów własności gracza i jego kart ułatwień i utrudnień (z opisem, np. „do użycia”, „2 tury”). Kliknięcie miniatury otwiera kartę w okienku. Panel można zwinąć.
 
 ## Ekran gry i kamera (od 13.10.2026)
@@ -469,7 +471,7 @@ Prezentacja zawsze pokazuje dioramę, a po jej zamknięciu wraca wybrany wygląd
 | 6 | Pytania: szablon dla wykładowców, okno pytania z minutnikiem | szablon Excela i skrypt do gry gotowe, okno pytania z minutnikiem i talia z tasowaniem działają; wzór karty do druku gotowy |
 | 7 | Zasady i rozgrywka, tryb 2 na 2, boty | pierwsza pełna wersja (13.10.2026): kostki, ruch, kupno, budowa, czynsz, karty, dziekanat, 2 na 2, boty |
 | 8 | Ekrany: menu, ustawienia gry, koniec gry | menu gotowe; w grze panel graczy, pauza i ekran końca gry |
-| 9 | Tryb online | |
+| 9 | Tryb online | pierwsza wersja (14.10.2026): serwer gry, party z kodem, poczekalnia, gra i powrót po odświeżeniu |
 | 10 | Logowanie przez wirtualny dziekanat | |
 | 11 | Testy i wdrożenie na serwer uczelni | |
 | 12 | Wersja do druku (opcjonalnie) | |

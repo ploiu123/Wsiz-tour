@@ -16,7 +16,8 @@ Robię grę **WSiZ Tour** jako pracę inżynierską. To gra planszowa 3D w przeg
 - **Najważniejsze pliki:**
   - Projekt na Vite (od 14.10.2026). `index.html` to szkielet strony (ekrany, panele, prezentacja), `src/main.js` wejście (czcionki, style, gra).
   - `src/data/` (TypeScript): dane gry bez grafiki: `board.ts` (pola, grupy, układ), `economy.ts` (kwoty, ceny, czynsze, boty), `cards.ts` (karty), `players.ts` (kolory graczy).
-  - `src/legacy/game.js`: grafika 3D (Three.js z npm), modele, interfejs i rozgrywka, przeniesione 1:1 z dawnego jednego pliku. W etapie 2 logika gry przechodzi do `src/core`.
+  - `src/core/` (TypeScript): silnik gry (zasady, tury, pytania, boty, losowanie z ziarnem). `src/legacy/game.js`: grafika 3D (Three.js z npm), modele i interfejs; odtwarza zdarzenia silnika.
+  - `server/` (Node.js, TypeScript): serwer gry online (pokoje z kodem, silnik po stronie serwera), `npm run server`. W przeglądarce połączenie z nim: `src/net/online.ts`.
   - `src/styles/`: `base.css`, `menu.css`, `game.css`, `promo.css`. `tests/unit` (Vitest) i `tests/e2e` (Playwright).
   - `docs/plan-techniczny.md`: plan rozwoju krok po kroku i przyjęte decyzje (silnik, serwer, grafika 4K). `docs/wdrozenie.md`: paczka na serwer i ustawienia Nginx/Apache.
   - `pytania/`: baza pytań. `pytania.xlsx` wypełniają wykładowcy, `excel-na-js.py` zamienia go na `baza-pytan.js`, który czyta gra. `xlsx_prosty.py` czyta i zapisuje pliki Excela bez dodatkowych bibliotek.
@@ -42,9 +43,9 @@ Robię grę **WSiZ Tour** jako pracę inżynierską. To gra planszowa 3D w przeg
 
 Pierwsza pełna wersja rozgrywki jest gotowa (13.10.2026). Opis i wszystkie przyjęte ustawienia są w `docs/zalozenia.md`, w sekcjach „Baza pytań” i „Rozgrywka: co działa i jakie ustawienia przyjęliśmy”. Zanim zaczniesz coś nowego, zapytaj mnie, czy mam poprawki do rozgrywki i czy potwierdzam ustawienia tymczasowe.
 
-Realizujemy plan z `docs/plan-techniczny.md`. Etapy 1 (Vite) i 2 (silnik gry w `src/core`) są zrobione, następny jest etap 3 (serwer gry). Zasady gry są w `src/core/engine.ts` i `src/core/rules.ts`; `src/legacy/game.js` odtwarza zdarzenia silnika (blok „Odtwarzanie zdarzeń silnika”). Najważniejsze miejsca:
+Realizujemy plan z `docs/plan-techniczny.md`. Etapy 1 (Vite), 2 (silnik gry w `src/core`) i 3 (serwer gry i tryb online) są zrobione, następny jest etap 4 (renderer WebGPU i scena 4K). Zasady gry są w `src/core/engine.ts` i `src/core/rules.ts`; `src/legacy/game.js` odtwarza zdarzenia silnika (blok „Odtwarzanie zdarzeń silnika”). Najważniejsze miejsca:
 - ustawienia: `ECON`, `GROUP_PRICE`, `RENT_MULT`, `BUILD_MULT`, `BOT` (w `src/data/economy.ts`), `DICE_SOUND_FILE` (w `src/legacy/game.js`),
-- przebieg: `startGame` (przeglądarka) → `GameEngine.run` → `playTurn` (kostki `rollDice`, ruch `movePlayer`, pole `landOn`),
+- przebieg: `startGame` (przeglądarka) → `GameEngine.run` → `playTurn` (kostki `rollDice`, ruch `movePlayer`, pole `landOn`); online: `openOnline` i poczekalnia `renderLobby` → serwer (`Room.start` w `server/room.ts`) → `beginOnline` w przeglądarce,
 - pola: `landProperty` (kupno, budowa, czynsz), `chance` i `applyCard` (karty), `jailTurn` i `landJail` (dziekanat),
 - decyzje: `choose` (wybór), `askQuestion` (pytanie z minutnikiem), `ack` (karta); w przeglądarce okna `chooseModal`, `questionModal`, `cardModal`,
 - koniec: `endGame` w silniku (wynik i Prymus z `scoreGame`), `showEnd` w przeglądarce (ekran wyniku, zapis statystyk w profilu), `quitGame` (sprzątanie planszy).
@@ -54,7 +55,7 @@ Po końcu gry silnik przerywa turę wyjątkiem `STOP`. Symulacja wielu gier bot�
 
 1. Moje poprawki do rozgrywki i potwierdzenie ekonomii (ceny, czynsze, START, waluta).
 2. Grafika planszy w stylu animowanym z liniami rysunkowymi (kontury jak w kreskówce).
-3. Serwer gry (Node.js): tryb online z kodem party, potem logowanie przez wirtualny dziekanat.
+3. Logowanie przez wirtualny dziekanat na serwerze gry (gdy dział IT poda standard logowania).
 4. Prawdziwe pytania od wykładowców w `pytania/pytania.xlsx`.
 
 ## Pytania, na które czekam od autora (nie zgaduj, zapytaj)
@@ -96,3 +97,4 @@ Po końcu gry silnik przerywa turę wyjątkiem `STOP`. Symulacja wielu gier bot�
 - **14.10.2026, mniejsze kwoty:** pieniądze w zwykłych złotych zamiast tysięcy i milionów (2000 zł na start, sale od 80 do 400 zł, START 250 zł), te same proporcje. Pełne kwoty na ekranie, banknoty po 100 zł, karty, zasady, prezentacja i strona-wizytówka przeliczone. Stare statystyki profilu przeliczają się same.
 - **14.10.2026, etap 1 planu technicznego (Vite):** projekt przeniesiony z jednego pliku na Vite. Szkielet strony w `index.html`, style w `src/styles`, dane gry w TypeScript w `src/data` (plansza, ekonomia, karty, kolory graczy), gra w `src/legacy/game.js`. Three.js z npm zamiast CDN, czcionki w paczce (bez Google Fonts), paczka `dist/` z kompresją Brotli i gzip (JS 827 KB, po Brotli 189 KB), lokalne utwory z Uppbeat nie trafiają na serwer. ESLint, TypeScript, testy Vitest (11) i Playwright (4: menu, gra z rzutem, prezentacja, telefon). Wygląd i zachowanie gry bez zmian. Plan rozwoju w `docs/plan-techniczny.md`, wdrożenie w `docs/wdrozenie.md`.
 - **14.10.2026, etap 2 planu technicznego (silnik gry):** zasady gry przeniesione do `src/core` (TypeScript): silnik tury ze stanem jako JSON, decyzjami i zdarzeniami, zasady jako czyste funkcje, pytania z talią, losowanie z ziarnem (ta sama gra przy tym samym seedzie), sterownik gry lokalnej z zegarem, pauzą i „namysłem” botów. Przeglądarka nie zna już dobrych odpowiedzi; odtwarza zdarzenia z animacjami i odsyła decyzje. Testy: 16 jednostkowych (w tym pełne gry botów i tryb 2 na 2) i 5 w przeglądarce (w tym 5 minut gry jak człowiek i koniec z pauzy). Nowe polecenie `npm run sim` pokazało, że gry są za długie (średnio 438 tur); ekonomię dostroimy po filmie wzorcowym.
+- **14.10.2026, etap 3 planu technicznego (serwer gry i tryb online):** serwer gry w `server/` (Node.js, TypeScript, Socket.IO, `npm run server`): pokoje z 6-znakowym kodem, ten sam silnik gry na serwerze, serwer losuje, liczy pieniądze i czas i decyduje za boty, przeglądarki dostają ukryte karty innych graczy i pytania bez dobrej odpowiedzi. W menu: Online, „Stwórz party” albo „Dołącz kodem”, poczekalnia z kodem i graczami, start przez gospodarza. Gra online bez pauzy, koniec przez gospodarza, za gracza, który wyszedł, gra bot, powrót na swoje miejsce po odświeżeniu strony. Testy: 4 testy serwera i gra w dwóch przeglądarkach. Wdrożenie serwera w `docs/wdrozenie.md`.

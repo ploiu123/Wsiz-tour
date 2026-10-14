@@ -220,6 +220,14 @@ body.menu-open .hud, body.menu-open .vignette { display: none !important; }
 .m-pawn:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .m-slot .swatch { width: 26px; height: 26px; }
 .m-code { font: 700 26px var(--display); letter-spacing: .2em; padding: 6px 16px; border-radius: 12px; background: var(--chip); color: var(--ink); }
+/* poczekalnia party online */
+.m-slot.is-waiting .m-avatar { opacity: .45; }
+.m-slot.is-you { border-color: var(--ink); }
+.m-live { width: 9px; height: 9px; border-radius: 50%; background: #2E9E8A; flex: none; }
+.m-live.off { background: var(--panel-line); }
+.m-slot.is-waiting .m-live { animation: m-wait 1.4s ease-in-out infinite; }
+@keyframes m-wait { 50% { opacity: .3; } }
+@media (prefers-reduced-motion: reduce) { .m-slot.is-waiting .m-live { animation: none; } }
 
 /* ranking */
 .m-podium { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }

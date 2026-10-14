@@ -27,8 +27,8 @@ Cel: gra przeglądarkowa o jakości wizualnej „AAA”, ostra na monitorach 4K,
 |---|---|---|
 | 1. Vite i struktura | Vite, TypeScript, ESLint, Prettier; `index.html` rozdzielony na szkielet, style (`src/styles`), dane gry (`src/data`, TypeScript) i moduł gry (`src/legacy/game.js`); Three.js z npm; czcionki z Fontsource w paczce; paczka `dist/` z kompresją Brotli i gzip; testy Vitest i Playwright | **zrobione 14.10.2026** |
 | 2. Logika osobno | `src/core` w TypeScript: silnik tury (`engine.ts`) ze stanem jako JSON, decyzjami gracza i zdarzeniami, zasady (`rules.ts`), pytania (`questions.ts`), losowanie z ziarnem (`rng.ts`), sterownik gry lokalnej (`local-driver.ts`); przeglądarka tylko odtwarza zdarzenia i odsyła decyzje; testy silnika (pełne gry botów, powtarzalność, sprawdzanie decyzji) i symulacja `npm run sim` | **zrobione 14.10.2026** |
-| 3. Serwer | `server/`: Node.js, TypeScript, WebSocket (Socket.IO), pokoje z kodem, serwer decyduje o rzutach, pieniądzach i czasie, pytania bez odpowiedzi w przeglądarce, `.env` na klucz uczelni | następny |
-| 4. Renderer i scena 4K | renderer WebGPU z zapasowym WebGL2, pokój ze stołem, pełny `devicePixelRatio`, dynamiczna rozdzielczość, poziomy jakości (Niska, Średnia, Wysoka, Ultra 4K) | |
+| 3. Serwer | `server/`: Node.js, TypeScript, WebSocket (Socket.IO), pokoje z kodem, serwer decyduje o rzutach, pieniądzach i czasie, pytania bez odpowiedzi w przeglądarce, `.env` na klucz uczelni; w przeglądarce `src/net/online.ts` (połączenie i sterownik gry online) i poczekalnia party w menu | **zrobione 14.10.2026** |
+| 4. Renderer i scena 4K | renderer WebGPU z zapasowym WebGL2, pokój ze stołem, pełny `devicePixelRatio`, dynamiczna rozdzielczość, poziomy jakości (Niska, Średnia, Wysoka, Ultra 4K) | następny |
 | 5. Zasoby i PBR | skrypt wypiekający modele do GLB (meshopt, tekstury KTX2 do 4K, LOD), lakier, metal, szkło, drewno, papier, mapa HDR | |
 | 6. Fizyka kości | Rapier: kości z masą, tarciem i odbiciem; wynik zawsze z logiki albo serwera (kość obrócona tak, żeby wypadła wylosowana ścianka) | |
 | 7. Efekty i kamera | AO, bloom, SMAA albo TAA, korekcja kolorów, głębia ostrości przy rzucie, najazdy kamery na kupowane pole | |
@@ -45,3 +45,14 @@ Prezentację gry, film i stronę-wizytówkę przenosimy po etapie 7.
 - **Przeglądarka** (`src/legacy/game.js`) odtwarza zdarzenia po kolei z animacjami (`pump`, `playEvent`), pokazuje okna decyzji i odsyła wybór. Pauza zatrzymuje kolejkę zdarzeń, zegar gry i boty.
 - **Powtarzalność:** ten sam seed daje tę samą grę. Serwer w etapie 3 użyje tego samego silnika.
 - **Symulacja ekonomii** (`npm run sim -- 300`, 14.10.2026): średnio 438 tur na grę, 39% gier bez rozstrzygnięcia przed limitem 600 tur, 31% kończy 4 monopole, 19% bankructwo, 12% pola specjalne. Gry są dużo dłuższe niż w Business Tour; ekonomię dostroimy po obejrzeniu filmu wzorcowego od autora.
+
+## Etap 3: jak działa gra online
+
+- **Serwer** (`server/index.ts`, `npm run server`) podaje pliki gry z `dist/` i prowadzi pokoje przez WebSocket (Socket.IO). Pokój (`server/room.ts`) ma kod z 6 znaków, miejsca graczy (gospodarz, gracze online, gracz przy komputerze gospodarza, boty) i ten sam silnik gry co gra przy jednym komputerze.
+- **Kto o czym decyduje:** serwer losuje (ziarno z `crypto`), liczy pieniądze i czas gry, decyduje za boty. Przeglądarka odsyła tylko decyzje swoich graczy; decyzja za innego gracza jest odrzucana. Każda przeglądarka dostaje stan z ukrytymi kartami innych graczy, a pytania bez dobrej odpowiedzi.
+- **Tempo jak przy jednym komputerze:** bot decyduje dopiero, gdy wszystkie przeglądarki pokażą jego decyzję (najwyżej 8 s czekania), i po chwili „namysłu”. Minutnik pytania liczy się od chwili, gdy gracz zobaczył pytanie (plus 3 s zapasu na sieć).
+- **Gracz znika:** po 2 minutach bez reakcji (po rozłączeniu po 20 s) decyzję podejmuje bot. Kto kliknie „Wyjdź do menu”, za tego do końca gra bot, a inni dostają komunikat.
+- **Powrót:** przeglądarka pamięta kod party i token (3 godziny). Po odświeżeniu strony albo zerwanym połączeniu wraca na swoje miejsce i odbudowuje widok ze stanu serwera.
+- **Bezpieczeństwo:** dane z sieci są sprawdzane (ustawienia pokoju, nick 2–20 znaków, numery decyzji), wiadomości mają limit 64 KB, pokój bez graczy znika po 10 minutach. Klucz uczelni będzie tylko w `.env` na serwerze.
+- **Testy:** 4 testy serwera (złe ustawienia, gra gospodarza i gościa z botami, gracz przy komputerze gospodarza, powrót po rozłączeniu) i test w dwóch przeglądarkach (`tests/e2e/online.spec.js`: party, dołączenie kodem, gra, odświeżenie strony, koniec gry przez gospodarza).
+

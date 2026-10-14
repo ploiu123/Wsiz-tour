@@ -23,6 +23,16 @@ Przeglądarka otworzy się sama pod adresem http://localhost:5173. Zmiany w kodz
 
 Prezentacja gry: http://localhost:5173/?prezentacja
 
+## Gra online
+
+Tryb online potrzebuje serwera gry. W drugim oknie Terminala:
+
+```bash
+npm run server
+```
+
+Potem w grze: Graj, zakładka Online, „Stwórz party”. Gra pokaże kod, który wpisują znajomi (Online, „Dołącz kodem”). Gdy wszyscy dołączą, gospodarz klika „Zacznij grę”. Serwer może też podawać samą grę: po `npm run build` gra i tryb online są pod adresem http://localhost:3000. Ustawienia serwera są w pliku `.env` (wzór: `.env.example`), a wdrożenie opisuje `docs/wdrozenie.md`.
+
 ## Paczka na serwer
 
 ```bash
@@ -40,7 +50,8 @@ Paczkę można sprawdzić przed wysłaniem: `npm run preview` (adres http://loca
 | `npm run lint` | szuka błędów w kodzie (ESLint) |
 | `npm run typecheck` | sprawdza typy w plikach TypeScript |
 | `npm test` | testy danych i silnika gry: plansza, ekonomia, karty, pełne gry botów (Vitest) |
-| `npm run e2e` | testy w przeglądarce: menu, gra, rzut kostkami, rozgrywka z decyzjami, prezentacja, telefon (Playwright); pierwszy raz: `npx playwright install chromium` |
+| `npm run e2e` | testy w przeglądarce: menu, gra, rzut kostkami, rozgrywka z decyzjami, prezentacja, telefon, gra online w dwóch przeglądarkach (Playwright); pierwszy raz: `npx playwright install chromium` |
+| `npm run server` | serwer gry: tryb online (pokoje z kodem) i pliki gry z `dist/` |
 | `npm run check` | lint, typy, testy i paczka naraz |
 | `npm run sim -- 300` | symulacja 300 gier botów: długość gier, bankructwa, majątek (do strojenia ekonomii) |
 
@@ -51,8 +62,10 @@ Paczkę można sprawdzić przed wysłaniem: `npm run preview` (adres http://loca
 | `index.html` | Szkielet strony: ekrany menu, panele gry, prezentacja (bez kodu i stylów) |
 | `src/main.js` | Wejście aplikacji: czcionki, style, gra |
 | `src/data/` | Dane gry bez grafiki (TypeScript): plansza i pola, ekonomia, karty, kolory graczy |
-| `src/core/` | Silnik gry (TypeScript): tury, zasady, pytania, losowanie z ziarnem, boty; ten sam silnik obsłuży serwer gry online |
+| `src/core/` | Silnik gry (TypeScript): tury, zasady, pytania, losowanie z ziarnem, boty; ten sam silnik działa na serwerze gry online |
 | `src/legacy/game.js` | Grafika 3D i interfejs: odtwarza zdarzenia silnika z animacjami i odsyła decyzje gracza |
+| `src/net/` | Połączenie z serwerem gry w trybie online (Socket.IO) |
+| `server/` | Serwer gry (Node.js, TypeScript): pokoje online, silnik gry po stronie serwera, pliki gry |
 | `src/styles/` | Wygląd: podstawy, menu, rozgrywka, prezentacja |
 | `tests/` | Testy jednostkowe (`unit`) i w przeglądarce (`e2e`) |
 | `assets/` | Logo uczelni i muzyka (podpisy autorów w `assets/muzyka/AUTORZY.md`) |
@@ -76,7 +89,7 @@ python3 pytania/excel-na-js.py
 
 ## Technologie i licencje
 
-- [Three.js](https://threejs.org) do grafiki 3D (licencja MIT), [Vite](https://vite.dev) do budowania paczki (MIT).
+- [Three.js](https://threejs.org) do grafiki 3D (licencja MIT), [Vite](https://vite.dev) do budowania paczki (MIT), [Socket.IO](https://socket.io) do trybu online (MIT).
 - Czcionki Fredoka, Figtree, Inter Tight i Anton z pakietów Fontsource, dołączone do paczki (licencja SIL Open Font License). Gra nie łączy się z Google Fonts.
 - Modele 3D, grafiki pól i ilustracje kart są rysowane w kodzie, bez gotowych plików i bez generatorów obrazów.
 - Dźwięki i muzyka zapasowa są generowane w kodzie (Web Audio). Utwory z plików i ich licencje: `assets/muzyka/AUTORZY.md`.

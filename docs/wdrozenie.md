@@ -62,6 +62,36 @@ npm run e2e        # testy w przeglądarce (pierwszy raz: npx playwright install
 npm run preview    # paczka z dist/ pod adresem http://localhost:4173
 ```
 
-## Serwer gry wieloosobowej
+## Serwer gry (tryb online)
 
-Tryb online będzie miał osobny serwer Node.js (etap 3 planu w `docs/plan-techniczny.md`). Klucz aplikacji od uczelni będzie tylko w pliku `.env` na tym serwerze, nigdy w paczce `dist/`.
+Tryb online potrzebuje serwera gry (Node.js 22+). Najprościej uruchomić go tak, żeby podawał też pliki gry, wtedy gra i tryb online są pod jednym adresem:
+
+```bash
+npm install
+npm run build                  # paczka w dist/
+cp .env.example .env           # ustawienia: PORT, STATIC_DIR, CORS_ORIGIN
+npm run server                 # http://localhost:3000
+```
+
+Na serwerze uczelni proces powinien działać stale i wstawać po restarcie, np. przez PM2 (`pm2 start npm --name wsiz-tour -- run server`) albo usługę systemd. Klucz aplikacji od uczelni (logowanie przez wirtualny dziekanat) będzie tylko w pliku `.env` na tym serwerze, nigdy w paczce `dist/` ani w repozytorium.
+
+### Nginx przed serwerem gry
+
+Gdy pliki gry podaje Nginx (jak wyżej), wystarczy przekazać do serwera gry połączenia trybu online:
+
+```nginx
+location /socket.io/ {
+    proxy_pass http://127.0.0.1:3000;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;     # WebSocket
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $host;
+    proxy_read_timeout 120s;
+}
+```
+
+Jeśli gra leży pod innym adresem niż serwer gry, zbuduj paczkę z adresem serwera: `VITE_SERVER_URL=https://gra.uczelnia.pl npm run build`, a w `.env` serwera wpisz adres gry w `CORS_ORIGIN`.
+
+### Praca lokalna
+
+W dwóch oknach Terminala: `npm run server` i `npm run dev`. Gra z http://localhost:5173 łączy się z serwerem gry przez Vite (ustawienie `server.proxy` w `vite.config.js`). Żeby zagrać z kimś w tej samej sieci Wi-Fi, otwórz grę pod adresem komputera z serwerem, np. `http://192.168.1.20:3000` (po `npm run build`).

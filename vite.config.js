@@ -42,6 +42,7 @@ export default defineConfig(({ mode }) => ({
     compression({ algorithms: ['gzip', 'brotliCompress'], include: /\.(js|css|html|svg|json)$/ }),
   ],
   test: { include: ['tests/unit/**/*.test.ts'] },   // Vitest: tylko nasze testy (bez testów skilli w .claude/)
-  server: { port: 5173, open: true },
+  // npm run dev: gra online łączy się z serwerem gry (npm run server) przez ten sam adres
+  server: { port: 5173, open: true, proxy: { '/socket.io': { target: 'http://localhost:3000', ws: true } } },
   preview: { port: 4173 },
 }));

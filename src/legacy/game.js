@@ -2730,7 +2730,6 @@ const escHtml = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&l
 const avatar = (pawn, color) => `<span class="m-avatar" style="--c:${PAWN_COLORS[color].hex}">${pawnSvg(PLAYERS[pawn].pawn, '#ffffff')}</span>`;
 const chipHtml = (label, attrs, pressed, disabled = false) =>
   `<button type="button" class="chip" ${attrs} aria-pressed="${pressed}"${disabled ? ' disabled' : ''}>${label}</button>`;
-const randomCode = () => Array.from({ length: 6 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)]).join('');
 
 let profile = store.get('profil', null);
 // statystyki z gier sprzed zmiany skali (kwoty były w tysiącach): przelicz na nowe kwoty
@@ -2743,7 +2742,10 @@ const defaultSlots = () => [
   { kind: 'bot', level: 'średni', pawn: 2, color: 2 },
   { kind: 'empty', pawn: 3, color: 3 },
 ];
-const setup = Object.assign({ mode: 'solo', teams: false, online: 'create', code: '', joinCode: '', semester: 8, timer: 0 }, store.get('nowa-gra-2', {}));
+const setup = Object.assign({ mode: 'solo', teams: false, online: 'create', joinCode: '', semester: 8, timer: 0 }, store.get('nowa-gra-2', {}));
+delete setup.code;   // kod party nadaje teraz serwer gry
+let NET = null;                       // gra online: { mod, client, seat, lobby }; null = bez serwera
+let netBusy = false, netError = '';   // łączenie z serwerem i ostatni błąd (pod przyciskiem nowej gry)
 if (!Array.isArray(setup.slots) || setup.slots.length !== 4) setup.slots = defaultSlots();
 const saveSetup = () => store.set('nowa-gra-2', setup);
 
@@ -2775,6 +2777,7 @@ $('btnPreview').innerHTML = `${ico('eye')}Obejrzyj planszę`;
 $('btnMenu').innerHTML = `${ico('back')}Menu`;
 $('btnPromoBoard').innerHTML = `${ico('film')}Prezentacja`;
 $('btnStart').innerHTML = `${ico('play')}Rozpocznij grę`;
+$('btnLobbyStart').innerHTML = `${ico('play')}Zacznij grę`;
 document.querySelectorAll('.m-back').forEach(b => { b.innerHTML = `${ico('back')}Wróć`; });
 $('homeNav').innerHTML = [
   { go: 'play', label: 'Graj', icon: 'play', main: true },
@@ -2805,7 +2808,7 @@ document.addEventListener('click', e => { if (!e.target.closest('.m-profile')) c
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDropdown(); });
 
 // Przechodzenie między stronami menu
-const PAGES = { home: 'pgHome', play: 'pgPlay', ranking: 'pgRanking', rules: 'pgRules', profile: 'pgProfile', settings: 'pgSettings' };
+const PAGES = { home: 'pgHome', play: 'pgPlay', lobby: 'pgLobby', ranking: 'pgRanking', rules: 'pgRules', profile: 'pgProfile', settings: 'pgSettings' };
 let exampleTimer = null;
 function go(page) {
   closeDropdown();
@@ -2814,6 +2817,7 @@ function go(page) {
   if (page === 'promo') { openPromo(); return; }
   for (const [k, id] of Object.entries(PAGES)) $(id).hidden = k !== page;
   if (page === 'play') renderPlay();
+  if (page === 'lobby') renderLobby();
   if (page === 'ranking') renderRanking();
   if (page === 'rules') renderRules();
   if (page === 'profile') renderProfilePage();
@@ -2885,28 +2889,32 @@ function renderPlay() {
   $('modeDesc').textContent = online
     ? 'Gra przez internet: 1 na 1 na 1 na 1 albo 2 na 2. Na każde miejsce możesz zaprosić gracza online, posadzić kogoś przy tym komputerze albo dodać bota.'
     : 'Gra na jednym komputerze, bez internetu. Gracze rzucają po kolei przy tym samym ekranie, a puste miejsca możesz zająć botami. Nikt z zewnątrz nie dołączy.';
+  const joining = online && setup.online === 'join';
   if (online) {
-    if (!setup.code) setup.code = randomCode();
     $('onlineBox').innerHTML = `
-      <div class="chips">${chipHtml('Stwórz party', 'data-online="create"', setup.online === 'create')}${chipHtml('Dołącz kodem', 'data-online="join"', setup.online === 'join')}</div>
-      <div class="row" style="margin-top: 12px">${setup.online === 'create'
-        ? `<span class="m-code">${setup.code}</span><span class="m-hint">Podaj ten kod znajomym, żeby dołączyli.</span>`
-        : `<input class="m-input" id="joinCode" maxlength="6" placeholder="Kod party, np. K7P3QX" aria-label="Kod party" style="max-width: 240px; text-transform: uppercase" value="${escHtml(setup.joinCode)}">`}</div>
-      <p class="m-note">Gra online zadziała, gdy uruchomimy serwer gry. Na razie możesz przygotować ustawienia.</p>`;
+      <div class="chips">${chipHtml('Stwórz party', 'data-online="create"', !joining)}${chipHtml('Dołącz kodem', 'data-online="join"', joining)}</div>
+      <div class="row" style="margin-top: 12px">${joining
+        ? `<input class="m-input" id="joinCode" maxlength="6" placeholder="Kod party, np. K7P3QX" aria-label="Kod party" autocomplete="off" style="max-width: 240px; text-transform: uppercase" value="${escHtml(setup.joinCode)}">
+           <span class="m-hint">Kod dostaniesz od osoby, która stworzyła party. Pionek wybierasz w profilu.</span>`
+        : '<span class="m-hint">Ustaw miejsca graczy poniżej. Po kliknięciu „Stwórz party” dostaniesz kod dla znajomych.</span>'}</div>`;
   } else $('onlineBox').innerHTML = '';
+  // dołączając do party, ustawienia gry wybiera gospodarz
+  for (const el of [$('slots').closest('.m-card'), $('semChips').closest('.m-grid2')]) el.hidden = joining;
   $('teamChips').innerHTML = chipHtml(online ? '1 na 1 na 1 na 1' : 'Każdy na siebie', 'data-team="0"', !setup.teams)
     + chipHtml('2 na 2', 'data-team="1"', setup.teams, n !== 4);
   $('slots').innerHTML = setup.slots.map(slotHtml).join('');
   $('semChips').innerHTML = [1, 2, 3, 4, 5, 6, 7, 8].map(k =>
     chipHtml(k === 8 ? 'Mieszane (1–7)' : `Semestr ${k}`, `data-sem="${k}"`, setup.semester === k)).join('');
   $('timeChips').innerHTML = TIMERS.map(([v, l]) => chipHtml(l, `data-time="${v}"`, setup.timer === v)).join('');
-  const ok = online ? n === 4 : n >= 2;
-  $('btnStart').disabled = !ok;
+  const ok = joining ? setup.joinCode.length === 6 : online ? n === 4 : n >= 2;
+  $('btnStart').disabled = !ok || netBusy;
+  $('btnStart').innerHTML = `${ico(online ? 'globe' : 'play')}${joining ? 'Dołącz do party' : online ? 'Stwórz party' : 'Rozpocznij grę'}`;
   const sem = setup.semester === 8 ? 'pytania mieszane' : `semestr ${setup.semester}`;
   const time = TIMERS.find(([v]) => v === setup.timer)[1].toLowerCase();
-  $('playHint').textContent = ok
-    ? `Graczy: ${n}${setup.teams ? ' (2 na 2)' : ''} · ${sem} · ${time}`
-    : online ? 'W grze online potrzebne są 4 miejsca: gracze albo boty.' : 'Dodaj co najmniej jednego gracza albo bota.';
+  $('playHint').textContent = netError || (joining
+    ? (ok ? `Dołączasz jako ${profile.nick}` : 'Wpisz 6-znakowy kod party.')
+    : ok ? `Graczy: ${n}${setup.teams ? ' (2 na 2)' : ''} · ${sem} · ${time}`
+    : online ? 'W grze online potrzebne są 4 miejsca: gracze albo boty.' : 'Dodaj co najmniej jednego gracza albo bota.');
   saveSetup();
 }
 $('pgPlay').addEventListener('click', e => {
@@ -2924,6 +2932,7 @@ $('pgPlay').addEventListener('click', e => {
   } else if (d.color) pickColor(+d.color, +d.v);
   else if (d.online) setup.online = d.online;
   else return;
+  netError = '';
   renderPlay();
 });
 $('pgPlay').addEventListener('change', e => {
@@ -2936,9 +2945,129 @@ $('pgPlay').addEventListener('input', e => {
   if (e.target.id !== 'joinCode') return;
   setup.joinCode = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
   e.target.value = setup.joinCode;
+  netError = '';
   saveSetup();
+  const ok = setup.joinCode.length === 6;
+  $('btnStart').disabled = !ok || netBusy;
+  $('playHint').textContent = ok ? `Dołączasz jako ${profile.nick}` : 'Wpisz 6-znakowy kod party.';
 });
-$('btnStart').addEventListener('click', () => startGame());
+$('pgPlay').addEventListener('keydown', e => { if (e.target.id === 'joinCode' && e.key === 'Enter' && !$('btnStart').disabled) $('btnStart').click(); });
+$('btnStart').addEventListener('click', () => (setup.mode === 'online' ? openOnline() : startGame()));
+
+// ---------------------------------------------------------------------------
+// Party online: gospodarz tworzy pokój na serwerze gry, znajomi dołączają kodem.
+// Kod do sieci (Socket.IO) wczytuje się dopiero tutaj, więc gra solo go nie pobiera.
+// ---------------------------------------------------------------------------
+const onlineModule = () => import('../net/online.ts');
+const SEAT_KIND = { me: 'host', online: 'online', local: 'local', bot: 'bot' };
+function onlineConfig() {
+  return {
+    seats: setup.slots.map(s => ({ kind: SEAT_KIND[s.kind], level: s.level, pawnIdx: slotPawn(s), colorIdx: slotColor(s) })),
+    teams: setup.teams, semester: setup.semester, timer: setup.timer,
+  };
+}
+async function openOnline() {
+  saveSetup();
+  netBusy = true; netError = '';
+  $('btnStart').disabled = true;
+  $('playHint').textContent = 'Łączę z serwerem gry…';
+  let r, client = null, mod = null;
+  try {
+    mod = await onlineModule();
+    leaveOnline();
+    client = new mod.OnlineClient();
+    r = setup.online === 'join'
+      ? await client.join(setup.joinCode, profile.nick, profile.pawn)
+      : await client.create(profile.nick, onlineConfig());
+  } catch (e) {
+    console.error(e);
+    r = { error: 'Nie udało się wczytać trybu online.' };
+  }
+  netBusy = false;
+  if (r.error) {
+    client?.close();
+    netError = r.error === 'Brak połączenia z serwerem gry.'
+      ? 'Brak połączenia z serwerem gry. Grę online trzeba otworzyć z adresu, na którym działa serwer (npm run server).'
+      : r.error;
+    renderPlay();
+    return;
+  }
+  attachNet(mod, client, r);
+}
+function attachNet(mod, client, r) {
+  const net = NET = { mod, client, seat: r.seat, lobby: r.lobby };
+  client.onLobby = l => { if (NET !== net) return; net.lobby = l; if (!$('pgLobby').hidden) renderLobby(); };
+  client.onStart = m => { if (NET === net) beginOnline(m); };
+  client.onNote = text => { if (NET === net) toast(text); };
+  client.onClosed = text => {
+    if (NET !== net) return;
+    NET = null;
+    netError = text;
+    if (G?.online) { quitGame(); openMenu(); }
+    if (menuOpen) go('play');
+  };
+  client.onLost = () => { if (NET === net) toast('Zerwane połączenie z serwerem gry. Łączę ponownie…'); };
+  client.onBack = j => {
+    if (NET !== net) return;
+    net.lobby = j.lobby;
+    toast('Połączenie wróciło.');
+    if (j.game) beginOnline(j.game);   // odbudowa widoku: w czasie przerwy mogły przyjść ruchy
+    else if (!$('pgLobby').hidden) renderLobby();
+  };
+  if (r.game) beginOnline(r.game);
+  else go('lobby');
+}
+function leaveOnline() {
+  if (!NET) return;
+  const net = NET;
+  NET = null;
+  net.client.close();
+}
+function toast(text) {
+  const el = $('toast');
+  el.textContent = text;
+  el.hidden = false;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.hidden = true; }, 5000);
+}
+const SEAT_SUB = { host: 'Gospodarz', online: 'Gracz online', local: 'Przy komputerze gospodarza', bot: 'Bot' };
+function renderLobby() {
+  if (!NET) { go('play'); return; }
+  const { lobby, seat } = NET;
+  const host = lobby.seats[seat]?.kind === 'host';
+  $('lobbyCode').textContent = lobby.code;
+  $('lobbyPill').textContent = lobby.teams ? '2 na 2' : 'Każdy na siebie';
+  const sem = lobby.semester === 8 ? 'pytania mieszane' : `semestr ${lobby.semester}`;
+  const time = (TIMERS.find(([v]) => v === lobby.timer) || [0, `${lobby.timer} min`])[1].toLowerCase();
+  $('lobbyInfo').textContent = `${host ? 'Podaj ten kod znajomym, żeby dołączyli. ' : ''}${sem[0].toUpperCase() + sem.slice(1)} · ${time}`;
+  $('lobbySeats').innerHTML = lobby.seats.map((s, i) => {
+    const waiting = !s.filled;
+    const sub = waiting ? 'Czeka na dołączenie kodem'
+      : s.kind === 'bot' ? `Bot · poziom ${s.level}`
+      : s.kind === 'online' && !s.connected ? 'Rozłączony, może wrócić' : SEAT_SUB[s.kind];
+    const team = lobby.teams ? TEAMS[i % 2] : null;
+    return `<div class="m-slot${waiting ? ' is-waiting' : ''}${i === seat ? ' is-you' : ''}">
+      <div class="m-slot-top">${avatar(s.pawnIdx, s.colorIdx)}<span class="m-slot-name"><b>${escHtml(s.name)}${i === seat ? ' (Ty)' : ''}</b><small>${sub}</small></span>
+      ${team ? `<span class="m-team" style="--t:${team.color}">${team.name}</span>` : ''}<span class="m-live${s.connected && s.filled ? '' : ' off'}" aria-hidden="true"></span></div>
+    </div>`;
+  }).join('');
+  const missing = lobby.seats.filter(s => !s.filled).length;
+  $('btnLobbyStart').hidden = !host;
+  $('btnLobbyStart').disabled = !lobby.canStart;
+  $('lobbyHint').textContent = !host ? 'Gospodarz zacznie grę, gdy wszyscy dołączą.'
+    : lobby.canStart ? 'Wszyscy są gotowi.' : `Czekamy na graczy online: ${missing}`;
+}
+$('lobbyLeave').addEventListener('click', () => { leaveOnline(); go('play'); });
+$('lobbyCopy').addEventListener('click', () => {
+  if (!NET) return;
+  navigator.clipboard?.writeText(NET.lobby.code).then(() => { $('lobbyCopy').textContent = 'Skopiowano'; setTimeout(() => { $('lobbyCopy').textContent = 'Kopiuj kod'; }, 1600); }, () => {});
+});
+$('btnLobbyStart').addEventListener('click', async () => {
+  if (!NET) return;
+  $('btnLobbyStart').disabled = true;
+  const r = await NET.client.start();
+  if (r.error) { $('lobbyHint').textContent = r.error; renderLobby(); }
+});
 
 // Ranking (do czasu serwera gry dane są przykładowe)
 const RANKING_SAMPLE = [
@@ -5065,7 +5194,7 @@ function renderPlayers() {
     if (p.cards.some(c => c.icon === 'notes')) badges.push('notatki');
     if (p.insured > 0) badges.push(`ubezpieczenie ${p.insured}`);
     if (p.pending) badges.push(p.pending.type === 'buy' ? 'kupno w następnej turze' : 'budowa w następnej turze');
-    const sub = p.out ? 'poza grą' : [G.teams ? TEAMS[p.team].name : '', isBot(p) ? `bot · ${p.level}` : p.kind === 'me' ? 'Ty' : 'gracz'].filter(Boolean).join(' · ');
+    const sub = p.out ? 'poza grą' : [G.teams ? TEAMS[p.team].name : '', isBot(p) ? `bot · ${p.level}` : p.kind === 'me' ? 'Ty' : p.kind === 'remote' ? 'online' : 'gracz'].filter(Boolean).join(' · ');
     const fields = DEED_CELLS.filter(i => G.own.get(i)?.owner === p).length;
     el.classList.toggle('is-turn', k === G.turn && !G.over);
     el.querySelector('.g-turn').textContent = k === G.turn && !G.over ? (p.kind === 'me' ? 'Twój ruch' : 'Ruch') : '';
@@ -5121,9 +5250,32 @@ gameInfo = i => {
 // Start, pauza, koniec gry
 // ---------------------------------------------------------------------------
 const timeLeft = () => G?.driver?.timeLeft ?? 0;
+// Widok nowej gry: pionki na planszy, panel graczy, kamera. Gra przy jednym komputerze i online.
+function beginGame(players, snap, { teams, semester, view, online = false }) {
+  quitGame(true);
+  const g = G = {
+    players: players.map(sp => ({ ...structuredClone(sp), obj: PLAYERS[sp.pawnIdx].make(sp.hex) })),
+    own: new Map(), marks: new Map(), pool: 0, turn: 0, over: false, paused: false, teams,
+    semester, timeUp: false, deckLeft: { bonus: 0, penalty: 0 }, snap: null,
+    queue: [], pumping: false, driver: null, online, seq: 0,
+    anim: { flags: flags.length, steams: steams.length, coins: coins.length },
+  };
+  applySnap(snap);
+  for (const p of g.players) { board.add(p.obj); placePawn(p); }
+  $('gPlayers').dataset.sig = '';
+  g.view = view;
+  viewCorner = cornerOf(g.players[g.view]);
+  document.body.classList.add('in-game');
+  layer.innerHTML = '';
+  openUi = null;
+  setStatus('');
+  closeMenu();
+  controls.enableZoom = false;   // w grze kamerę można tylko obracać
+  return g;
+}
 function startGame() {
   saveSetup();
-  quitGame();
+  leaveOnline();
   const slots = setup.slots.map((s, i) => ({ s, i })).filter(({ s }) => s.kind !== 'empty');
   const players = slots.map(({ s, i }) => {
     const pawnIdx = slotPawn(s), colorIdx = slotColor(s);
@@ -5134,38 +5286,61 @@ function startGame() {
     };
   });
   const seed = crypto.getRandomValues(new Uint32Array(1))[0];
-  const engine = new GameEngine({ players, teams: setup.teams, semester: setup.semester, seed, timeLimitMin: setup.timer, online: setup.mode === 'online' },
+  const engine = new GameEngine({ players, teams: setup.teams, semester: setup.semester, seed, timeLimitMin: setup.timer },
     buildBank(window.BAZA_PYTAN, setup.semester));
-  const g = G = {
-    players: engine.state.players.map(sp => ({ ...structuredClone(sp), obj: PLAYERS[sp.pawnIdx].make(sp.hex) })),
-    own: new Map(), marks: new Map(), pool: 0, turn: 0, over: false, paused: false, teams: engine.state.teams,
-    semester: setup.semester, timeUp: false, deckLeft: { bonus: 0, penalty: 0 }, snap: null,
-    queue: [], pumping: false, engine, driver: null,
-    anim: { flags: flags.length, steams: steams.length, coins: coins.length },
-  };
-  applySnap(engine.publicState());
-  for (const p of g.players) { board.add(p.obj); placePawn(p); }
-  $('gPlayers').dataset.sig = '';
-  g.view = (g.players.find(x => !isBot(x)) || g.players[0]).idx;
-  viewCorner = cornerOf(g.players[g.view]);
-  document.body.classList.add('in-game');
-  layer.innerHTML = '';
-  openUi = null;
-  setStatus('');
-  closeMenu();
-  controls.enableZoom = false;   // w grze kamerę można tylko obracać
+  const view = (engine.state.players.find(x => x.kind !== 'bot') || engine.state.players[0]).idx;
+  const g = beginGame(engine.state.players, engine.publicState(), { teams: engine.state.teams, semester: setup.semester, view });
   g.driver = new LocalDriver(engine, { timeLimitMs: setup.timer * 60000, onTick: () => { if (G === g) renderHud(); } });
   engine.on(ev => { if (G !== g) return; g.queue.push(ev); pump(g); });
   renderHud();
   g.driver.start().catch(e => console.error(e));
 }
-function quitGame() {
+// Gra online: stan przychodzi z serwera. Gracze przy tym komputerze decydują, pozostali ludzie są „zdalni”.
+// Ta sama funkcja odbudowuje widok po powrocie połączenia (albo po odświeżeniu strony).
+function beginOnline(m) {
+  const net = NET;
+  if (!net) return;
+  if (m.snap.over) { leaveOnline(); toast('Ta gra już się skończyła.'); return; }
+  const kindOf = sp => (m.mine.includes(sp.idx) ? (sp.idx === m.you ? 'me' : 'local') : sp.kind === 'bot' ? 'bot' : 'remote');
+  const g = beginGame(m.snap.players.map(sp => ({ ...sp, kind: kindOf(sp) })), m.snap, { teams: m.teams, semester: m.semester, view: m.you, online: true });
+  g.seq = m.seq;
+  g.host = net.lobby.seats[net.seat]?.kind === 'host';
+  g.driver = new net.mod.OnlineDriver(net.client, m.timeLeft, () => { if (G === g) renderHud(); });
+  net.client.onEvent = ev => {
+    if (G !== g || ev.seq <= g.seq) return;   // zdarzenia sprzed stanu, od którego zaczynamy, już są w tym stanie
+    g.seq = ev.seq;
+    g.queue.push(ev);
+    pump(g);
+  };
+  for (const i of g.own.keys()) placeBuilding(i);
+  renderHud();
+  if (m.pending) { g.queue.push({ type: 'decision', decision: m.pending, snap: m.snap, seq: m.seq }); pump(g); }
+}
+// Budynek i znaczniki pola od razu, bez animacji (odbudowa widoku gry online)
+function placeBuilding(i) {
+  const o = G.own.get(i);
+  const m = G.marks.get(i) || {};
+  G.marks.set(i, m);
+  if (o?.level > 0 && !m.building) {
+    const def = BUILDINGS[o.level - 1];
+    m.building = def.make(o.owner.hex);
+    m.building.position.set(0, TILE_H, BUILD_Z);
+    m.building.scale.setScalar(def.board);
+    cellGroups[i].add(m.building);
+  }
+  refreshMarks(i);
+}
+// keep = widok zaraz zastąpi nowa gra (połączenie z serwerem zostaje)
+function quitGame(keep = false) {
   if (!G) return;
   const g = G;
   G = null;
   g.over = true;
   g.queue.length = 0;
-  g.driver?.stop();
+  if (!keep) {
+    g.driver?.stop();
+    if (g.online) NET = null;
+  }
   layer.innerHTML = '';
   openUi = null;
   $('gRoll').hidden = true;
@@ -5185,9 +5360,16 @@ function quitGame() {
 function pause() {
   if (!G || G.over) return;
   const g = G;
-  g.paused = true;
-  g.driver.pause(true);
-  const bd = openModal(`<h2>Pauza</h2><p>Gra czeka. Czas gry też stoi.</p>
+  // gra online nie stoi dla innych graczy: menu tylko przykrywa planszę
+  if (!g.online) { g.paused = true; g.driver.pause(true); }
+  const bd = openModal(g.online
+    ? `<h2>Menu gry</h2><p>Gra online toczy się dalej, a inni gracze nie czekają.${g.host ? '' : ' Grę może zakończyć gospodarz.'}</p>
+    <div class="g-opts">
+      <button type="button" class="m-btn m-primary" data-p="back">Wróć do gry</button>
+      ${g.host ? '<button type="button" class="m-btn m-secondary" data-p="end">Zakończ grę dla wszystkich i policz wynik</button>' : ''}
+      <button type="button" class="m-btn m-secondary" data-p="quit">Wyjdź do menu (dalej zagra za Ciebie bot)</button>
+    </div>`
+    : `<h2>Pauza</h2><p>Gra czeka. Czas gry też stoi.</p>
     <div class="g-opts">
       <button type="button" class="m-btn m-primary" data-p="back">Wróć do gry</button>
       <button type="button" class="m-btn m-secondary" data-p="end">Zakończ grę i policz wynik</button>
@@ -5199,8 +5381,7 @@ function pause() {
     if (!b) return;
     bd.remove();
     if (G !== g) return;
-    g.paused = false;
-    g.driver.pause(false);
+    if (!g.online) { g.paused = false; g.driver.pause(false); }
     if (b.dataset.p === 'end') endManual();
     if (b.dataset.p === 'quit') { quitGame(); openMenu(); }
   });
@@ -5232,6 +5413,7 @@ function showEnd(result) {
   const g = G;
   if (!g) return;
   g.driver.stop();
+  if (g.online) NET = null;
   $('gRoll').hidden = true;
   setStatus('');
   const rows = result.rows.map(r => ({ p: g.players[r.player], wealth: r.wealth, acc: r.acc }));
@@ -5266,12 +5448,12 @@ function showEnd(result) {
         <td>${r.acc == null ? '–' : `<span class="m-bar"><i style="width:${r.acc}%"></i></span>${r.acc}%`}</td></tr>`).join('')}</tbody>
     </table></div>
     <p class="g-ctx">Majątek to gotówka oraz sale i budynki. „Prymus” ma najwyższy procent dobrych odpowiedzi. Pytań i odpowiedzi nie pokazujemy.</p>
-    <div class="g-opts two"><button type="button" class="m-btn m-primary" data-e="again">Zagraj jeszcze raz</button><button type="button" class="m-btn m-secondary" data-e="menu">Wróć do menu</button></div>`, 'wide');
+    <div class="g-opts two"><button type="button" class="m-btn m-primary" data-e="again">${g.online ? 'Nowa gra' : 'Zagraj jeszcze raz'}</button><button type="button" class="m-btn m-secondary" data-e="menu">Wróć do menu</button></div>`, 'wide');
   bd.addEventListener('click', e => {
     const b = e.target.closest('[data-e]');
     if (!b) return;
-    if (b.dataset.e === 'again') startGame();
-    else { quitGame(); openMenu(); }
+    if (b.dataset.e === 'again' && !g.online) startGame();
+    else { quitGame(); openMenu(); if (b.dataset.e === 'again') go('play'); }
   });
 }
 
@@ -6487,6 +6669,19 @@ $('loader').hidden = true;
 openMenu();
 // Link z ?prezentacja otwiera od razu zwiastun gry
 if (new URLSearchParams(location.search).has('prezentacja')) openPromo(true);
+// Po odświeżeniu strony w trakcie gry online wracamy na swoje miejsce (kod party i token są w pamięci przeglądarki)
+{
+  const saved = store.get('online', null);
+  if (profile && saved?.code && saved?.token && Date.now() - saved.at < 3 * 3600_000) {
+    onlineModule().then(async mod => {
+      const client = new mod.OnlineClient();
+      const r = await client.resume(saved.code, saved.token);
+      if (r.error) client.close();
+      else if (!G && !P.on) attachNet(mod, client, r);
+      else client.close();
+    }).catch(e => console.error(e));
+  }
+}
 
 // Testy automatyczne (Playwright) dostają dostęp do sceny i prezentacji. W paczce na serwer tego kodu nie ma.
 if (__TEST_HOOKS__) {

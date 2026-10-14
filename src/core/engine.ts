@@ -145,7 +145,7 @@ export class GameEngine {
     const sem = s.semester === 8 ? 'pytania mieszane (semestry 1–7)' : `pytania z semestru ${s.semester}`;
     const t = this.setup.timeLimitMin;
     try {
-      this.notice('Zaczynamy!', `${sem} · ${t ? `czas gry ${t} min` : 'bez limitu czasu'}${this.setup.online ? ' · tryb online ruszy z serwerem gry, teraz wszyscy grają przy tym komputerze' : ''}`, '', 2200);
+      this.notice('Zaczynamy!', `${sem} · ${t ? `czas gry ${t} min` : 'bez limitu czasu'}${this.setup.online ? ' · gra online' : ''}`, '', 2200);
     } catch (e) { if (e !== STOP) throw e; return; }
     while (!s.over) {
       try {
