@@ -9,19 +9,19 @@
       @font-face { font-family: 'Geist'; font-weight: 800; src: url('./assets/fonts/Geist-800-latin.woff2') format('woff2'); }
       @font-face { font-family: 'Geist Mono'; font-weight: 500; src: url('./assets/fonts/GeistMono-500-latin.woff2') format('woff2'); }
       * { margin: 0; padding: 0; box-sizing: border-box; }
-      html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #05070d; }
-      #root { width: 100%; height: 100%; position: relative; overflow: hidden; background: #05070d; font-family: 'Geist', system-ui, sans-serif; color: #ffffff; }
+      html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #00133b; }
+      #root { width: 100%; height: 100%; position: relative; overflow: hidden; background: #00133b; font-family: 'Geist', system-ui, sans-serif; color: #ffffff; }
       .scene { position: absolute; inset: 0; overflow: hidden; }
-      .ground { position: absolute; inset: 0; background: #05070d; }
+      .ground { position: absolute; inset: 0; background: radial-gradient(90% 80% at 50% 38%, #164aae 0%, #00276f 46%, #00133b 100%); }
       .bg { position: absolute; inset: -2%; }
       .bg img { display: block; width: 100%; height: 100%; object-fit: cover; }
-      .shade-left { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(3, 8, 24, .86) 0%, rgba(3, 8, 24, .5) 38%, rgba(3, 8, 24, 0) 70%); }
-      .shade-bottom { position: absolute; inset: 0; background: linear-gradient(0deg, rgba(3, 8, 24, .88) 0%, rgba(3, 8, 24, .35) 42%, rgba(3, 8, 24, 0) 70%); }
-      .shade-center { position: absolute; inset: 0; background: radial-gradient(70% 70% at 50% 50%, rgba(3, 8, 24, .25) 0%, rgba(3, 8, 24, .78) 100%); }
-      .vignette { position: absolute; inset: 0; background: radial-gradient(120% 95% at 50% 50%, transparent 55%, rgba(0, 0, 0, .5) 100%); }
+      .shade-left { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(0, 22, 64, .86) 0%, rgba(0, 22, 64, .5) 38%, rgba(0, 22, 64, 0) 70%); }
+      .shade-bottom { position: absolute; inset: 0; background: linear-gradient(0deg, rgba(0, 22, 64, .88) 0%, rgba(0, 22, 64, .35) 42%, rgba(0, 22, 64, 0) 70%); }
+      .shade-center { position: absolute; inset: 0; background: radial-gradient(70% 70% at 50% 50%, rgba(0, 22, 64, .25) 0%, rgba(0, 22, 64, .78) 100%); }
+      .vignette { position: absolute; inset: 0; background: radial-gradient(120% 95% at 50% 50%, transparent 56%, rgba(0, 18, 56, .34) 100%); }
       .eyebrow { display: block; font: 500 24px 'Geist Mono', ui-monospace, monospace; letter-spacing: .32em; text-transform: uppercase; color: rgba(255, 255, 255, .62); }
       .h { display: block; font-weight: 800; letter-spacing: -.055em; line-height: .95; }
-      .silver { color: #aeb7c9; }
+      .silver { color: #9dc0ff; }
       .sub { display: block; font-weight: 500; font-size: 36px; letter-spacing: -.01em; color: rgba(255, 255, 255, .78); }
       .line { display: block; overflow: visible; }
 
@@ -38,16 +38,19 @@
       #s3 .eyebrow { margin-bottom: 30px; }
       /* 4-5. hasła jak Nike */
       .slam { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
-      .slam .word { display: block; font-weight: 800; font-size: 300px; letter-spacing: -.06em; text-transform: uppercase; line-height: .9; color: #ffffff; text-shadow: 0 20px 80px rgba(0, 0, 0, .55); }
+      .slam .word { display: block; font-weight: 800; font-size: 300px; letter-spacing: -.06em; text-transform: uppercase; line-height: .9; color: #ffffff; text-shadow: 0 20px 80px rgba(0, 14, 48, .55); }
       .slam .word.gold { color: #f2c766; }
-      /* 6. pionki: zdjęcie ze studia po prawej, opis po lewej */
+      /* 6. pionki: zdjęcie z jasnego studia po prawej, granatowy opis po lewej, tło w kolorze gracza */
       .pawn .shot { position: absolute; right: 120px; top: 60px; width: 960px; height: 960px;
         -webkit-mask-image: radial-gradient(closest-side at 50% 54%, #000 58%, transparent 100%); mask-image: radial-gradient(closest-side at 50% 54%, #000 58%, transparent 100%); }
       .pawn .shot img { display: block; width: 100%; height: 100%; object-fit: cover; }
       .pawn .txt { position: absolute; left: 150px; top: 380px; width: 760px; }
       .pawn .h { font-size: 132px; margin-top: 22px; }
       .pawn .sub { margin-top: 24px; font-size: 34px; }
-      .pawn .bar { display: block; width: 96px; height: 6px; border-radius: 3px; margin-top: 34px; }
+      .pawn .bar { display: block; width: 96px; height: 8px; border-radius: 4px; margin-top: 34px; }
+      .pawn .eyebrow { color: rgba(11, 31, 77, .6); }
+      .pawn .h { color: #0b1f4d; }
+      .pawn .sub { color: #4a5a7a; }
       /* 7. budynki */
       #s7 .txt { position: absolute; left: 140px; bottom: 140px; width: 1200px; }
       #s7 .h { font-size: 128px; }
@@ -89,12 +92,12 @@
   <body>
     <div id="root" data-composition-id="main" data-start="0" data-duration="42.46" data-width="1920" data-height="1080">
 
-      <!-- 1. Otwarcie: czerń i hasło -->
+      <!-- 1. Otwarcie: granat uczelni i hasło -->
       <section id="s1" class="scene clip" data-start="0" data-duration="3.692" data-track-index="1">
         <div class="ground"></div>
         <div class="txt">
           <span class="h line" id="s1a">Uczelnia,</span>
-          <span class="h line silver" id="s1b">jakiej jeszcze nie znasz.</span>
+          <span class="h line silver" id="s1b">jakiej jeszcze nie znasz</span>
         </div>
       </section>
 
@@ -106,7 +109,7 @@
         <div class="txt">
           <span class="eyebrow" id="s2e">Praca inżynierska · WSiZ Bielsko-Biała</span>
           <span class="h line" id="s2h">WSiZ Tour</span>
-          <span class="sub" id="s2s">Gra planszowa 3D o Twojej uczelni.</span>
+          <span class="sub" id="s2s">Gra planszowa 3D o Twojej uczelni</span>
         </div>
       </section>
 
@@ -117,8 +120,8 @@
         <div class="shade-left"></div>
         <div class="txt">
           <span class="eyebrow" id="s3e">Kampus nad wodą</span>
-          <span class="h line" id="s3a">Uniwersytet z jednej strony.</span>
-          <span class="h line silver" id="s3b">Wakacje z drugiej.</span>
+          <span class="h line" id="s3a">Uniwersytet z jednej strony,</span>
+          <span class="h line silver" id="s3b">wakacje z drugiej</span>
         </div>
       </section>
 
@@ -127,8 +130,8 @@
         <div class="ground"></div>
         <div class="bg" id="s4bg" data-layout-allow-overflow><img src="./assets/img/board-close.jpg" alt="Plansza w trakcie gry" /></div>
         <div class="shade-center"></div>
-        <div class="slam"><span class="word" id="w1">Rzuć.</span></div>
-        <div class="slam"><span class="word" id="w2">Odpowiedz.</span></div>
+        <div class="slam"><span class="word" id="w1">Rzuć</span></div>
+        <div class="slam"><span class="word" id="w2">Odpowiedz</span></div>
       </section>
 
       <!-- 5. Kupuj. Buduj. -->
@@ -136,30 +139,30 @@
         <div class="ground"></div>
         <div class="bg" id="s5bg" data-layout-allow-overflow><img src="./assets/img/buildings-close.jpg" alt="Kupione sale z budynkami" /></div>
         <div class="shade-center"></div>
-        <div class="slam"><span class="word" id="w3">Kupuj.</span></div>
-        <div class="slam"><span class="word gold" id="w4">Buduj.</span></div>
+        <div class="slam"><span class="word" id="w3">Kupuj</span></div>
+        <div class="slam"><span class="word gold" id="w4">Buduj</span></div>
       </section>
 
       <!-- 6. Pionki w studiu, po jednym takcie -->
       <section id="p1" class="scene clip pawn" data-start="18.462" data-duration="1.846" data-track-index="1">
-        <div class="ground"></div>
+        <div class="ground" style="background: linear-gradient(180deg, #edebf2 0%, #edebf2 7%, #e8e6f3 50%, #f4d3d8 93%, #f4d3d8 100%)"></div>
         <div class="shot" id="p1i"><img src="./assets/img/pawn-1.jpg" alt="Pionek Sztandar" /></div>
-        <div class="txt"><span class="eyebrow">Pionek 01</span><span class="h line" id="p1h">Sztandar.</span><span class="sub">Dla tych, którzy prowadzą.</span><span class="bar" style="background:#e5484d"></span></div>
+        <div class="txt"><span class="eyebrow">Pionek 01</span><span class="h line" id="p1h">Sztandar</span><span class="sub">Dla tych, którzy prowadzą.</span><span class="bar" style="background:#e5484d"></span></div>
       </section>
       <section id="p2" class="scene clip pawn" data-start="20.308" data-duration="1.846" data-track-index="1">
-        <div class="ground"></div>
+        <div class="ground" style="background: linear-gradient(180deg, #e8edf7 0%, #e8edf7 7%, #dbe2f6 50%, #c8def8 93%, #c8def8 100%)"></div>
         <div class="shot" id="p2i"><img src="./assets/img/pawn-2.jpg" alt="Pionek Drukarka 3D" /></div>
-        <div class="txt"><span class="eyebrow">Pionek 02</span><span class="h line" id="p2h">Drukarka 3D.</span><span class="sub">Dla tych, którzy budują.</span><span class="bar" style="background:#2f7ff0"></span></div>
+        <div class="txt"><span class="eyebrow">Pionek 02</span><span class="h line" id="p2h">Drukarka 3D</span><span class="sub">Dla tych, którzy budują.</span><span class="bar" style="background:#2f7ff0"></span></div>
       </section>
       <section id="p3" class="scene clip pawn" data-start="22.154" data-duration="1.846" data-track-index="1">
-        <div class="ground"></div>
+        <div class="ground" style="background: linear-gradient(180deg, #e8eef2 0%, #e8eef2 7%, #dfeaf4 50%, #c9e9e0 93%, #c9e9e0 100%)"></div>
         <div class="shot" id="p3i"><img src="./assets/img/pawn-3.jpg" alt="Pionek Koparka" /></div>
-        <div class="txt"><span class="eyebrow">Pionek 03</span><span class="h line" id="p3h">Koparka.</span><span class="sub">Dla tych, którzy liczą.</span><span class="bar" style="background:#1fa463"></span></div>
+        <div class="txt"><span class="eyebrow">Pionek 03</span><span class="h line" id="p3h">Koparka</span><span class="sub">Dla tych, którzy liczą.</span><span class="bar" style="background:#1fa463"></span></div>
       </section>
       <section id="p4" class="scene clip pawn" data-start="24.000" data-duration="1.846" data-track-index="1">
-        <div class="ground"></div>
+        <div class="ground" style="background: linear-gradient(180deg, #edeff0 0%, #edeff0 7%, #ebecf3 50%, #f8ecd2 93%, #f8ecd2 100%)"></div>
         <div class="shot" id="p4i"><img src="./assets/img/pawn-4.jpg" alt="Pionek Ekspres" /></div>
-        <div class="txt"><span class="eyebrow">Pionek 04</span><span class="h line" id="p4h">Ekspres.</span><span class="sub">Dla tych, którzy nie śpią przed sesją.</span><span class="bar" style="background:#f2b72e"></span></div>
+        <div class="txt"><span class="eyebrow">Pionek 04</span><span class="h line" id="p4h">Ekspres</span><span class="sub">Dla tych, którzy nie śpią przed sesją.</span><span class="bar" style="background:#f2b72e"></span></div>
       </section>
 
       <!-- 7. Budynki -->
@@ -170,7 +173,7 @@
         <div class="txt">
           <span class="eyebrow" id="s7e">Pięć poziomów</span>
           <span class="h line" id="s7a">Od telefonu</span>
-          <span class="h line silver" id="s7b">do serwerowni.</span>
+          <span class="h line silver" id="s7b">do serwerowni</span>
         </div>
       </section>
 
@@ -179,7 +182,7 @@
         <div class="ground"></div>
         <div class="txt">
           <span class="eyebrow" id="s8e">Komputer · tablet · telefon</span>
-          <span class="h line" id="s8a">Graj, gdzie chcesz. Kiedy chcesz.</span>
+          <span class="h line" id="s8a">Graj, gdzie chcesz i kiedy chcesz.</span>
         </div>
         <div class="devices">
           <div class="laptop" id="dl"><div class="scr"><img src="./assets/img/ui-game.jpg" alt="Gra na komputerze" /></div><div class="base"></div></div>
@@ -209,7 +212,7 @@
         <div class="ground"></div>
         <div class="txt">
           <span class="h line" id="s10h">WSiZ Tour</span>
-          <span class="sub" id="s10s">Zagraj w swoją uczelnię. W przeglądarce, na każdym ekranie.</span>
+          <span class="sub" id="s10s">Zagraj w swoją uczelnię w przeglądarce, na każdym ekranie.</span>
           <span class="cta" id="s10c">Zagraj teraz</span>
         </div>
         <div class="legal" id="s10l">

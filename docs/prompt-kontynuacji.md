@@ -32,6 +32,7 @@ Robię grę **WSiZ Tour** jako pracę inżynierską. To gra planszowa 3D w przeg
 4. Po każdej zmianie sprawdź grę w przeglądarce. Sprawdź też konsolę i czy nic się nie wysypało.
 5. Po każdej mojej decyzji zaktualizuj `docs/zalozenia.md`. Po każdym etapie dopisz wpis do dziennika w tym pliku.
 6. Logo uczelni: przed publicznym wydaniem gry potrzebna jest zgoda uczelni. Pytania przygotują wykładowcy.
+7. **Interpunkcja:** kropka tylko na końcu pełnego zdania. Po pojedynczych słowach, hasłach i nazwach nie ma kropek.
 
 ## Obecne zadanie
 
@@ -87,3 +88,4 @@ Funkcja `w()` przerywa turę, gdy gra się skończyła albo gracz wyszedł do me
 - **13.10.2026, urządzenia, muzyka i strona-wizytówka:** nowa scena prezentacji „Graj, gdzie chcesz. Kiedy chcesz.” z laptopem, tabletem i telefonem pokazującymi żywą planszę. Muzyka prezentacji z częścią B, przejściami i talerzem; stała `MUSIC_FILE` na utwór CC0 z `assets/muzyka/` (pobranie gotowego utworu zablokowane przez ustawienia sieci środowiska). Strona-wizytówka projektu w `prezentacja-strona/`. Testy Playwright bez błędów.
 - **13.10.2026, muzyka od autora i aktualizacja skilli:** prezentacja gra „Epic Cinematic Trailer | ELITE” (Alex-Productions, CC BY 3.0, w repozytorium, podpis w Ustawieniach i na końcu prezentacji); menu i gra: „Tropical Sun” i „New Life” z Uppbeat tylko lokalnie (w .gitignore); bez plików muzyka z syntezatora. Taste-skill zaktualizowany (`npx skills add Leonxlnx/taste-skill`): skille leżą teraz w `.agents/skills`, a `.claude/skills` ma do nich dowiązania.
 - **13.10.2026, film promocyjny:** 42,5 s, 1920x1080, HyperFrames (`film/`), sceny cięte w rytm „Epic Cinematic Trailer | ELITE” (CC BY 3.0, podpis na końcu). Lżejsza wersja (7 MB) jest w `prezentacja-strona/video/` i w sekcji „Zwiastun” na stronie-wizytówce. Pełna jakość (30 MB) przekazana autorowi jako plik.
+- **14.10.2026, interpunkcja i świeży wygląd:** kropki tylko po pełnych zdaniach (prezentacja, komunikaty w grze, film i strona-wizytówka). Ekran gry jak w Business Tour: karty graczy w czterech rogach ekranu, pula i menu na górze, karty i opis ruchu na dole. Prezentacja w dzień (noc tylko w finale z fajerwerkami), granat uczelni zamiast czerni, bez kinowych pasów i ziarna, jasne studio pionków z poświatą w kolorze gracza, pytanie na białej karcie z kolorowymi literami, liczby na szklanych kafelkach, szklane sterowanie.

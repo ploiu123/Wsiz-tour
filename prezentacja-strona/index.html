@@ -195,7 +195,7 @@
   .studio .lead { color: var(--stage-ink-2); }
   .bento { position: relative; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto auto; gap: 18px; margin-top: clamp(32px, 5vw, 56px); }
   .pawn { position: relative; }
-  .pawn .shot { background: #060912; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); aspect-ratio: 1 / 1; }
+  .pawn .shot { background: #EEF2F8; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); aspect-ratio: 1 / 1; }
   .pawn:first-child { grid-row: span 2; }
   .pawn:first-child .shot { aspect-ratio: auto; height: 100%; min-height: 520px; }
   .pawn:last-child { grid-column: span 2; }
@@ -356,7 +356,7 @@
     <div class="wrap">
       <div>
         <p class="eyebrow reveal">Praca inżynierska · WSiZ w Bielsku-Białej</p>
-        <h1 class="reveal" style="--d:.08s">WSiZ Tour<span>Uczelnia w formie gry planszowej.</span></h1>
+        <h1 class="reveal" style="--d:.08s">WSiZ Tour<span>Uczelnia w formie gry planszowej</span></h1>
         <p class="lead reveal" style="--d:.16s">Gra 3D w przeglądarce w stylu Business Tour. Rzucasz kostkami, odpowiadasz na pytania z przedmiotów, kupujesz sale i budujesz od telefonu do serwerowni. Plansza leży na kampusie nad wodą.</p>
         <div class="hero-cta reveal" style="--d:.24s">
           <a class="btn btn-primary" href="https://claude.ai/artifact/ATfwdTc5QKUtyK6d7A6qpV" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>Zagraj w przeglądarce</a>
@@ -400,8 +400,8 @@
     <div class="wrap">
       <div class="head">
         <p class="eyebrow reveal">00 · Zwiastun</p>
-        <h2 class="reveal">Cała gra w 42 sekundy.</h2>
-        <p class="lead reveal" style="--d:.1s">Film zrobiony z zrzutów naszej gry, cięty w rytm muzyki. Muzyka: „Epic Cinematic Trailer | ELITE”, Alex-Productions (onsound.eu), licencja CC BY 3.0.</p>
+        <h2 class="reveal">Cała gra w 42 sekundy</h2>
+        <p class="lead reveal" style="--d:.1s">Film powstał ze zrzutów naszej gry i jest cięty w rytm muzyki. Muzyka: „Epic Cinematic Trailer | ELITE”, Alex-Productions (onsound.eu), licencja CC BY 3.0.</p>
       </div>
       <div class="film reveal" style="--d:.12s">
         <video id="promoFilm" controls playsinline preload="metadata" poster="img/diorama-day.jpg" width="1920" height="1080">
@@ -416,7 +416,7 @@
     <div class="wrap">
       <div class="head">
         <p class="eyebrow reveal">01 · Świat</p>
-        <h2 class="reveal">Uniwersytet z jednej strony. Wakacje z drugiej.</h2>
+        <h2 class="reveal">Uniwersytet z jednej strony, wakacje z drugiej</h2>
         <p class="lead reveal" style="--d:.1s">Plansza leży na placu z kostki granitowej, jak makieta w przekroju: z boku widać warstwy ziemi i przezroczystą wodę. Za planszą gmach z wieżą zegarową, wydziały, boisko i parking. Przed nią plaża, pomost i latarnia na falochronie.</p>
       </div>
       <div class="world">
@@ -424,8 +424,8 @@
         <div class="side">
           <div class="shot reveal" style="--d:.1s"><img src="img/board-close.jpg" alt="Plansza w trakcie gry: kupione sale z budynkami i pionki na polu START" width="1600" height="900" loading="lazy" style="object-position:58% 50%"></div>
           <ul class="facts reveal" style="--d:.15s">
-            <li><b>Fale</b>Suma fal Gerstnera. Łodzie, skuter i boje unoszą się i przechylają na tej samej fali, którą widać na wodzie.</li>
-            <li><b>Plac</b>Kostka z mapą normalnych: fugi i fazowane brzegi łapią światło. Pod ławkami i latarniami leżą miękkie cienie.</li>
+            <li><b>Fale</b>Woda to suma fal Gerstnera. Łodzie, skuter i boje unoszą się i przechylają na tej samej fali, którą widać na wodzie.</li>
+            <li><b>Plac</b>Kostka ma mapę normalnych, więc fugi i fazowane brzegi łapią światło. Pod ławkami i latarniami leżą miękkie cienie.</li>
             <li><b>Kadr</b>Przed planszą nic wysokiego nie stoi, więc w grze nic nie zasłania pól.</li>
           </ul>
         </div>
@@ -438,11 +438,11 @@
     <div class="wrap skins">
       <div>
         <p class="eyebrow reveal">02 · Wygląd</p>
-        <h2 class="reveal" style="margin-top:18px">Dwa wyglądy. Jedna plansza.</h2>
+        <h2 class="reveal" style="margin-top:18px">Dwa wyglądy, jedna plansza</h2>
         <p class="lead reveal" style="margin-top:18px;--d:.1s">W Ustawieniach wybierasz otoczenie. Wybór się zapamiętuje, a prezentacja zawsze pokazuje makietę.</p>
         <div class="tabs reveal" role="tablist" aria-label="Wygląd planszy" style="--d:.16s">
-          <button class="tab" role="tab" id="t-dio" aria-controls="p-skins" aria-selected="true" data-skin="dio"><b>Diorama nad wodą</b><span>Kampus, plaża i morze dookoła planszy. Ciągle coś się dzieje.</span></button>
-          <button class="tab" role="tab" id="t-tek" aria-controls="p-skins" aria-selected="false" data-skin="tek" tabindex="-1"><b>Czysta tektura</b><span>Sama plansza jak z kartonu, na jasnym stole. Nic nie odciąga uwagi od gry.</span></button>
+          <button class="tab" role="tab" id="t-dio" aria-controls="p-skins" aria-selected="true" data-skin="dio"><b>Diorama nad wodą</b><span>Dookoła planszy są kampus, plaża i morze. Ciągle coś się dzieje.</span></button>
+          <button class="tab" role="tab" id="t-tek" aria-controls="p-skins" aria-selected="false" data-skin="tek" tabindex="-1"><b>Czysta tektura</b><span>To sama plansza jak z kartonu na jasnym stole. Nic nie odciąga uwagi od gry.</span></button>
         </div>
       </div>
       <div class="stage-img reveal" id="p-skins" role="tabpanel" aria-labelledby="t-dio" style="--d:.1s">
@@ -457,13 +457,13 @@
     <div class="wrap">
       <div class="head">
         <p class="eyebrow reveal">03 · Tura</p>
-        <h2 class="reveal">Jedna tura. Pięć decyzji.</h2>
+        <h2 class="reveal">Jedna tura, pięć decyzji</h2>
         <p class="lead reveal" style="--d:.1s">Zasady jak w Business Tour, tylko zamiast szczęścia liczy się wiedza ze studiów.</p>
       </div>
       <div class="turn">
         <div class="shot reveal"><img src="img/buildings-close.jpg" alt="Zbliżenie planszy: pole Sala 05, parking i kupione pola z budynkami" width="1600" height="900" loading="lazy"></div>
         <ol class="steps">
-          <li class="reveal"><div><h3>Rzut</h3><p>Dwie kostki 3D. Dublet daje drugi rzut, trzeci dublet z rzędu kończy się w dziekanacie.</p></div></li>
+          <li class="reveal"><div><h3>Rzut</h3><p>Rzucasz dwiema kostkami 3D. Dublet daje drugi rzut, trzeci dublet z rzędu kończy się w dziekanacie.</p></div></li>
           <li class="reveal" style="--d:.06s"><div><h3>Pytanie</h3><p>Żeby kupić salę, odpowiadasz na pytanie z przedmiotu. Masz 60 sekund. Pytania wpisują wykładowcy.</p></div></li>
           <li class="reveal" style="--d:.12s"><div><h3>Zakup albo czynsz</h3><p>Wolna sala jest do kupienia, cudza kosztuje czynsz. Paczki banknotów lecą przez plac z jednego stosu na drugi.</p></div></li>
           <li class="reveal" style="--d:.18s"><div><h3>Budowa</h3><p>Cała grupa w jednym kolorze to monopol. Na swoich salach stawiasz budynki, a czynsz rośnie z każdym poziomem.</p></div></li>
@@ -479,7 +479,7 @@
       <div class="studio">
         <div class="head" style="margin-bottom:0">
           <p class="eyebrow reveal">04 · Pionki</p>
-          <h2 class="reveal">Cztery pionki. Każdy z charakterem.</h2>
+          <h2 class="reveal">Cztery pionki, każdy z charakterem</h2>
           <p class="lead reveal" style="--d:.1s">Stoją na podeście w kolorach uczelni: lakierowany granat, pas w kolorze gracza i jasna płytka ze srebrnym rantem.</p>
         </div>
         <div class="bento">
@@ -497,8 +497,8 @@
     <div class="wrap levels">
       <div>
         <p class="eyebrow reveal">05 · Budynki</p>
-        <h2 class="reveal" style="margin-top:18px">Od telefonu do serwerowni.</h2>
-        <p class="lead reveal" style="margin-top:18px;--d:.1s">Pięć poziomów, każdy w całości w kolorze właściciela sali. Wszystkie modele są zbudowane kodem z prostych brył.</p>
+        <h2 class="reveal" style="margin-top:18px">Od telefonu do serwerowni</h2>
+        <p class="lead reveal" style="margin-top:18px;--d:.1s">Jest pięć poziomów, a każdy ma kolor właściciela sali. Wszystkie modele są zbudowane kodem z prostych brył.</p>
         <ol class="ladder reveal" style="--d:.16s">
           <li><i>01</i><b>Telefon</b><span class="bar"><span style="--w:20%;--d:.1s"></span></span></li>
           <li><i>02</i><b>Laptop</b><span class="bar"><span style="--w:40%;--d:.2s"></span></span></li>
@@ -520,10 +520,10 @@
         <div class="shot reveal"><img src="img/ui-cards.jpg" alt="Akty własności: karty sal z ilustracjami, ceną i tabelą czynszów" width="1600" height="1000" loading="lazy" style="object-position:50% 30%"></div>
         <div>
           <p class="eyebrow reveal">06 · Karty</p>
-          <h2 class="reveal" style="margin-top:18px">23 akty własności. Każdy z własną ilustracją.</h2>
-          <p class="lead reveal" style="margin-top:18px;--d:.1s">Nagłówek w kolorze grupy, cena, tabela czynszów i koszt budowy. Karty pytań są gotowe do druku w formacie 63 × 88 mm.</p>
+          <h2 class="reveal" style="margin-top:18px">23 akty własności, każdy z własną ilustracją</h2>
+          <p class="lead reveal" style="margin-top:18px;--d:.1s">Każdy akt ma nagłówek w kolorze grupy, cenę, tabelę czynszów i koszt budowy. Karty pytań są gotowe do druku w formacie 63 × 88 mm.</p>
           <div class="backs reveal" style="--d:.16s" aria-label="Tył kart: ułatwienia i utrudnienia"><span class="back good" title="Ułatwienia"></span><span class="back bad" title="Utrudnienia"></span></div>
-          <p class="caption reveal" style="--d:.2s">Tył kart jak na polu Szansa: ułatwienia zielone, utrudnienia czerwone.</p>
+          <p class="caption reveal" style="--d:.2s">Tył kart ma kolory pola Szansa: ułatwienia są zielone, a utrudnienia czerwone.</p>
         </div>
       </div>
     </div>
@@ -534,11 +534,11 @@
     <div class="wrap">
       <div class="head">
         <p class="eyebrow reveal">07 · Urządzenia</p>
-        <h2 class="reveal">Graj, gdzie chcesz. Kiedy chcesz.</h2>
+        <h2 class="reveal">Graj, gdzie chcesz i kiedy chcesz.</h2>
         <p class="lead reveal" style="--d:.1s">Gra działa w przeglądarce, bez instalacji. Na komputerze panele stoją w rogach, na tablecie pod planszą, a na telefonie gracze mieszczą się w jednym rzędzie. Plansza jest zawsze cała na ekranie.</p>
       </div>
       <div class="devices reveal" style="--d:.12s">
-        <figure class="dev-laptop"><div class="scr"><img src="img/ui-game.jpg" alt="Gra na komputerze: gracze w lewym górnym rogu, pula i menu w prawym, przycisk Rzuć kostkami" width="1600" height="1000" loading="lazy"></div><div class="lap-base"></div><figcaption>Komputer</figcaption></figure>
+        <figure class="dev-laptop"><div class="scr"><img src="img/ui-game.jpg" alt="Gra na komputerze: karty graczy w czterech rogach ekranu, pula i menu na górze, przycisk Rzuć kostkami" width="1600" height="1000" loading="lazy"></div><div class="lap-base"></div><figcaption>Komputer</figcaption></figure>
         <figure class="dev-tablet"><div class="scr"><img src="img/ui-tablet.jpg" alt="Gra na tablecie: gracze w rzędzie nad planszą, pula i karty pod nią" width="1024" height="768" loading="lazy"></div><figcaption>Tablet</figcaption></figure>
         <figure class="dev-phone"><div class="scr"><img src="img/ui-phone.jpg" alt="Gra na telefonie: gracze w jednym rzędzie u góry, plansza pośrodku, karty i pula na dole" width="390" height="844" loading="lazy"></div><figcaption>Telefon</figcaption></figure>
       </div>
@@ -555,14 +555,14 @@
     <div class="wrap code">
       <div>
         <p class="eyebrow reveal">08 · Kod</p>
-        <h2 class="reveal" style="margin-top:18px">Zrobione w kodzie. Od pierwszej kostki brukowej.</h2>
+        <h2 class="reveal" style="margin-top:18px">Wszystko zrobione w kodzie, od pierwszej kostki brukowej</h2>
       </div>
       <dl class="rows">
-        <div class="reveal"><dt>Silnik</dt><dd>Three.js 0.169. Cała gra mieści się w jednym pliku <code>index.html</code>, bez bundlera.</dd></div>
+        <div class="reveal"><dt>Silnik</dt><dd>Silnik to Three.js 0.169. Cała gra mieści się w jednym pliku <code>index.html</code>, bez bundlera.</dd></div>
         <div class="reveal" style="--d:.04s"><dt>Grafika</dt><dd>Każdy model, tekstura i ilustracja jest narysowana kodem. Bez gotowych modeli i bez generatorów obrazów.</dd></div>
-        <div class="reveal" style="--d:.08s"><dt>Muzyka</dt><dd>Syntezowana w Web Audio: spokojny podkład w menu i grze, osobny utwór prezentacji, który rośnie ze scenami.</dd></div>
+        <div class="reveal" style="--d:.08s"><dt>Muzyka</dt><dd>Muzyka z kodu powstaje w Web Audio. W prezentacji i filmie gra też utwór Alex-Productions na licencji CC BY 3.0.</dd></div>
         <div class="reveal" style="--d:.12s"><dt>Pytania</dt><dd>Wykładowcy wpisują je w Excelu. Skrypt sprawdza arkusz i zapisuje <code>baza-pytan.js</code> dla gry.</dd></div>
-        <div class="reveal" style="--d:.16s"><dt>Logowanie</dt><dd>Przez wirtualny dziekanat (w przygotowaniu). Klucz aplikacji jest tylko w pliku <code>.env</code> na serwerze, nigdy w przeglądarce. Gra nie widzi haseł studentów.</dd></div>
+        <div class="reveal" style="--d:.16s"><dt>Logowanie</dt><dd>Logowanie przez wirtualny dziekanat jest w przygotowaniu. Klucz aplikacji jest tylko w pliku <code>.env</code> na serwerze, nigdy w przeglądarce. Gra nie widzi haseł studentów.</dd></div>
         <div class="reveal" style="--d:.2s"><dt>Płynność</dt><dd>Gra sama zmniejsza rozdzielczość, gdy komputer nie nadąża, i lżej liczy cienie na telefonach.</dd></div>
       </dl>
     </div>
@@ -575,7 +575,7 @@
         <img src="img/diorama-night.jpg" alt="" width="1600" height="900" loading="lazy">
         <div class="final-in">
           <h2>Rzuć kostkami.</h2>
-          <p>Gra działa w przeglądarce, bez instalacji. Solo z botami na trzech poziomach albo 2 na 2.</p>
+          <p>Gra działa w przeglądarce i nie wymaga instalacji. Zagrasz solo z botami na trzech poziomach albo w drużynach 2 na 2.</p>
           <a class="btn btn-primary" href="https://claude.ai/artifact/ATfwdTc5QKUtyK6d7A6qpV" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>Zagraj w WSiZ Tour</a>
         </div>
       </div>
