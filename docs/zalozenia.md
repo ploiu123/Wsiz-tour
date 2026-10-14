@@ -487,3 +487,12 @@ Prezentacja zawsze pokazuje dioramę, a po jej zamknięciu wraca wybrany wygląd
 - Sceny cięte w rytm muzyki (130 uderzeń na minutę, cięcia na początku taktów): „Uczelnia, jakiej jeszcze nie znasz.”, makieta z tytułem, kampus nad wodą, hasła „RZUĆ. ODPOWIEDZ. KUPUJ. BUDUJ.”, cztery pionki ze studia, budynki od telefonu do serwerowni, laptop, tablet i telefon, makieta nocą z liczbami (32, 23, 4, 60 s), plansza końcowa w granacie uczelni z przyciskiem „Zagraj teraz”.
 - Muzyka: „Epic Cinematic Trailer | ELITE” (Alex-Productions, CC BY 3.0), fragment 27,5–70 s, podpis na planszy końcowej.
 - Projekt filmu: folder `film/` (`index.html`, `BRIEF.md`, `STORYBOARD.md`, zdjęcia, czcionki Geist, GSAP, muzyka). Nowy render: w folderze `film/` uruchom `npm install`, potem `npx hyperframes render --quality high --output renders/video.mp4` (potrzebny ffmpeg).
+
+## Technika: projekt na Vite i plan rozwoju (od 14.10.2026)
+
+- Autor zaakceptował plan techniczny („wszystko w najlepszej jakości”). Plan, decyzje i stan etapów są w `docs/plan-techniczny.md`.
+- **Silnik:** zostaje Three.js; w etapie 4 przechodzi na renderer WebGPU (z zapasowym WebGL2), kości dostaną fizykę Rapier. Unreal Engine odpada, bo nie działa w przeglądarce. Babylon.js odrzucony, bo wymagałby przepisania całej grafiki.
+- **Grafika nadal tylko nasza:** modele GLB powstaną skryptem z naszego kodu, mapa HDR z naszej sceny.
+- **Scena:** główna scena będzie pokojem ze stołem, makieta kampusu nad wodą zostaje jako drugi wygląd.
+- **Etap 1 zrobiony:** projekt na Vite (TypeScript, ESLint, testy Vitest i Playwright), czcionki w paczce, paczka na serwer w `dist/` z kompresją. Uruchamianie: `npm install`, potem `npm run dev`. Wdrożenie: `docs/wdrozenie.md`.
+- **Gra wieloosobowa:** logika gry przejdzie do `src/core` (etap 2), serwer Node.js z WebSocket w `server/` (etap 3). Serwer decyduje o rzutach i pieniądzach; poprawne odpowiedzi na pytania nie trafiają do przeglądarki.

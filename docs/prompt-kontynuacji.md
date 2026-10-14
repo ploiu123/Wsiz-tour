@@ -14,20 +14,24 @@ Robię grę **WSiZ Tour** jako pracę inżynierską. To gra planszowa 3D w przeg
 
 - **Repozytorium:** GitHub `ploiu123/Wsiz-tour`. Na moim Macu: `~/Documents/Wsiz-tour`.
 - **Najważniejsze pliki:**
-  - `index.html`: cała gra w jednym pliku. Zawiera planszę 3D (Three.js z CDN), modele pionków i budynków, zakładkę „Karty”, kod menu i rozgrywkę (blok „Rozgrywka”).
+  - Projekt na Vite (od 14.10.2026). `index.html` to szkielet strony (ekrany, panele, prezentacja), `src/main.js` wejście (czcionki, style, gra).
+  - `src/data/` (TypeScript): dane gry bez grafiki: `board.ts` (pola, grupy, układ), `economy.ts` (kwoty, ceny, czynsze, boty), `cards.ts` (karty), `players.ts` (kolory graczy).
+  - `src/legacy/game.js`: grafika 3D (Three.js z npm), modele, interfejs i rozgrywka, przeniesione 1:1 z dawnego jednego pliku. W etapie 2 logika gry przechodzi do `src/core`.
+  - `src/styles/`: `base.css`, `menu.css`, `game.css`, `promo.css`. `tests/unit` (Vitest) i `tests/e2e` (Playwright).
+  - `docs/plan-techniczny.md`: plan rozwoju krok po kroku i przyjęte decyzje (silnik, serwer, grafika 4K). `docs/wdrozenie.md`: paczka na serwer i ustawienia Nginx/Apache.
   - `pytania/`: baza pytań. `pytania.xlsx` wypełniają wykładowcy, `excel-na-js.py` zamienia go na `baza-pytan.js`, który czyta gra. `xlsx_prosty.py` czyta i zapisuje pliki Excela bez dodatkowych bibliotek.
   - `docs/zalozenia.md`: **źródło prawdy o wszystkich ustaleniach**, czyli zasady, pola, karty, mechanika, menu, otwarte sprawy i harmonogram. Przeczytaj go w całości na początku i aktualizuj przy każdej mojej decyzji.
   - `docs/prompt-kontynuacji.md`: ten plik. Po każdym skończonym etapie dopisz wpis do dziennika na dole.
   - `assets/logo-wsiz.png`: logo uczelni, okrągłe na białym tle (447 × 447 px, bez przezroczystości). W kodzie rysujemy je przycięte do koła albo jako jednokolorową wersję (granatową na jasnym tle, białą na ciemnym).
   - `druk/`: karty z pytaniami do druku (odłożone na później) oraz wspólne pliki `karty-pytan.css` i `karty-pytan.js`, których używa też gra.
-- **Podgląd online (Artifact):** https://claude.ai/artifact/ATfwdTc5QKUtyK6d7A6qpV. Przy aktualizacji publikuj `index.html` z parametrem `url` tego artefaktu i z plikami pomocniczymi: `assets/logo-wsiz.png`, `druk/karty-pytan.css`, `druk/karty-pytan.js`, `pytania/baza-pytan.js`. Jeśli publikacja zostanie odrzucona, bo jest nowsza wersja, przeczytaj ją w całości, scal zmiany i opublikuj ponownie.
-- **Uruchomienie lokalnie:** w folderze projektu `python3 -m http.server 8000`, potem http://localhost:8000 (używam przeglądarki Brave). Otwarcie pliku dwuklikiem nie pokaże logo w grafice 3D.
+- **Podgląd online (Artifact):** https://claude.ai/artifact/ATfwdTc5QKUtyK6d7A6qpV. Przy aktualizacji zbuduj paczkę (`npm run build`) i opublikuj stronę z `dist/` z parametrem `url` tego artefaktu, z plikami z `dist/app/`, logo, muzyką prezentacji, `druk/karty-pytan.js` i `pytania/baza-pytan.js`. Jeśli publikacja zostanie odrzucona, bo jest nowsza wersja, przeczytaj ją w całości, scal zmiany i opublikuj ponownie.
+- **Uruchomienie lokalnie:** raz `npm install` (potrzebny Node.js 22+), potem `npm run dev` i http://localhost:5173 (używam przeglądarki Brave). Paczka na serwer: `npm run build` (folder `dist/`). Sprawdzanie: `npm run check` i `npm run e2e`.
 - **Commity:** wysyłam je na GitHuba przez GitHub Desktop. Na moim Macu git w terminalu nie ma danych logowania. Jeśli w repozytorium brakuje plików opisanych tutaj, poproś mnie o wypchnięcie zmian.
 
 ## Zasady pracy
 
 1. **Wszystkie grafiki, modele i ilustracje robimy sami, w kodzie.** Bez gotowych modeli, bez generatorów obrazów AI i bez cudzych grafik, żebym miał do nich prawa. Wyjątek: dźwięki na licencji CC0 albo moje własne nagrania.
-2. **Kolory uczelni:** granat `#00276F`, jasny szaroniebieski `#CCD3E1`, biel i szarość. Czcionki: Fredoka (nagłówki, napisy na planszy) i Figtree (interfejs), z Google Fonts.
+2. **Kolory uczelni:** granat `#00276F`, jasny szaroniebieski `#CCD3E1`, biel i szarość. Czcionki: Fredoka (nagłówki, napisy na planszy) i Figtree (interfejs), w prezentacji Inter Tight i Anton; wszystkie z pakietów Fontsource w paczce gry (bez Google Fonts).
 3. **Nazwy gry nie ma na planszy.** W menu może być.
 4. Po każdej zmianie sprawdź grę w przeglądarce. Sprawdź też konsolę i czy nic się nie wysypało.
 5. Po każdej mojej decyzji zaktualizuj `docs/zalozenia.md`. Po każdym etapie dopisz wpis do dziennika w tym pliku.
@@ -38,7 +42,7 @@ Robię grę **WSiZ Tour** jako pracę inżynierską. To gra planszowa 3D w przeg
 
 Pierwsza pełna wersja rozgrywki jest gotowa (13.10.2026). Opis i wszystkie przyjęte ustawienia są w `docs/zalozenia.md`, w sekcjach „Baza pytań” i „Rozgrywka: co działa i jakie ustawienia przyjęliśmy”. Zanim zaczniesz coś nowego, zapytaj mnie, czy mam poprawki do rozgrywki i czy potwierdzam ustawienia tymczasowe.
 
-Kod rozgrywki w `index.html` jest w bloku „Rozgrywka” (przed „Klikanie pól”). Najważniejsze miejsca:
+Realizujemy plan z `docs/plan-techniczny.md`. Etap 1 (Vite) jest zrobiony, następny jest etap 2 (logika gry w `src/core`). Kod rozgrywki jest teraz w `src/legacy/game.js`, w bloku „Rozgrywka”. Najważniejsze miejsca:
 - ustawienia: `ECON`, `GROUP_PRICE`, `RENT_MULT`, `BUILD_MULT`, `BOT`, `SHOW_CORRECT`, `DICE_SOUND_FILE`,
 - przebieg: `startGame` → `runGame` → `playTurn` (kostki `rollDice`, ruch `movePlayer`, pole `landOn`),
 - pola: `landProperty` (kupno, budowa, czynsz), `chance` i `applyCard` (karty), `jailTurn` i `landJail` (dziekanat),
@@ -90,3 +94,4 @@ Funkcja `w()` przerywa turę, gdy gra się skończyła albo gracz wyszedł do me
 - **13.10.2026, film promocyjny:** 42,5 s, 1920x1080, HyperFrames (`film/`), sceny cięte w rytm „Epic Cinematic Trailer | ELITE” (CC BY 3.0, podpis na końcu). Lżejsza wersja (7 MB) jest w `prezentacja-strona/video/` i w sekcji „Zwiastun” na stronie-wizytówce. Pełna jakość (30 MB) przekazana autorowi jako plik.
 - **14.10.2026, interpunkcja i świeży wygląd:** kropki tylko po pełnych zdaniach (prezentacja, komunikaty w grze, film i strona-wizytówka). Ekran gry jak w Business Tour: karty graczy w czterech rogach ekranu, pula i menu na górze, karty i opis ruchu na dole. Prezentacja w dzień (noc tylko w finale z fajerwerkami), granat uczelni zamiast czerni, bez kinowych pasów i ziarna, jasne studio pionków z poświatą w kolorze gracza, pytanie na białej karcie z kolorowymi literami, liczby na szklanych kafelkach, szklane sterowanie.
 - **14.10.2026, mniejsze kwoty:** pieniądze w zwykłych złotych zamiast tysięcy i milionów (2000 zł na start, sale od 80 do 400 zł, START 250 zł), te same proporcje. Pełne kwoty na ekranie, banknoty po 100 zł, karty, zasady, prezentacja i strona-wizytówka przeliczone. Stare statystyki profilu przeliczają się same.
+- **14.10.2026, etap 1 planu technicznego (Vite):** projekt przeniesiony z jednego pliku na Vite. Szkielet strony w `index.html`, style w `src/styles`, dane gry w TypeScript w `src/data` (plansza, ekonomia, karty, kolory graczy), gra w `src/legacy/game.js`. Three.js z npm zamiast CDN, czcionki w paczce (bez Google Fonts), paczka `dist/` z kompresją Brotli i gzip (JS 827 KB, po Brotli 189 KB), lokalne utwory z Uppbeat nie trafiają na serwer. ESLint, TypeScript, testy Vitest (11) i Playwright (4: menu, gra z rzutem, prezentacja, telefon). Wygląd i zachowanie gry bez zmian. Plan rozwoju w `docs/plan-techniczny.md`, wdrożenie w `docs/wdrozenie.md`.

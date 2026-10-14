@@ -1,0 +1,10 @@
+# Kod przeniesiony 1:1 z dawnego index.html formatujemy dopiero przy przepisywaniu (etap 2 i dalej)
+src/legacy/
+dist/
+dist-test/
+film/
+prezentacja-strona/
+druk/
+pytania/
+.agents/
+.claude/

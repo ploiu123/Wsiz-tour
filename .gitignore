@@ -1,9 +1,14 @@
 # macOS
 .DS_Store
 
-# Node.js (przyda się, gdy przejdziemy na Node)
+# Node.js i Vite: zależności, paczka na serwer i paczka testowa (tworzone poleceniami npm)
 node_modules/
 dist/
+dist-test/
+
+# Wyniki testów w przeglądarce (Playwright)
+test-results/
+playwright-report/
 
 # Hasła i klucze nigdy nie trafiają do repozytorium
 .env
@@ -16,8 +21,6 @@ dist/
 # Python (skrypty w pytania/)
 __pycache__/
 
-# Kopia strony do testów automatycznych (tworzona lokalnie)
-index-test.html
 # Playwright CLI output (may contain credentials)
 .playwright-cli/
 

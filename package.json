@@ -1,0 +1,41 @@
+{
+  "name": "wsiz-tour",
+  "version": "0.9.0",
+  "private": true,
+  "description": "WSiZ Tour: gra planszowa 3D w przeglądarce o Wyższej Szkole Informatyki i Zarządzania w Bielsku-Białej (praca inżynierska)",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:test": "vite build --mode test",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "e2e": "playwright test",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run lint && npm run typecheck && npm test && npm run build"
+  },
+  "dependencies": {
+    "@fontsource/anton": "^5.3.0",
+    "@fontsource/figtree": "^5.3.0",
+    "@fontsource/fredoka": "^5.3.0",
+    "@fontsource/inter-tight": "^5.3.0",
+    "three": "0.169.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "1.56.1",
+    "eslint": "^10.12.0",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.10",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.71.2",
+    "vite": "^8.3.4",
+    "vite-plugin-compression2": "^2.5.3",
+    "vitest": "^5.0.4"
+  }
+}
