@@ -11,7 +11,7 @@ Cel: gra przeglądarkowa o jakości wizualnej „AAA”, ostra na monitorach 4K,
 | Babylon.js | Alternatywa, nie wybrana | Wymagałby przepisania całej warstwy 3D przed jakąkolwiek poprawą widoczną dla gracza. |
 | Modele glTF/GLB | Nasze modele z kodu „wypiekane” skryptem do GLB | Spełnia wymóg ładowania GLB i regułę „grafika tylko nasza”. |
 | Mapa HDR (IBL) | Generowana z naszej sceny | Bez cudzych grafik. |
-| Scena | Pokój ze stołem jako główna scena, makieta kampusu nad wodą jako drugi wygląd | Wymóg z planu autora (stół w pokoju), bez utraty makiety. |
+| Scena | Makieta kampusu nad wodą jako główna scena (decyzja autora z 14.10.2026), pokój ze stołem do wyboru | Autor wybrał makietę w planie „klasy AAA” (niżej). Pokój ze stołem z pierwszej wersji planu zostaje w Ustawieniach. |
 
 ## Stan przed migracją
 
@@ -89,4 +89,33 @@ Prezentację gry, film i stronę-wizytówkę przenosimy po etapie 7.
 - **Głębia ostrości** (Wysoka i Ultra): ostrość na punkcie, na który patrzy kamera. Cała plansza jest w strefie w pełni ostrej, a stół i pokój za nią są miękko rozmyte jak na zdjęciu z aparatu. W menu i prezentacji bez rozmycia.
 - **Najazdy kamery** na kupione pole i hotel: kamera podjeżdża z tego samego kierunku, przez chwilę patrzy z bliska (ostrość na polu, reszta planszy rozmyta) i wraca tam, gdzie była. Można wyłączyć w Ustawieniach („Najazdy kamery”).
 - Cienie kontaktowe (GTAO), poświata (bloom) i MSAA 4x opisane wyżej, w etapie 4.
+
+## Plan „klasy AAA” (zaakceptowany 14.10.2026)
+
+Autor uruchomił grę na MacBooku i chce gry klasy AAA: plansza wielkością jak w Business Tour, lepsza makieta, realistyczna woda, lepsze pionki i karty, nowa muzyka i dźwięki prezentacji, w rankingu tylko on.
+
+**Decyzje autora:**
+- główny wygląd: makieta nad wodą (pokój ze stołem do wyboru w Ustawieniach),
+- plansza: kamera jak w Business Tour, plansza wypełnia ekran,
+- modele: generowane skryptami w Blenderze (`bpy`), dalej nasze, z kodu, bez gotowych modeli,
+- muzyka prezentacji: nowa, skomponowana w kodzie, jako domyślna; utwór Alex-Productions (CC BY 3.0) do wyboru w Ustawieniach.
+
+**Silnik:** zostajemy przy Three.js i WebGPU. Babylon.js i PlayCanvas wymagałyby przepisania ok. 7000 linii bez zysku w obrazie, Unity 6 daje paczkę 30–60 MB i wolny start w przeglądarce, Unreal 5 nie działa w przeglądarce. O wyglądzie AAA decydują modele, materiały, światło i efekty, a nie silnik, dlatego zmieniamy potok grafiki: Blender jako biblioteka Pythona (`tools/blender/`, `npm run assets`), eksport GLB z kompresją meshopt i teksturami KTX2, wypalone AO i oświetlenie z Cycles.
+
+| Krok | Zakres | Stan |
+|---|---|---|
+| Krok 0 | ostry obraz Retina i 4K, makieta znowu domyślna, ranking tylko autora, plansza jak w Business Tour (kamera, układ ekranu, większe pionki i budynki, większe napisy na polach) | **zrobione 14.10.2026** |
+| Etap 1 | potok Blender, pionki v2, plansza v2, karty v2 (3D, folia holograficzna), budynki v2 | |
+| Etap 2 | makieta v2 (`src/scene/diorama.js`), realistyczna woda (`src/scene/water.js`: widmo fal JONSWAP, piana, odbicia, załamanie i pochłanianie światła, kaustyki) i fizyka wody (symulacja zmarszczek, kilwater łodzi) | |
+| Etap 3 | pora dnia, niebo fizyczne, promienie słońca, odbicia SSR, TRAA, korekcja kolorów LUT, SSGI na Ultra | |
+| Etap 4 | muzyka prezentacji w kodzie (`src/audio/`), nowe efekty dźwiękowe, nowe sceny prezentacji, film i strona-wizytówka | |
+| Etap 5 | wykres majątku po grze, osiągnięcia, emotki online, samouczek, tryb zdjęć, ekonomia z filmu wzorcowego, GitHub Actions, licznik klatek | |
+
+### Krok 0: co się zmieniło
+
+- **Plansza jak w Business Tour:** kamera w grze patrzy z góry pod kątem ok. 47° (`DIR_GAME`). Karty graczy, opis ruchu, pula z menu i szuflada „Twoje karty” leżą w wolnych trójkątach przy rogach ekranu. `measureSafe` zbiera ich prostokąty, a `fitBoardDistance` szuka najbliższej kamery, przy której romb planszy (z podstawą i miejscem na budynki) nie wchodzi pod żaden z nich. Potem przesuwa obraz w pionie (`fitShift`), żeby nad i pod planszą było tyle samo miejsca, i dopasowuje jeszcze raz. Na ekranie 1440 × 900 plansza ma ok. 865 px wysokości zamiast ok. 675 px.
+- **Pionki i budynki:** pionki w grze o 18% większe (`PAWN_SCALE`, model w grupie, więc animacja skoku dalej działa), budynki na polach o 20% (`BUILD_SCALE`).
+- **Napisy na polach:** większy numer pola, nazwa sali i podpisy grup.
+- **Makieta domyślna:** `prefs.skin = 'diorama'` z migracją `skinV: 3`, w Ustawieniach „Makieta nad wodą”, „Pokój ze stołem”, „Czysta tektura”.
+- **Ranking:** tylko wyniki gracza z tej przeglądarki (trzy karty z rekordami i jeden wiersz), bez przykładowych graczy.
 

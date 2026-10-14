@@ -447,8 +447,8 @@ function tileTexture(i) {
       const band = grp ? grp.color : NO_GROUP;   // pas w kolorze grupy
       g.fillStyle = mix(band, '#ffffff', 0.72); g.fillRect(0, 0, w, h * 0.34);   // działka na budynki
       g.fillStyle = band; g.fillRect(0, 0, w, grp ? 92 : 64);
-      if (grp) { g.fillStyle = '#FFFFFF'; g.font = '700 30px Fredoka, sans-serif'; g.fillText(grp.name.toUpperCase(), w / 2, 48); }
-      if (field) { g.fillStyle = NAVY; drawLines(g, field.name.toUpperCase(), w / 2, h * 0.44, w - 44, 54); }
+      if (grp) { g.fillStyle = '#FFFFFF'; g.font = '700 38px Fredoka, sans-serif'; g.fillText(grp.name.toUpperCase(), w / 2, 48); }
+      if (field) { g.fillStyle = NAVY; drawLines(g, field.name.toUpperCase(), w / 2, h * 0.46, w - 36, 66); }
     } else if (type === 'tax') {
       g.fillStyle = '#FFF7E6'; g.fillRect(0, 0, w, h);
       g.fillStyle = NO_GROUP; g.fillRect(0, 0, w, 20);
@@ -462,7 +462,7 @@ function tileTexture(i) {
         g.restore();
       }
       g.fillStyle = NAVY; g.font = '700 66px Fredoka, sans-serif'; g.fillText('CZESNE', w / 2, h * 0.45);
-      g.fillStyle = '#B4533F'; g.font = '600 27px Fredoka, sans-serif'; g.fillText('ZAPŁAĆ DO PULI', w / 2, h * 0.54);
+      g.fillStyle = '#B4533F'; g.font = '700 32px Fredoka, sans-serif'; g.fillText('ZAPŁAĆ DO PULI', w / 2, h * 0.55);
     } else if (type === 'special') {
       const grad = g.createLinearGradient(0, 0, 0, h);
       grad.addColorStop(0, '#9A3550'); grad.addColorStop(1, '#5C1B2F');
@@ -472,8 +472,8 @@ function tileTexture(i) {
       else if (field.icon === 'vase') drawVase(g, w / 2, h * 0.2);
       else if (field.icon === 'senate') drawSenate(g, w / 2, h * 0.2);
       else drawChandelier(g, w / 2, h * 0.2);
-      g.fillStyle = '#FFFFFF'; drawLines(g, field.name.toUpperCase(), w / 2, h * 0.47, w - 60, 58);
-      g.fillStyle = GOLD; g.font = '600 24px Fredoka, sans-serif'; g.fillText(`POLE SPECJALNE · ${field.no}/4`, w / 2, h * 0.6);
+      g.fillStyle = '#FFFFFF'; drawLines(g, field.name.toUpperCase(), w / 2, h * 0.47, w - 52, 64);
+      g.fillStyle = GOLD; g.font = '700 32px Fredoka, sans-serif'; g.fillText(`SPECJALNE ${field.no}/4`, w / 2, h * 0.61);
       numColor = GOLD;
     } else if (type === 'chance') {
       g.fillStyle = NO_GROUP; g.fillRect(0, 0, w, 20);
@@ -482,15 +482,15 @@ function tileTexture(i) {
       g.fillStyle = '#D6534F'; g.beginPath(); g.arc(w / 2, cy, 80, -Math.PI / 2, Math.PI / 2); g.fill();
       g.fillStyle = '#FFFFFF'; g.font = '700 116px Fredoka, sans-serif'; g.fillText('?', w / 2, cy + 6);
       g.fillStyle = NAVY; g.font = '700 62px Fredoka, sans-serif'; g.fillText('SZANSA', w / 2, h * 0.45);
-      g.font = '600 24px Fredoka, sans-serif';
-      g.fillStyle = '#2E9E8A'; g.fillText('DOBRZE: UŁATWIENIE', w / 2, h * 0.535);
-      g.fillStyle = '#D6534F'; g.fillText('ŹLE: UTRUDNIENIE', w / 2, h * 0.58);
+      g.font = '700 30px Fredoka, sans-serif';
+      g.fillStyle = '#2E9E8A'; g.fillText('DOBRZE: UŁATWIENIE', w / 2, h * 0.54);
+      g.fillStyle = '#D6534F'; g.fillText('ŹLE: UTRUDNIENIE', w / 2, h * 0.595);
     } else if (type === 'earn') {
       g.fillStyle = '#FFF3E6'; g.fillRect(0, 0, w, h);
       g.fillStyle = NO_GROUP; g.fillRect(0, 0, w, 20);
       drawPot(g, w / 2, h * 0.25);
       g.fillStyle = NAVY; drawLines(g, field.name.toUpperCase(), w / 2, h * 0.45, w - 44, 60);
-      g.fillStyle = '#C4652A'; g.font = '600 26px Fredoka, sans-serif'; g.fillText('POLE ZAROBKOWE', w / 2, h * 0.545);
+      g.fillStyle = '#C4652A'; g.font = '700 32px Fredoka, sans-serif'; g.fillText('POLE ZAROBKOWE', w / 2, h * 0.55);
     } else if (type === 'station') {
       g.fillStyle = '#EEF4FB'; g.fillRect(0, 0, w, h);
       g.fillStyle = NO_GROUP; g.fillRect(0, 0, w, 20);
@@ -499,14 +499,14 @@ function tileTexture(i) {
       g.fillStyle = '#1F5FBF'; g.beginPath(); g.roundRect(w / 2 - 76, cy - 76, 152, 152, 16); g.fill();
       g.fillStyle = '#FFFFFF'; g.font = '700 130px Fredoka, sans-serif'; g.fillText('P', w / 2, cy + 6);
       g.fillStyle = NAVY; drawLines(g, field.name.toUpperCase(), w / 2, h * 0.45, w - 44, 60);
-      g.fillStyle = '#1F5FBF'; g.font = '600 26px Fredoka, sans-serif'; g.fillText(`STACJA · ${field.no}/2`, w / 2, h * 0.54);
-      g.font = '600 22px Fredoka, sans-serif'; g.fillText('Z BONUSAMI', w / 2, h * 0.585);
+      g.fillStyle = '#1F5FBF'; g.font = '700 32px Fredoka, sans-serif'; g.fillText(`STACJA ${field.no}/2`, w / 2, h * 0.55);
+      g.font = '700 28px Fredoka, sans-serif'; g.fillText('Z BONUSAMI', w / 2, h * 0.6);
     } else if (type === 'exam') {
       g.fillStyle = '#FBF1F0'; g.fillRect(0, 0, w, h);
       g.fillStyle = NO_GROUP; g.fillRect(0, 0, w, 20);
       drawExamSheet(g, w / 2, h * 0.21);
       g.fillStyle = NAVY; drawLines(g, field.name.toUpperCase(), w / 2, h * 0.47, w - 44, 50);
-      g.fillStyle = '#B4533F'; g.font = '600 26px Fredoka, sans-serif'; g.fillText('PYTANIE', w / 2, h * 0.59);
+      g.fillStyle = '#B4533F'; g.font = '700 32px Fredoka, sans-serif'; g.fillText('PYTANIE', w / 2, h * 0.59);
     } else if (type === 'todo') {
       g.fillStyle = '#F2F4F8'; g.fillRect(0, 0, w, h);
       g.setLineDash([18, 12]); g.strokeStyle = '#B7BFCE'; g.lineWidth = 5; g.strokeRect(22, 22, w - 44, h - 44); g.setLineDash([]);
@@ -515,8 +515,8 @@ function tileTexture(i) {
       numColor = '#8A93A8';
     }
     g.fillStyle = numColor;
-    g.font = `700 ${field ? 72 : 150}px Fredoka, sans-serif`;
-    g.fillText(String(i + 1), w / 2, field ? h * 0.82 : h * 0.745);
+    g.font = `700 ${field ? 96 : 150}px Fredoka, sans-serif`;
+    g.fillText(String(i + 1), w / 2, field ? h * 0.83 : h * 0.745);
   }
   g.strokeStyle = 'rgba(30,42,71,.14)'; g.lineWidth = 6; g.strokeRect(3, 3, w - 6, h - 6);
   return tex(c);
@@ -2372,7 +2372,7 @@ const paperMat = (() => {
 const cardboardBg = gradientTexture('#F4F1EC', '#E2DCD2');
 const roomBg = new THREE.Color('#D9D2C6');
 let curSkin = 'diorama', boardBg = null, room = null, roomEnv = null, baseEnv = null;
-const SKIN_NAMES = [['pokoj', 'Pokój ze stołem'], ['diorama', 'Diorama nad wodą'], ['tektura', 'Czysta tektura']];
+const SKIN_NAMES = [['diorama', 'Makieta nad wodą'], ['pokoj', 'Pokój ze stołem'], ['tektura', 'Czysta tektura']];
 // Świat wokół planszy: widoczny tylko na widoku planszy, zależnie od wybranego wyglądu
 function showWorld(on) {
   world.visible = on && curSkin === 'diorama';
@@ -2404,7 +2404,7 @@ function captureRoomEnv() {
   return roomEnv;
 }
 function applySkin(name) {
-  curSkin = SKIN_NAMES.some(([v]) => v === name) ? name : 'pokoj';
+  curSkin = SKIN_NAMES.some(([v]) => v === name) ? name : 'diorama';
   document.documentElement.dataset.skin = curSkin;
   const t = curSkin === 'tektura', r = curSkin === 'pokoj';
   boardBg ||= scene.background;
@@ -2545,15 +2545,57 @@ function fitDistance(size) {
 const boardDist = () => (safe.fit ? fitBoardDistance() : fitDistance(S * 0.7));
 const showDist = () => fitDistance(5.9);
 let viewCorner = 0;   // róg planszy gracza, z którego perspektywy patrzymy (0 = START)
-const boardDir = () => DIR_BOARD.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), -viewCorner * Math.PI / 2);
+// W grze kamera patrzy bardziej z góry (ok. 47°, jak w Business Tour): plansza wypełnia ekran, pola są mniej spłaszczone
+const DIR_GAME = new THREE.Vector3(1, 1.5, 1).normalize();
+const boardDir = () => (G && safe.fit ? DIR_GAME : DIR_BOARD).clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), -viewCorner * Math.PI / 2);
 function presetBoard() { return [boardDir().multiplyScalar(boardDist()), new THREE.Vector3(0, 0, 0)]; }
 // Szuka najmniejszej odległości kamery, przy której narożniki planszy (także z budynkami) mieszczą się w wolnym miejscu
 const fitCam = new THREE.PerspectiveCamera();
 const fitPts = [];
-// narożniki podstawy planszy i punkty nad polami bliżej narożników (budynki i pionki)
-for (const [y, k] of [[0, 1], [1.1, 0.85]]) for (const [x, z] of [[1, 1], [-1, 1], [-1, -1], [1, -1]]) fitPts.push(new THREE.Vector3(x * k, y, z * k));
+// narożniki planszy, dół jej podstawy i punkty nad polami bliżej narożników (budynki i pionki)
+for (const [y, k] of [[0, 1], [1.1, 0.85], [-BASE_H, 1]]) for (const [x, z] of [[1, 1], [-1, 1], [-1, -1], [1, -1]]) fitPts.push(new THREE.Vector3(x * k, y, z * k));
+// Gdzie na wysokości wolnego miejsca stoi środek planszy. Bliższa połowa planszy jest na ekranie większa (perspektywa),
+// więc w grze środek jest wyżej niż w połowie; fitBoardDistance dobiera go tak, żeby nad i pod planszą było tyle samo miejsca.
+let fitShift = 0.4;
+function viewCenter() {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  return [safe.l + (w - safe.l - safe.r) / 2, safe.t + (h - safe.t - safe.b) * (safe.fit ? fitShift : 0.5)];
+}
+function setViewOffset() {
+  const w = stage.clientWidth, h = stage.clientHeight, [cx, cy] = viewCenter();
+  camera.setViewOffset(w, h, Math.round(w / 2 - cx), Math.round(h / 2 - cy), w, h);
+  camera.updateProjectionMatrix();
+  stage.style.setProperty('--cy', `${Math.round(cy)}px`);
+}
 function fitBoardDistance() {
-  const w = stage.clientWidth || 1, h = stage.clientHeight || 1, half = S / 2 + LOOK.margin, m = 0.03;
+  let d = fitBoardOnce();
+  const h = stage.clientHeight, band = h - safe.t - safe.b;
+  for (let k = 0; k < 4 && band > 0; k++) {
+    const [top, bottom] = fitExtent(d);
+    const shift = ((h - safe.b - bottom) - (top - safe.t)) / 2;   // >0: plansza ma za dużo miejsca pod spodem
+    if (Math.abs(shift) < 1.5) break;
+    fitShift = THREE.MathUtils.clamp(fitShift + shift / band, 0.2, 0.6);
+    setViewOffset();
+    d = fitBoardOnce();
+  }
+  return d;
+}
+// Górna i dolna krawędź planszy na ekranie (w pikselach) przy odległości kamery d
+function fitExtent(d) {
+  const h = stage.clientHeight || 1, half = S / 2 + LOOK.margin, v = new THREE.Vector3();
+  fitCam.copy(camera);
+  fitCam.position.copy(boardDir()).multiplyScalar(d);
+  fitCam.lookAt(0, 0, 0);
+  fitCam.updateMatrixWorld();
+  let top = Infinity, bottom = -Infinity;
+  for (const pt of fitPts) {
+    const y = (1 - v.set(pt.x * half, pt.y, pt.z * half).project(fitCam).y) * h / 2;
+    top = Math.min(top, y); bottom = Math.max(bottom, y);
+  }
+  return [top, bottom];
+}
+function fitBoardOnce() {
+  const w = stage.clientWidth || 1, h = stage.clientHeight || 1, half = S / 2 + LOOK.margin, m = 0.012;
   const x0 = (2 * safe.l) / w - 1 + m, x1 = 1 - (2 * safe.r) / w - m, y0 = (2 * safe.b) / h - 1 + m, y1 = 1 - (2 * safe.t) / h - m;
   fitCam.copy(camera);
   const dir = boardDir(), v = new THREE.Vector3();
@@ -2575,7 +2617,7 @@ function fitBoardDistance() {
     fitCam.updateMatrixWorld();
     const all = fitPts.map(px);
     if (!all.every(([, , nx, ny]) => nx >= x0 && nx <= x1 && ny >= y0 && ny <= y1)) return false;
-    for (const poly of [all.slice(0, 4), all.slice(4)]) {
+    for (const poly of [all.slice(0, 4), all.slice(4, 8), all.slice(8)]) {
       for (const [ax, ay, bx, by] of safe.avoid) {
         if ([[ax, ay], [bx, ay], [ax, by], [bx, by]].some(([x, y]) => inside(poly, x, y))) return false;
         if (poly.some(([x, y]) => x >= ax && x <= bx && y >= ay && y <= by)) return false;
@@ -2662,6 +2704,7 @@ function selectDeck(face) {
 // Budynki na polach: budynek spada na pole, odbija się, a wokół lecą iskry w kolorze gracza
 // ---------------------------------------------------------------------------
 const BUILD_Z = -0.52;   // pas na budynki na polu
+const BUILD_SCALE = 1.2; // budynki na polach większe, żeby było je widać z kamery gry
 const dustGeo = new THREE.SphereGeometry(0.08, 10, 8);
 const sparkGeo = new THREE.BoxGeometry(0.07, 0.07, 0.025);
 const ringGeo = new THREE.RingGeometry(0.42, 0.56, 48);
@@ -2787,9 +2830,9 @@ const chipHtml = (label, attrs, pressed, disabled = false) =>
 let profile = store.get('profil', null);
 // statystyki z gier sprzed zmiany skali (kwoty były w tysiącach): przelicz na nowe kwoty
 if (profile?.stats?.wealth > 200000) { profile.stats.wealth = Math.round(profile.stats.wealth / 1000); store.set('profil', profile); }
-const prefs = Object.assign({ theme: 'system', music: 60, effects: 80, scale: 1, spin: true, skin: 'pokoj', gfx: 'auto', cine: true }, store.get('preferencje', {}));
-// 14.10.2026: nowa główna scena (pokój ze stołem) dla wszystkich; wcześniejszy wygląd można wybrać w Ustawieniach
-if (prefs.skinV !== 2) { prefs.skin = 'pokoj'; prefs.skinV = 2; }
+const prefs = Object.assign({ theme: 'system', music: 60, effects: 80, scale: 1, spin: true, skin: 'diorama', gfx: 'auto', cine: true }, store.get('preferencje', {}));
+// 14.10.2026 (decyzja autora): główna scena to makieta nad wodą; pokój ze stołem jest do wyboru w Ustawieniach
+if (prefs.skinV !== 3) { prefs.skin = 'diorama'; prefs.skinV = 3; }
 const savePrefs = () => store.set('preferencje', prefs);
 const defaultSlots = () => [
   { kind: 'me' },
@@ -3125,49 +3168,41 @@ $('btnLobbyStart').addEventListener('click', async () => {
 });
 
 // Ranking (do czasu serwera gry dane są przykładowe)
-const RANKING_SAMPLE = [
-  { nick: 'Ola_K', pawn: 3, color: 0, games: 42, wins: 19, acc: 81, best: 96, wealth: 14850 },
-  { nick: 'Kuba.dev', pawn: 2, color: 2, games: 37, wins: 15, acc: 74, best: 92, wealth: 16200 },
-  { nick: 'Marta', pawn: 0, color: 1, games: 51, wins: 17, acc: 69, best: 88, wealth: 12900 },
-  { nick: 'Szymon', pawn: 1, color: 3, games: 18, wins: 8, acc: 77, best: 94, wealth: 11350 },
-  { nick: 'Natalia', pawn: 3, color: 1, games: 25, wins: 7, acc: 83, best: 100, wealth: 9800 },
-  { nick: 'Bartek', pawn: 0, color: 2, games: 33, wins: 6, acc: 58, best: 79, wealth: 13400 },
-  { nick: 'Igor', pawn: 2, color: 0, games: 12, wins: 3, acc: 64, best: 85, wealth: 8700 },
-];
-const RANK_SORTS = [['wins', 'Wygrane', 'wygranych'], ['acc', 'Skuteczność', 'dobrych odpowiedzi'], ['games', 'Rozegrane', 'rozegranych gier'], ['wealth', 'Majątek', 'najwyższy majątek']];
-let rankSort = 'wins';
+// Ranking: na razie tylko Twoje wyniki z gier w tej przeglądarce. Ranking wszystkich graczy pojawi się,
+// gdy gra stanie na serwerze uczelni z logowaniem przez wirtualny dziekanat.
 const fmtNum = v => (v == null ? '–' : v.toLocaleString('pl-PL'));
+function myRankRow() {
+  const st = profile?.stats || {};
+  const games = st.games || 0, wins = st.wins || 0;
+  return {
+    nick: profile?.nick || 'Ty', pawn: profile?.pawn ?? 0, color: profile?.color ?? 0, games, wins,
+    acc: st.q ? Math.round((100 * st.ok) / st.q) : null, best: st.best ?? null, wealth: st.wealth ?? null,
+    rate: games ? Math.round((100 * wins) / games) : null,
+  };
+}
 function renderRanking() {
-  const rows = RANKING_SAMPLE.map(r => ({ ...r, rate: Math.round((100 * r.wins) / r.games) }));
-  if (profile) {   // Twoje wyniki z gier na tym komputerze
-    const st = profile.stats || {};
-    const games = st.games || 0, wins = st.wins || 0;
-    rows.push({ nick: profile.nick, pawn: profile.pawn, color: profile.color, games, wins, acc: st.q ? Math.round((100 * st.ok) / st.q) : null,
-      best: st.best ?? null, wealth: st.wealth ?? null, rate: games ? Math.round((100 * wins) / games) : null, me: true });
-  }
-  const by = r => r[rankSort] ?? -1;
-  rows.sort((a, b) => by(b) - by(a) || (b.acc ?? -1) - (a.acc ?? -1));
-  const [, , unit] = RANK_SORTS.find(([k]) => k === rankSort);
-  const val = r => (rankSort === 'acc' ? `${r.acc}%` : fmtNum(r[rankSort]));
-  $('podium').innerHTML = rows.filter(r => !r.me).slice(0, 3).map((r, i) => `
-    <div class="m-card m-podium-card"><span class="m-medal r${i + 1}">${i + 1}</span>${avatar(r.pawn, r.color)}<b>${escHtml(r.nick)}</b><span class="m-big-num">${val(r)}</span><small>${unit}</small></div>`).join('');
-  $('rankTabs').innerHTML = RANK_SORTS.map(([k, l]) => `<button type="button" role="tab" aria-selected="${k === rankSort}" data-sort="${k}">${l}</button>`).join('');
-  const th = (label, key) => `<th${key === rankSort ? ' class="is-sorted"' : ''}>${label}</th>`;
+  const r = myRankRow();
+  const empty = !r.games;
+  // trzy rekordy zamiast podium innych graczy
+  const records = [
+    ['Wygrane', fmtNum(r.wins), r.games ? `z ${fmtNum(r.games)} gier` : 'jeszcze bez gier'],
+    ['Skuteczność', r.acc == null ? '–' : `${r.acc}%`, r.best == null ? 'dobrych odpowiedzi' : `najlepsza gra: ${r.best}%`],
+    ['Najwyższy majątek', r.wealth == null ? '–' : money(r.wealth), 'w jednej grze'],
+  ];
+  $('podium').innerHTML = records.map(([t, v, sub], i) => `
+    <div class="m-card m-podium-card"><span class="m-medal r${i + 1}">${i + 1}</span>${i === 0 ? avatar(r.pawn, r.color) : ''}<b>${t}</b><span class="m-big-num">${v}</span><small>${sub}</small></div>`).join('');
   const bar = p => (p == null ? '–' : `<span class="m-bar"><i style="width:${p}%"></i></span>${p}%`);
   $('rankTable').innerHTML = `
-    <thead><tr><th>#</th><th>Gracz</th>${th('Rozegrane', 'games')}${th('Wygrane', 'wins')}<th>% wygranych</th>${th('Dobre odpowiedzi', 'acc')}<th>Najlepsza gra</th>${th('Najwyższy majątek', 'wealth')}</tr></thead>
-    <tbody>${rows.map((r, i) => `<tr${r.me ? ' class="is-me"' : ''}>
-      <td><span class="m-pos">${i + 1}</span></td>
-      <td><span class="m-player">${avatar(r.pawn, r.color)}${escHtml(r.nick)}${r.me ? ' (Ty)' : ''}</span></td>
+    <thead><tr><th>#</th><th>Gracz</th><th>Rozegrane</th><th>Wygrane</th><th>% wygranych</th><th>Dobre odpowiedzi</th><th>Najlepsza gra</th><th>Najwyższy majątek</th></tr></thead>
+    <tbody><tr class="is-me">
+      <td><span class="m-pos">1</span></td>
+      <td><span class="m-player">${avatar(r.pawn, r.color)}${escHtml(r.nick)} (Ty)</span></td>
       <td>${fmtNum(r.games)}</td><td>${fmtNum(r.wins)}</td><td>${r.rate == null ? '–' : `${r.rate}%`}</td>
-      <td>${bar(r.acc)}</td><td>${r.best == null ? '–' : `${r.best}%`}</td><td>${fmtNum(r.wealth)}</td></tr>`).join('')}</tbody>`;
+      <td>${bar(r.acc)}</td><td>${r.best == null ? '–' : `${r.best}%`}</td><td>${r.wealth == null ? '–' : money(r.wealth)}</td></tr></tbody>`;
+  $('rankHint').innerHTML = empty
+    ? 'Rozegraj pierwszą grę, a Twoje wyniki pojawią się tutaj. <button type="button" class="chip" data-go="play" style="margin-left: 6px">Graj</button>'
+    : 'Wyniki liczą się po każdej grze na tym komputerze. Ranking wszystkich graczy pojawi się, gdy gra będzie na serwerze uczelni.';
 }
-$('rankTabs').addEventListener('click', e => {
-  const b = e.target.closest('[data-sort]');
-  if (!b) return;
-  rankSort = b.dataset.sort;
-  renderRanking();
-});
 
 // Zasady (wersja robocza) z przykładowym pytaniem, które nigdy nie padnie w grze
 const EXAMPLE = { q: 'Ile to jest 7 × 8?', a: ['54', '56', '64', '48'], ok: 1 };
@@ -4497,6 +4532,13 @@ function throwDice(a, b, slow = 1, opts = {}) {
 // Pionki na planszy
 // ---------------------------------------------------------------------------
 const PAWN_SPOTS = [[-0.27, 0.2], [0.27, 0.2], [-0.27, 0.62], [0.27, 0.62]];
+const PAWN_SCALE = 1.18;  // pionki w grze większe niż w menu (skok pionka zmienia skalę zewnętrznej grupy)
+function gamePawn(sp) {
+  const outer = new THREE.Group(), model = PLAYERS[sp.pawnIdx].make(sp.hex);
+  model.scale.multiplyScalar(PAWN_SCALE);
+  outer.add(model);
+  return outer;
+}
 const CORNER_SPOTS = [[-0.42, 0.05], [0.42, 0.05], [-0.42, 0.55], [0.42, 0.55]];
 function spotPos(cell, k) {
   const p = cellPose(cell);
@@ -4650,7 +4692,7 @@ async function showLevel(i, focus = true) {
     cg.add(obj);
     m.building = obj;
     sfx('build');
-    await dropIn(obj, def.board, o.owner.hex, cg);
+    await dropIn(obj, def.board * BUILD_SCALE, o.owner.hex, cg);
   }
   refreshMarks(i);
   if (focus && !G) { await sleep(450); backToBoard(); }
@@ -5369,7 +5411,7 @@ const timeLeft = () => G?.driver?.timeLeft ?? 0;
 function beginGame(players, snap, { teams, semester, view, online = false }) {
   quitGame(true);
   const g = G = {
-    players: players.map(sp => ({ ...structuredClone(sp), obj: PLAYERS[sp.pawnIdx].make(sp.hex) })),
+    players: players.map(sp => ({ ...structuredClone(sp), obj: gamePawn(sp) })),
     own: new Map(), marks: new Map(), pool: 0, turn: 0, over: false, paused: false, teams,
     semester, timeUp: false, deckLeft: { bonus: 0, penalty: 0 }, snap: null,
     queue: [], pumping: false, driver: null, online, seq: 0,
@@ -5441,7 +5483,7 @@ function placeBuilding(i) {
     const def = BUILDINGS[o.level - 1];
     m.building = def.make(o.owner.hex);
     m.building.position.set(0, TILE_H, BUILD_Z);
-    m.building.scale.setScalar(def.board);
+    m.building.scale.setScalar(def.board * BUILD_SCALE);
     cellGroups[i].add(m.building);
   }
   refreshMarks(i);
@@ -6667,13 +6709,16 @@ function measureSafe(w, h) {
   Object.assign(safe, { b: 0, fit: true, avoid: [] });
   const s = stage.getBoundingClientRect(), gap = 14;
   if (!matchMedia('(max-width: 1100px)').matches) {
-    // karty graczy w rogach, pula i menu u góry, szuflada kart z opisem ruchu na dole: plansza ich nie zasłania
-    const add = (r, up = 0) => { if (r.width && r.height) safe.avoid.push([r.left - s.left - gap, r.top - s.top - gap - up, r.right - s.left + gap, r.bottom - s.top + gap]); };
+    // jak w Business Tour: plansza (romb) wypełnia ekran, a karty graczy, opis ruchu, pula z menu i szuflada kart
+    // leżą w wolnych trójkątach przy rogach ekranu; plansza ich nie zasłania
+    const add = r => { if (r.width && r.height) safe.avoid.push([r.left - s.left - gap, r.top - s.top - gap, r.right - s.left + gap, r.bottom - s.top + gap]); };
     $('gPlayers').querySelectorAll('.g-player').forEach(el => add(el.getBoundingClientRect()));
     add($('gSide').querySelector('.g-tr').getBoundingClientRect());
-    const head = $('gHand').querySelector('.g-hand-head') || $('gHand');
-    add(head.getBoundingClientRect(), 52 * (+getComputedStyle(document.documentElement).getPropertyValue('--ui-scale') || 1));   // nad szufladą stoi opis ruchu
-    Object.assign(safe, { l: 12, r: 12, t: 12, b: 12 });
+    add($('gStatus').getBoundingClientRect());
+    // szuflada rośnie w górę nad planszę tylko po otwarciu: liczy się miejsce zamkniętej szuflady (sam nagłówek przy dole)
+    const hand = $('gHand').getBoundingClientRect(), head = $('gHand').querySelector('.g-hand-head')?.getBoundingClientRect();
+    if (hand.height) add({ left: hand.left, right: hand.right, bottom: hand.bottom, top: hand.bottom - Math.min(hand.height, (head?.height || 30) + 26), width: hand.width, height: 1 });
+    Object.assign(safe, { l: 8, r: 8, t: 8, b: 8 });
     return;
   }
   for (const el of [$('gPlayers'), $('gSide')]) {
@@ -6695,9 +6740,7 @@ function applyView() {
   if (!w || !h) return;
   measureSafe(w, h);
   for (const k of ['l', 'r', 't', 'b']) stage.style.setProperty(`--s${k}`, `${Math.round(safe[k])}px`);
-  const cx = safe.l + (w - safe.l - safe.r) / 2, cy = safe.t + (h - safe.t - safe.b) * (safe.fit ? 0.4 : 0.5);
-  camera.setViewOffset(w, h, Math.round(w / 2 - cx), Math.round(h / 2 - cy), w, h);
-  camera.updateProjectionMatrix();
+  setViewOffset();
   updateLimits();
 }
 function resize() {

@@ -65,7 +65,7 @@ Paczkę można sprawdzić przed wysłaniem: `npm run preview` (adres http://loca
 | `src/core/` | Silnik gry (TypeScript): tury, zasady, pytania, losowanie z ziarnem, boty; ten sam silnik działa na serwerze gry online |
 | `src/legacy/game.js` | Grafika 3D i interfejs: odtwarza zdarzenia silnika z animacjami i odsyła decyzje gracza |
 | `src/render/` | Jakość grafiki: poziomy od Niskiej do Ultra 4K, cienie kontaktowe, poświata, wygładzanie krawędzi |
-| `src/scene/` | Pokój ze stołem: główna scena gry (stół, pokój, światło, odbicia), rysowana w kodzie |
+| `src/scene/` | Pokój ze stołem: drugi wygląd do wyboru w Ustawieniach (stół, pokój, światło, odbicia), rysowany w kodzie; główny wygląd to makieta nad wodą |
 | `src/net/` | Połączenie z serwerem gry w trybie online (Socket.IO) |
 | `server/` | Serwer gry (Node.js, TypeScript): pokoje online, silnik gry po stronie serwera, pliki gry |
 | `src/styles/` | Wygląd: podstawy, menu, rozgrywka, prezentacja |
