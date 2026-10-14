@@ -16,6 +16,10 @@ export default defineConfig(
     files: ['src/legacy/**/*.js'],
     rules: { 'no-unused-vars': 'off', 'no-empty': 'off', 'no-cond-assign': 'off', 'no-sparse-arrays': 'off' },
   },
-  { files: ['**/*.ts'], extends: [tseslint.configs.recommended] },
+  {
+    files: ['**/*.ts'],
+    extends: [tseslint.configs.recommended],
+    rules: { '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true, varsIgnorePattern: '^_' }] },
+  },
   { files: ['*.config.js', 'tests/**/*.js'], languageOptions: { globals: { ...globals.node } } },
 );

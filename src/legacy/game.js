@@ -14,6 +14,10 @@ import {
 import { CUR, K, money, roundK, ECON, GROUP_PRICE, RENT_MULT, BUILD_MULT, BOT, priceOf, levelCost } from '../data/economy.ts';
 import { TAGS, BONUS_CARDS, PENALTY_CARDS } from '../data/cards.ts';
 import { PAWN_COLORS } from '../data/players.ts';
+import { GameEngine } from '../core/engine.ts';
+import { LocalDriver } from '../core/local-driver.ts';
+import { buildBank } from '../core/questions.ts';
+import * as R from '../core/rules.ts';
 
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $ = id => document.getElementById(id);
@@ -3766,7 +3770,6 @@ if (window.KartyPytan) {
 // Rozgrywka: tury, kostki, pytania, kupowanie i budowanie, karty, dziekanat, boty, koniec gry.
 // Kwoty i ustawienia, których autor jeszcze nie ustalił, są w jednym miejscu (ECON i niżej).
 // ---------------------------------------------------------------------------
-const SHOW_CORRECT = false;        // po złej odpowiedzi gra nie pokazuje dobrej, żeby pytania nie „wyciekały”
 const DICE_SOUND_FILE = '';        // np. 'assets/dzwieki/kostki.mp3' (własne nagranie albo CC0); puste = dźwięk z kodu
 const MOVE_SPEED = 1;
 
@@ -4098,7 +4101,7 @@ function openFieldInfo(i) {
 }
 function openDeckInfo(deck) {
   const kind = deck === DECKS[0] ? 'bonus' : 'penalty';
-  const left = G ? G.cardDecks[kind].length : null;
+  const left = G ? G.deckLeft[kind] : null;
   openPopup(`<div class="fp-card"><img src="${cardBackUrl(kind === 'bonus' ? 'ulatwienia' : 'utrudnienia')}" alt=""></div>
     <div class="fp-body"><h2>Stos: ${deck.name}</h2><p class="fp-sub">${left != null ? `W stosie: ${left} ${left === 1 ? 'karta' : left < 5 && left > 1 ? 'karty' : 'kart'}` : 'Karty z pola Szansa'}</p>
     <p class="fp-text">${kind === 'bonus' ? 'Kartę ułatwienia dostajesz za dobrą odpowiedź na polu Szansa.' : 'Kartę utrudnienia dostajesz za złą odpowiedź na polu Szansa.'} Wszystkie karty są w zakładce „Karty”.</p></div>`, true, `Stos kart: ${deck.name}`);
@@ -4113,7 +4116,7 @@ for (const i of DEED_CELLS) {
   slot.querySelector('button').addEventListener('click', () => openFieldInfo(i));
   $('deedGrid').append(slot);
 }
-const pct = (ok, q) => (q ? Math.round((100 * ok) / q) : null);
+const pct = R.pct;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const rnd = n => Math.floor(Math.random() * n);
 const pickOne = a => a[rnd(a.length)];
@@ -4122,20 +4125,22 @@ function shuffle(a) {
   return a;
 }
 
-let G = null;                       // stan rozgrywki; null = gra nie trwa
-const STOP = Symbol('koniec gry');  // przerywa turę, gdy gra się skończyła albo gracz wyszedł do menu
-// Czeka na animację albo decyzję, a potem sprawdza, czy gra nadal trwa (i czy nie ma pauzy)
-async function w(promise) {
-  const g = G;
-  const r = await promise;
-  while (G === g && g && g.paused) await sleep(150);
-  if (!g || G !== g || g.over) throw STOP;
-  return r;
-}
+// Rozgrywka w przeglądarce: zasady liczy silnik (src/core/engine.ts), a ten plik odtwarza jego zdarzenia
+// (animacje, okna, panel) i odsyła decyzje gracza. G to widok gry: stan z ostatniego odtworzonego zdarzenia
+// i obiekty 3D graczy. Gracze mają te same pola co w silniku, a właściciel pola to obiekt gracza.
+let G = null;                       // widok rozgrywki; null = gra nie trwa
 const isBot = p => p.kind === 'bot';
-const sameTeam = (a, b) => a === b || (G.teams && a.team === b.team);
-const active = () => G.players.filter(p => !p.out);
-const opponents = p => active().filter(o => !sameTeam(o, p));
+const isLocalHuman = p => p.kind === 'me' || p.kind === 'local';   // decyduje ktoś przy tym komputerze
+const sameTeam = (a, b) => R.sameTeam(G.snap, a.idx, b.idx);
+// Tekst z silnika jest zwykłym tekstem (bez HTML, bo nazwy graczy wpisują ludzie); **tak** = pogrubienie
+const fmt = t => escHtml(t ?? '').replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+const PLAYER_FIELDS = ['cash', 'pos', 'out', 'jail', 'noCard', 'skip', 'insured', 'cards', 'pending', 'lap', 'total'];
+function applySnap(snap) {
+  G.snap = snap;
+  snap.players.forEach((sp, k) => { const p = G.players[k]; for (const key of PLAYER_FIELDS) p[key] = sp[key]; });
+  G.own = new Map(Object.entries(snap.own).map(([i, o]) => [+i, { ...o, owner: G.players[o.owner] }]));
+  G.pool = snap.pool; G.turn = snap.turn; G.over = snap.over; G.timeUp = snap.timeUp; G.deckLeft = snap.deckLeft;
+}
 
 // ---------------------------------------------------------------------------
 // Dźwięki: syntezowane w przeglądarce (Web Audio), bez plików
@@ -4447,59 +4452,27 @@ function openModal(html, cls = '') {
   layer.append(bd);
   return bd;
 }
-// Okno z przyciskami. Gracz klika, bot wybiera sam (botPick zwraca wartość jednej z opcji).
-function choose(p, { title, text = '', options, two = false }, botPick) {
-  return new Promise(resolve => {
-    const bd = openModal(`<h2>${title}</h2>${text ? `<p>${text}</p>` : ''}
-      <div class="g-opts${two ? ' two' : ''}">${options.map((o, k) =>
-        `<button type="button" class="m-btn ${o.primary ? 'm-primary' : 'm-secondary'}" data-k="${k}"${o.disabled ? ' disabled' : ''}>${o.label}</button>`).join('')}</div>`);
-    const done = k => { bd.remove(); resolve(options[k].value); };
-    if (p && isBot(p)) {
-      let v = botPick ? botPick() : options.find(o => !o.disabled)?.value;
-      let k = options.findIndex(o => o.value === v && !o.disabled);
-      if (k < 0) k = options.findIndex(o => !o.disabled);
-      setTimeout(() => {
-        bd.querySelector(`[data-k="${k}"]`)?.classList.add('m-primary');
-        setTimeout(() => done(k), 450);
-      }, 700 + Math.random() * 600);
-    } else {
-      bd.addEventListener('click', e => {
-        const b = e.target.closest('[data-k]');
-        if (b && !b.disabled) done(+b.dataset.k);
-      });
-      requestAnimationFrame(() => bd.querySelector('.m-btn:not(:disabled)')?.focus());
-    }
-  });
+// Okno z przyciskami: gracz przy tym komputerze klika, a przy decyzji bota okno tylko pokazuje, co wybrał
+function chooseModal(d, pick) {
+  const label = o => (o.cell != null ? fieldLabel(o.cell) : fmt(o.label));
+  const bd = openModal(`<h2>${fmt(d.title)}</h2>${d.text ? `<p>${fmt(d.text)}</p>` : ''}
+    <div class="g-opts${d.two ? ' two' : ''}">${d.options.map((o, k) =>
+      `<button type="button" class="m-btn ${o.primary ? 'm-primary' : 'm-secondary'}" data-k="${k}"${o.disabled ? ' disabled' : ''}>${label(o)}</button>`).join('')}</div>`);
+  if (pick) {
+    bd.addEventListener('click', e => {
+      const b = e.target.closest('[data-k]');
+      if (b && !b.disabled) pick(d.options[+b.dataset.k].value, bd);
+    });
+    requestAnimationFrame(() => bd.querySelector('.m-btn:not(:disabled)')?.focus());
+  }
+  return bd;
 }
 const fieldLabel = i => {
   const o = G.own.get(i);
   const lvl = o && FIELDS[i].type === 'room' ? (o.level ? ` · ${BUILDINGS[o.level - 1].name.toLowerCase()}` : ' · bez budynku') : '';
   return `${escHtml(fname(i))}${o ? ` <small>(${escHtml(o.owner.name)}${lvl}${o.shield ? ' · tarcza' : ''})</small>` : ''}`;
 };
-function chooseField(p, title, text, cells, botPick, allowSkip = false) {
-  const options = cells.map(i => ({ label: fieldLabel(i), value: i }));
-  if (allowSkip) options.push({ label: 'Pomiń', value: -1 });
-  return choose(p, { title, text, options }, botPick);
-}
 
-// Talia pytań: losowa kolejność, a po jej końcu tasowanie z animacją.
-// Pytania z końca poprzedniej talii nie trafiają na początek nowej.
-function makeDeck(list) { return { list, order: [], tail: [], rounds: 0 }; }
-function newOrder(d) {
-  const order = shuffle(d.list.slice());
-  const k = Math.min(d.tail.length, Math.floor(order.length / 2));
-  const tail = new Set(d.tail);
-  for (let tries = 0; tries < 20; tries++) {
-    let moved = false;
-    for (let i = 0; i < k; i++) {
-      if (!tail.has(order[i])) continue;
-      const j = k + rnd(order.length - k);
-      if (!tail.has(order[j])) { [order[i], order[j]] = [order[j], order[i]]; moved = true; }
-    }
-    if (!moved) break;
-  }
-  return order;
-}
 let qBackUrl = null;
 function questionBackUrl() {   // tył karty z pytaniem: granat, logo i znak zapytania
   if (!qBackUrl) {
@@ -4525,349 +4498,71 @@ async function shuffleAnim(title) {
   await sleep(900);
   bd.remove();
 }
-async function drawQuestion(kind) {
-  const d = G.decks[kind];
-  if (!d.order.length) {
-    d.order = newOrder(d);
-    if (d.rounds++) await w(shuffleAnim(kind === 'dziekanat' ? 'Tasowanie pytań dziekanatu' : 'Tasowanie pytań'));
-  }
-  const q = d.order.shift();
-  d.tail.push(q);
-  if (d.tail.length > Math.max(2, Math.floor(d.list.length / 3))) d.tail.shift();
-  return q;
-}
 
-// Okno pytania z minutnikiem. Zwraca true przy dobrej odpowiedzi.
-async function askQuestion(p, kind = 'sem', context = '') {
-  const q = await drawQuestion(kind);
-  const notes = p.cards.findIndex(c => c.icon === 'notes');
-  let gone = [];
-  if (notes >= 0) {
-    returnCard(p, notes);
-    gone = shuffle([0, 1, 2, 3].filter(k => k !== q.ok)).slice(0, 2);
-  }
-  const cat = kind === 'dziekanat' ? 'Pytanie dziekanatu' : q.sem ? `Semestr ${q.sem}${q.przedmiot ? ` · ${escHtml(q.przedmiot)}` : ''}` : 'Pytanie';
-  const catColor = kind === 'dziekanat' ? '#B8862B' : window.KartyPytan?.SEMESTRY?.[q.sem]?.kolor || '#2F7FF0';
+// Okno pytania z minutnikiem. Odpowiedź sprawdza silnik (przeglądarka nie zna dobrej odpowiedzi);
+// wynik przychodzi w zdarzeniu „answered”.
+function questionModal(d, p, pick) {
+  const q = d.question, gone = d.gone;
+  const cat = q.dziekanat ? 'Pytanie dziekanatu' : q.sem ? `Semestr ${q.sem}${q.przedmiot ? ` · ${escHtml(q.przedmiot)}` : ''}` : 'Pytanie';
+  const catColor = q.dziekanat ? '#B8862B' : window.KartyPytan?.SEMESTRY?.[q.sem]?.kolor || '#2F7FF0';
   const bd = openModal(`
     <div class="g-q-head"><span class="g-cat" style="--c:${catColor}">${cat}</span>
       <span class="g-time"><i></i><span class="g-tleft">1:00</span></span></div>
-    <p class="g-ctx">${avatar(p.pawnIdx, p.colorIdx).replace('m-avatar', 'm-avatar g-mini')} <b>${escHtml(p.name)}</b>${context ? ` · ${context}` : ''}</p>
+    <p class="g-ctx">${avatar(p.pawnIdx, p.colorIdx).replace('m-avatar', 'm-avatar g-mini')} <b>${escHtml(p.name)}</b>${d.context ? ` · ${fmt(d.context)}` : ''}</p>
     <p class="g-qtext">${escHtml(q.q)}</p>
     ${gone.length ? '<p class="g-note">Notatki od kolegi: 2 złe odpowiedzi znikają.</p>' : ''}
     <div class="g-ans">${q.a.map((a, k) => `<button type="button" data-a="${k}"${gone.includes(k) ? ' class="is-gone" disabled' : ''}><b>${'ABCD'[k]}</b>${escHtml(a)}</button>`).join('')}</div>
-    <p class="g-res" aria-live="polite">${isBot(p) ? `${escHtml(p.name)} się zastanawia…` : ''}</p>`, 'wide');
-  const btns = [...bd.querySelectorAll('[data-a]')];
+    <p class="g-res" aria-live="polite">${pick ? '' : `${escHtml(p.name)} się zastanawia…`}</p>`, 'wide');
   const timeEl = bd.querySelector('.g-time');
-  let left = ECON.questionTime;
+  let left = d.seconds;
   const show = () => {
     timeEl.querySelector('.g-tleft').textContent = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
-    timeEl.style.setProperty('--left', `${(left / ECON.questionTime) * 100}%`);
+    timeEl.style.setProperty('--left', `${(left / d.seconds) * 100}%`);
     timeEl.classList.toggle('is-low', left <= 10);
   };
   show();
-  const pick = await new Promise(resolve => {
-    const timer = setInterval(() => {
-      if (!G) { clearInterval(timer); resolve(null); return; }
-      if (G.paused) return;
-      left -= 1; show();
-      if (left <= 0) { clearInterval(timer); resolve(null); }
-    }, 1000);
-    const finish = k => { clearInterval(timer); resolve(k); };
-    if (isBot(p)) {
-      const good = Math.random() < BOT[p.level].acc;
-      const wrong = [0, 1, 2, 3].filter(k => k !== q.ok && !gone.includes(k));
-      setTimeout(() => finish(good ? q.ok : pickOne(wrong)), 1300 + Math.random() * 1500);
-    } else {
-      bd.addEventListener('click', e => {
-        const b = e.target.closest('[data-a]');
-        if (b && !b.disabled) finish(+b.dataset.a);
-      });
-    }
-  });
-  const ok = pick === q.ok;
-  btns.forEach((b, k) => {
+  const ui = { id: d.id, kind: 'answer', bd, timer: null, done: false };
+  const finish = k => { if (ui.done) return; ui.done = true; clearInterval(ui.timer); pick?.(k); };
+  ui.timer = setInterval(() => {
+    if (!G || G.paused) return;
+    left = Math.max(0, left - 1); show();
+    if (left <= 0) { clearInterval(ui.timer); if (pick) finish(null); }
+  }, 1000);
+  if (pick) {
+    bd.addEventListener('click', e => {
+      const b = e.target.closest('[data-a]');
+      if (b && !b.disabled) finish(+b.dataset.a);
+    });
+  }
+  return ui;
+}
+async function showAnswer(ev) {
+  sfx(ev.correct ? 'good' : 'bad');
+  const ui = openUi && openUi.kind === 'answer' ? openUi : null;
+  if (!ui) return;
+  clearInterval(ui.timer);
+  ui.bd.querySelectorAll('[data-a]').forEach((b, k) => {
     b.disabled = true;
-    if (k === pick) b.classList.add(ok ? 'is-good' : 'is-bad');
-    if (SHOW_CORRECT && k === q.ok) b.classList.add('is-good');
+    if (k === ev.picked) b.classList.add(ev.correct ? 'is-good' : 'is-bad');
   });
-  bd.querySelector('.g-res').textContent = ok ? 'Dobrze!' : pick === null ? 'Czas minął.' : 'Niestety źle.';
-  sfx(ok ? 'good' : 'bad');
-  p.lap.q++; p.total.q++;
-  if (ok) { p.lap.ok++; p.total.ok++; }
+  ui.bd.querySelector('.g-res').textContent = ev.correct ? 'Dobrze!' : ev.picked === null ? 'Czas minął.' : 'Niestety źle.';
   await sleep(1300);
-  bd.remove();
-  renderHud();
-  if (!G || G.over) throw STOP;
-  return ok;
+  ui.bd.remove();
+  if (openUi === ui) openUi = null;
 }
 
 // ---------------------------------------------------------------------------
 // Pieniądze
 // ---------------------------------------------------------------------------
-function fieldValue(i) {
-  const o = G.own.get(i);
-  let v = priceOf(i);
-  if (o) for (let l = 1; l <= o.level; l++) v += levelCost(i, l);
-  return v;
-}
-function wealth(p) {
-  let v = p.cash;
-  for (const [i, o] of G.own) if (o.owner === p) v += fieldValue(i);
-  return v;
-}
-const ownedBy = p => [...G.own].filter(([, o]) => o.owner === p).map(([i]) => i);
-function receive(p, amount, from = null) {
-  p.cash += amount;
-  if (amount > 0) { sfx('coin'); fxTransfer(from, p, amount); }
-  renderHud();
-}
-// Za długi gra sama sprzedaje bankowi budynki, a potem sale (za połowę wartości)
-async function raiseCash(p, need) {
-  const sold = [];
-  while (p.cash < need) {
-    const withB = ownedBy(p).filter(i => G.own.get(i).level > 0).sort((a, b) => G.own.get(b).level - G.own.get(a).level);
-    if (withB.length) {
-      const i = withB[0], o = G.own.get(i);
-      const back = Math.round(levelCost(i, o.level) * ECON.sellRate);
-      p.cash += back;
-      fxTransfer(null, p, back);
-      o.level -= 1;
-      sold.push(`${fname(i)}: budynek w dół`);
-      await showLevel(i, false);
-      continue;
-    }
-    const fields = ownedBy(p).sort((a, b) => priceOf(a) - priceOf(b));
-    if (!fields.length) break;
-    const i = fields[0];
-    const back = Math.round(priceOf(i) * ECON.sellRate);
-    p.cash += back;
-    fxTransfer(null, p, back);
-    G.own.delete(i);
-    refreshMarks(i);
-    sold.push(`${fname(i)}: sprzedana`);
-  }
-  renderHud();
-  if (sold.length) await w(banner(`${escHtml(p.name)} sprzedaje majątek`, escHtml(sold.slice(0, 4).join(' · ')) + (sold.length > 4 ? ' …' : ''), p.hex, 2200));
-}
-// Płatność do gracza, do puli albo do banku (to = null). Zwraca false, gdy gracz zbankrutował.
-async function pay(p, amount, to) {
-  amount = Math.round(amount);
-  if (amount <= 0) return true;
-  if (p.cash < amount) await raiseCash(p, amount);
-  const paid = Math.min(p.cash, amount);
-  p.cash -= paid;
-  if (to === 'pool') G.pool += paid;
-  else if (to) to.cash += paid;
-  sfx('coin');
-  fxTransfer(p, to, paid);
-  renderHud();
-  if (paid < amount) { await bankrupt(p); return false; }
-  return true;
-}
-async function bankrupt(p) {
-  p.out = true;
-  for (const i of ownedBy(p)) {
-    G.own.delete(i);
-    await showLevel(i, false);
-    refreshMarks(i);
-  }
-  for (const c of p.cards.splice(0)) G.cardDecks.bonus.push(c);
-  shrinkOut(p.obj, board);
-  shake(0.25, 600);
-  fxRing(p.obj.position, '#5B6475', 2);
-  renderHud();
-  await w(banner(`${escHtml(p.name)} odpada z gry`, 'Zabrakło pieniędzy na zapłatę. Sale wracają do banku.', p.hex, 2400));
-  const left = active();
-  if (left.length <= 1 || (G.teams && left.every(o => o.team === left[0].team))) endGame('bankruptcy');
-}
-
-// ---------------------------------------------------------------------------
-// Czynsz, monopole, wygrana od razu
-// ---------------------------------------------------------------------------
-const hasMonopoly = (p, group) => GROUP_CELLS[group].every(i => G.own.get(i)?.owner === p);
-function rentOf(i) {
-  const o = G.own.get(i);
-  if (!o || o.off > 0) return 0;
-  const f = FIELDS[i];
-  if (f.type === 'room') {
-    let r = priceOf(i) * RENT_MULT[o.level];
-    if (o.level === 0 && hasMonopoly(o.owner, f.group)) r *= 2;
-    return roundK(r);
-  }
-  const n = [...G.own].filter(([k, x]) => x.owner === o.owner && FIELDS[k].type === f.type).length;
-  return f.type === 'station' ? ECON.stationRent[n] : ECON.specialRent[n];
-}
-function checkInstantWin(p) {
-  const team = o => o && (G.teams ? o.team === p.team : o === p);
-  if (SPECIAL_CELLS.every(i => team(G.own.get(i)?.owner))) { endGame('specials', p); return true; }
-  // monopol = cała grupa u jednego gracza; w trybie 2 na 2 monopole partnerów się sumują
-  const monos = Object.values(GROUP_CELLS).filter(cells => {
-    const o = G.own.get(cells[0])?.owner;
-    return team(o) && cells.every(i => G.own.get(i)?.owner === o);
-  }).length;
-  if (monos >= 4) { endGame('monopolies', p); return true; }
-  return false;
-}
-
-// ---------------------------------------------------------------------------
-// Kupowanie i budowanie
-// ---------------------------------------------------------------------------
-const botKeeps = (p, cost) => p.cash - cost >= BOT[p.level].reserve;
-function botWantsBuy(p, i) {
-  const cost = priceOf(i);
-  if (p.cash < cost) return false;
-  const f = FIELDS[i];
-  const completes = f.type === 'room' && GROUP_CELLS[f.group].every(k => k === i || G.own.get(k)?.owner === p);
-  if (completes && p.cash - cost >= 40 * K) return true;
-  return botKeeps(p, cost) && Math.random() < BOT[p.level].buy;
-}
-async function buyField(p, i) {
-  const price = priceOf(i);
-  if (p.cash < price) { await w(banner('Za mało gotówki', `${escHtml(fname(i))} kosztuje ${money(price)}.`, p.hex)); return; }
-  p.cash -= price;
-  G.own.set(i, { owner: p, level: 0, shield: 0, off: 0 });
-  sfx('coin');
-  fxTransfer(p, null, price);
-  refreshMarks(i);
-  renderHud();
-  fxRing(cellTarget(i), p.hex, 1.4);
-  fxText(cellTarget(i).setY(1.6), 'KUPIONE', '#FFFFFF', 0.75);
-  const f = FIELDS[i];
-  const mono = f.type === 'room' && hasMonopoly(p, f.group);
-  if (mono) fxMonopoly(p, f.group);
-  await w(banner(`Kupione: ${escHtml(fname(i))}`, `${escHtml(p.name)} płaci ${money(price)}.${mono ? ' Monopol na całą grupę: podwójny czynsz!' : ''}`, p.hex, 1900));
-  checkInstantWin(p);
-}
-// Ile poziomów można dobudować za jednym razem: najwyżej 2, a hotel (poziom 5) tylko z poziomu 4
-const maxAdd = lvl => (lvl >= 5 ? 0 : lvl === 4 ? 1 : Math.min(2, 4 - lvl));
-function buildOptions(p, i) {
-  const o = G.own.get(i);
-  const opts = [];
-  let cost = 0;
-  for (let n = 1; n <= maxAdd(o.level); n++) {
-    const lvl = o.level + n;
-    cost += levelCost(i, lvl);
-    opts.push({ label: `${n === 1 ? '+1 poziom' : '+2 poziomy'}: ${BUILDINGS[lvl - 1].name.toLowerCase()}${lvl === 5 ? ' (hotel)' : ''} · ${money(cost)}`, value: n, disabled: p.cash < cost, cost });
-  }
-  return opts;
-}
-function botBuildPick(p, opts) {
-  const ok = opts.filter(o => !o.disabled && botKeeps(p, o.cost));
-  return ok.length ? ok[ok.length - 1].value : 0;
-}
-async function build(p, i, n) {
-  const o = G.own.get(i);
-  let cost = 0;
-  for (let k = 1; k <= n; k++) cost += levelCost(i, o.level + k);
-  if (p.cash < cost) return;
-  p.cash -= cost;
-  fxTransfer(p, null, cost);
-  o.level += n;
-  renderHud();
-  await w(showLevel(i));
-  if (o.level === 5) { fxConfetti(cellTarget(i).setY(0.8), [o.owner.hex, GOLD, '#FFFFFF'], 110, 0.7); shake(0.1, 350); }
-  const name = BUILDINGS[o.level - 1].name;
-  await w(banner(o.level === 5 ? 'Hotel!' : `${name}: ${escHtml(fname(i))}`,
-    o.level === 5 ? `Serwerownia na ${escHtml(fname(i))}. Tego pola nic już nie ruszy.` : `${escHtml(p.name)} płaci ${money(cost)}${o.owner !== p ? ` (sala partnera: ${escHtml(o.owner.name)})` : ''}.`, p.hex));
-}
-// Pole wolne albo własne: pytanie, a po złej odpowiedzi zakup lub budowa na początku następnej tury
-async function landProperty(p, i) {
-  const f = FIELDS[i];
-  const o = G.own.get(i);
-  if (!o) {
-    const price = priceOf(i);
-    if (p.cash < price) { await w(banner(`${escHtml(fname(i))}`, `Wolne pole za ${money(price)}. Masz za mało gotówki.`, '', 1600)); return; }
-    const go = await w(choose(p, {
-      title: `Wolne pole: ${escHtml(fname(i))}`,
-      text: `Cena: <b>${money(price)}</b>, czynsz od ${money(f.type === 'room' ? roundK(price * RENT_MULT[0]) : (f.type === 'station' ? ECON.stationRent[1] : ECON.specialRent[1]))}. Żeby kupić, odpowiedz dobrze na pytanie.`,
-      options: [{ label: 'Kupuję: pokaż pytanie', value: true, primary: true }, { label: 'Nie kupuję', value: false }], two: true,
-    }, () => botWantsBuy(p, i)));
-    if (!go) return;
-    const ok = await w(askQuestion(p, 'sem', `kupno: ${escHtml(fname(i))}`));
-    if (ok) await buyField(p, i);
-    else {
-      p.pending = { type: 'buy', cell: i };
-      await w(banner('Tym razem nie', `${escHtml(fname(i))} możesz kupić na początku następnej tury, jeśli nikt Cię nie uprzedzi.`, p.hex, 2000));
-    }
-    return;
-  }
-  const own = o.owner === p;
-  if (own || sameTeam(o.owner, p)) {
-    if (f.type === 'station' && own) {
-      receive(p, ECON.stationBonus);
-      await w(banner('Twój parking', `Bonus parkingowy: ${money(ECON.stationBonus)}.`, p.hex));
-      return;
-    }
-    if (f.type !== 'room') { await w(banner(own ? 'Twoje pole' : 'Pole partnera', own ? 'Odpoczywasz.' : 'Nie płacisz czynszu.', p.hex, 1300)); return; }
-    if (o.level >= 5) { await w(banner(own ? 'Twój hotel' : 'Hotel partnera', 'Tu nie da się już nic zbudować.', p.hex, 1300)); return; }
-    const opts = buildOptions(p, i);
-    if (opts.every(x => x.disabled)) { await w(banner(own ? 'Twoja sala' : 'Sala partnera', 'Masz za mało gotówki na budowę.', p.hex, 1500)); return; }
-    const n = await w(choose(p, {
-      title: own ? `Budowa: ${escHtml(fname(i))}` : `Sala partnera: ${escHtml(o.owner.name)}`,
-      text: own ? 'Wybierz, ile poziomów chcesz zbudować. Najpierw pytanie.' : 'Możesz rozbudować salę partnera. Ty płacisz, sala zostaje partnera. Najpierw pytanie.',
-      options: [...opts, { label: 'Nie buduję', value: 0 }],
-    }, () => botBuildPick(p, opts)));
-    if (!n) return;
-    const ok = await w(askQuestion(p, 'sem', `budowa: ${escHtml(fname(i))}`));
-    if (ok) await build(p, i, n);
-    else {
-      p.pending = { type: 'build', cell: i, n };
-      await w(banner('Tym razem nie', 'Zbudujesz na początku następnej tury, bez pytania.', p.hex, 1800));
-    }
-    return;
-  }
-  // cudze pole: czynsz
-  const rent = rentOf(i);
-  if (o.off > 0) { await w(banner('Brak prądu', `${escHtml(fname(i))} nie pobiera czynszu jeszcze przez ${o.off} ${o.off === 1 ? 'turę' : 'tury'}.`, '', 1800)); return; }
-  await w(banner(`Czynsz: ${money(rent)}`, `${escHtml(p.name)} → ${escHtml(o.owner.name)} · ${escHtml(fname(i))}`, o.owner.hex, 1800));
-  await pay(p, rent, o.owner);
-}
-// Na początku tury: zakup albo budowa odłożone po złej odpowiedzi
-async function resolvePending(p) {
-  const pd = p.pending;
-  p.pending = null;
-  if (!pd) return;
-  const i = pd.cell, o = G.own.get(i);
-  if (pd.type === 'buy') {
-    if (o) { await w(banner('Ktoś był szybszy', `${escHtml(fname(i))}: właściciel ${escHtml(o.owner.name)}.`, o.owner.hex)); return; }
-    const price = priceOf(i);
-    const yes = await w(choose(p, {
-      title: `Kupno: ${escHtml(fname(i))}`, text: `Z poprzedniej tury: możesz kupić to pole bez pytania za <b>${money(price)}</b>.`,
-      options: [{ label: `Kupuję za ${money(price)}`, value: true, primary: true, disabled: p.cash < price }, { label: 'Rezygnuję', value: false }], two: true,
-    }, () => botWantsBuy(p, i)));
-    if (yes) await buyField(p, i);
-  } else {
-    if (!o || !sameTeam(o.owner, p) || o.level >= 5) return;
-    const opts = buildOptions(p, i).filter(x => x.value <= pd.n);
-    const n = await w(choose(p, {
-      title: `Budowa: ${escHtml(fname(i))}`, text: 'Z poprzedniej tury: budujesz bez pytania.',
-      options: [...opts, { label: 'Rezygnuję', value: 0 }],
-    }, () => botBuildPick(p, opts)));
-    if (n) await build(p, i, n);
-  }
-}
+// Wartości z zasad gry (src/core/rules.ts), liczone na stanie z ostatniego zdarzenia
+const fieldValue = i => R.fieldValue(G.snap, i);
+const wealth = p => R.wealth(G.snap, p.idx);
+const hasMonopoly = (p, group) => R.hasMonopoly(G.snap, p.idx, group);
+const rentOf = i => R.rentOf(G.snap, i);
 
 // ---------------------------------------------------------------------------
 // Karty ułatwień i utrudnień
 // ---------------------------------------------------------------------------
-function makeCardDecks() {
-  const bonus = [...BONUS_CARDS.map(c => ({ ...c, kind: 'bonus' })), ...EXIT_CARDS.map((c, k) => ({ name: 'Wyjście z dziekanatu', icon: 'exit', exit: k, kind: 'bonus', tag: 'zachowaj' }))];
-  const penalty = PENALTY_CARDS.map(c => ({ ...c, kind: 'penalty' }));
-  return { bonus: shuffle(bonus), penalty: shuffle(penalty), all: { bonus, penalty } };
-}
-function drawCard(kind) {
-  const d = G.cardDecks;
-  if (!d[kind].length) {   // stos się skończył: tasujemy karty, których nikt nie trzyma
-    const held = new Set(G.players.flatMap(p => p.cards));
-    d[kind] = shuffle(d.all[kind].filter(c => !held.has(c)));
-  }
-  return d[kind].shift();
-}
-function returnCard(p, k) {
-  const [c] = p.cards.splice(k, 1);
-  if (c) G.cardDecks.bonus.push(c);
-  renderHud();
-}
 // Karta unosi się ze stosu na planszy
 function liftCard(kind) {
   const deck = DECKS[kind === 'bonus' ? 0 : 1];
@@ -4890,369 +4585,126 @@ function cardSvg(card) {
   cardUid += 1;
   return card.exit != null ? exitCardSVG(EXIT_CARDS[card.exit], card.exit, `g${cardUid}`) : actionCardSVG(card, card.kind, `g${cardUid}`);
 }
-function revealCard(p, card) {
-  return new Promise(resolve => {
-    const back = cardBackUrl(card.kind === 'bonus' ? 'ulatwienia' : 'utrudnienia');
-    const bd = openModal(`<h2>${card.kind === 'bonus' ? 'Ułatwienie' : 'Utrudnienie'} dla: ${escHtml(p.name)}</h2>
-      <div class="g-card-show"><div class="flip static flipped"><span class="flip-inner"><span class="face front">${cardSvg(card)}</span><span class="face back"><img class="face-img" src="${back}" alt=""></span></span></div></div>
-      <div class="g-opts"><button type="button" class="m-btn m-primary" data-ok>Dalej</button></div>`);
-    setTimeout(() => { bd.querySelector('.flip').classList.remove('flipped'); sfx('card'); }, 250);
-    const done = () => { bd.remove(); resolve(); };
-    if (isBot(p)) setTimeout(done, 2400);
-    else bd.querySelector('[data-ok]').addEventListener('click', done);
-  });
-}
-// Cel ataku: sala przeciwnika bez hotelu, a właściciel nie ma ubezpieczenia
-const attackable = (i, attacker) => {
-  const o = G.own.get(i);
-  return o && FIELDS[i].type === 'room' && o.level < 5 && !sameTeam(o.owner, attacker) && !(o.owner.insured > 0);
-};
-async function shieldBlocks(i) {
-  const o = G.own.get(i);
-  if (!o || !o.shield) return false;
-  o.shield -= 1;
-  refreshMarks(i);
-  await w(banner('Tarcza!', `Ochrona mienia na ${escHtml(fname(i))} blokuje atak i się zużywa.`, '#2F7FF0'));
-  return true;
-}
-const best = (cells, score) => cells.slice().sort((a, b) => score(b) - score(a))[0];
-async function lowerLevel(i) {
-  const o = G.own.get(i);
-  o.level -= 1;
-  await w(showLevel(i));
-}
-async function moveBy(p, steps) {
-  await w(movePlayer(p, steps));
-  await landOn(p, 'card');
-}
-async function applyCard(p, card, x2) {
-  const k = x2 ? 2 : 1;
-  const none = msg => w(banner('Bez efektu', msg, '', 1600));
-  const mine = ownedBy(p).filter(i => FIELDS[i].type === 'room');
-  switch (card.icon) {
-    // ułatwienia
-    case 'helmet': {
-      const t = Object.keys(FIELDS).map(Number).filter(i => attackable(i, p) && G.own.get(i).level > 0);
-      if (!t.length) return none('Żaden przeciwnik nie ma budynku, który można zburzyć.');
-      const i = await w(chooseField(p, 'Kontrola BHP', 'Wybierz salę przeciwnika. Jej budynek spada o 1 poziom.', t, () => best(t, c => G.own.get(c).level)));
-      if (!(await shieldBlocks(i))) await lowerLevel(i);
-      return;
-    }
-    case 'power': {
-      const t = Object.keys(FIELDS).map(Number).filter(i => attackable(i, p) && !G.own.get(i).off);
-      if (!t.length) return none('Nie ma sali przeciwnika, którą można wyłączyć.');
-      const i = await w(chooseField(p, 'Wyłączenie prądu', 'Wybierz salę przeciwnika. Przez 3 tury nie pobiera czynszu.', t, () => best(t, rentOf)));
-      if (await shieldBlocks(i)) return;
-      G.own.get(i).off = 3;
-      refreshMarks(i);
-      await w(banner('Prąd wyłączony', `${escHtml(fname(i))} nie pobiera czynszu przez 3 tury.`, '#1E2A47'));
-      return;
-    }
-    case 'gavel': {
-      const t = Object.keys(FIELDS).map(Number).filter(i => attackable(i, p) && fieldValue(i) <= p.cash);
-      if (!t.length) return none('Nie ma sali przeciwnika, na którą Cię stać.');
-      const i = await w(chooseField(p, 'Decyzja rektora', 'Przeciwnik musi Ci sprzedać wybraną salę po jej cenie (z budynkami).', t, () => best(t, c => (botKeeps(p, fieldValue(c)) ? fieldValue(c) : -1))));
-      if (await shieldBlocks(i)) return;
-      const o = G.own.get(i), val = fieldValue(i), prev = o.owner;
-      p.cash -= val; prev.cash += val;
-      fxTransfer(p, prev, val);
-      o.owner = p;
-      sfx('coin');
-      renderHud();
-      await w(showLevel(i));
-      await w(banner('Decyzja rektora', `${escHtml(fname(i))}: nowy właściciel ${escHtml(p.name)}, zapłata ${money(val)}.`, p.hex));
-      checkInstantWin(p);
-      return;
-    }
-    case 'shieldRoom': {
-      for (let n = 0; n < k; n++) {
-        const t = mine.filter(i => !G.own.get(i).shield && G.own.get(i).level < 5);
-        if (!t.length) return n ? undefined : none('Nie masz sali, którą trzeba chronić.');
-        const i = await w(chooseField(p, 'Ochrona mienia', k === 2 ? `Tarcza ${n + 1} z 2: wybierz swoją salę.` : 'Wybierz swoją salę. Tarcza zablokuje jeden atak.', t, () => best(t, fieldValue)));
-        G.own.get(i).shield = 1;
-        refreshMarks(i);
-      }
-      await w(banner('Tarcza położona', 'Zablokuje jeden atak na tę salę.', '#2F7FF0'));
-      return;
-    }
-    case 'shieldPerson':
-      p.insured = 3 * k;
-      renderHud();
-      return w(banner('Ubezpieczenie studenckie', `Przez ${3 * k} tury przeciwnicy nie mogą atakować Twoich sal.`, '#2F7FF0'));
-    case 'grant': {
-      const t = mine.filter(i => G.own.get(i).level < 4);
-      if (!t.length) return none('Nie masz sali, którą można ulepszyć (hotel buduje się tylko na polu).');
-      const i = await w(chooseField(p, 'Grant badawczy', `Ulepsz za darmo swoją salę o ${k} ${k === 1 ? 'poziom' : 'poziomy'} (najwyżej do szafy rack).`, t, () => best(t, priceOf)));
-      G.own.get(i).level = Math.min(4, G.own.get(i).level + k);
-      await w(showLevel(i));
-      return;
-    }
-    case 'coins':
-      receive(p, 250 * K * k);
-      return w(banner(`+${money(250 * K * k)}`, 'Bank wypłaca stypendium naukowe.', p.hex));
-    case 'refund': {
-      const v = Math.min(G.pool, 150 * K * k);
-      G.pool -= v;
-      receive(p, v);
-      return w(banner(v ? `+${money(v)} z puli` : 'Pula jest pusta', 'Dostajesz zwrot czesnego.', p.hex));
-    }
-    case 'people': {
-      const from = opponents(p);
-      await w(banner('Praca w samorządzie', `Każdy przeciwnik płaci Ci ${money(60 * K * k)}.`, p.hex));
-      for (const o of from) if (!o.out) await pay(o, 60 * K * k, p);
-      return;
-    }
-    case 'forward': {
-      const n = x2 ? await w(choose(p, { title: 'Wcześniejsza sesja', text: 'O ile pól chcesz się przesunąć?', options: [{ label: '3 pola', value: 3 }, { label: '6 pól', value: 6, primary: true }], two: true }, () => pickOne([3, 6]))) : 3;
-      return moveBy(p, n);
-    }
-    case 'notes':
-    case 'exit':
-      p.cards.push(card);
-      renderHud();
-      return w(banner('Karta zostaje u Ciebie', card.icon === 'notes' ? 'Zadziała przy następnym pytaniu.' : 'Użyjesz jej, żeby wcześniej wyjść z dziekanatu.', p.hex));
-    // utrudnienia
-    case 'flood': {
-      const t = mine.filter(i => G.own.get(i).level > 0 && G.own.get(i).level < 5);
-      if (!t.length) return none('Nie masz budynku, który mogłoby zalać.');
-      const i = pickOne(t);
-      if (!(await shieldBlocks(i))) { await w(banner('Zalanie sali', `${escHtml(fname(i))}: budynek spada o 1 poziom.`, '#D6534F')); await lowerLevel(i); }
-      return;
-    }
-    case 'scissors': {
-      const t = mine.filter(i => G.own.get(i).level < 5);
-      if (!t.length) return none('Nie masz sali do sprzedania.');
-      const i = await w(chooseField(p, 'Cięcia budżetowe', 'Wybierz salę. Sprzedajesz ją bankowi za pół ceny.', t, () => best(t, c => -fieldValue(c))));
-      if (await shieldBlocks(i)) return;
-      const v = Math.round(fieldValue(i) * 0.5);
-      G.own.delete(i);
-      receive(p, v);
-      await w(showLevel(i));
-      refreshMarks(i);
-      return w(banner('Cięcia budżetowe', `${escHtml(fname(i))} wraca do banku. Dostajesz ${money(v)}.`, '#D6534F'));
-    }
-    case 'swap': {
-      const t = mine.filter(i => G.own.get(i).level < 5);
-      const to = opponents(p);
-      if (!t.length || !to.length) return none('Nie masz sali, która mogłaby przejść do przeciwnika.');
-      const i = pickOne(t), who = pickOne(to);
-      if (await shieldBlocks(i)) return;
-      G.own.get(i).owner = who;
-      await w(showLevel(i));
-      refreshMarks(i);
-      await w(banner('Zmiana planu zajęć', `${escHtml(fname(i))}: nowy właściciel ${escHtml(who.name)}.`, who.hex));
-      checkInstantWin(who);
-      return;
-    }
-    case 'bulb': {
-      const t = mine.filter(i => G.own.get(i).level < 5 && !G.own.get(i).off);
-      if (!t.length) return none('Nie masz sali, w której może zabraknąć prądu.');
-      const i = pickOne(t);
-      if (await shieldBlocks(i)) return;
-      G.own.get(i).off = 3;
-      refreshMarks(i);
-      return w(banner('Brak prądu', `${escHtml(fname(i))} nie pobiera czynszu przez 3 tury.`, '#1E2A47'));
-    }
-    case 'wrench': {
-      let v = 0;
-      for (const i of mine) { const l = G.own.get(i).level; v += l === 5 ? 125 * K : l > 0 ? 25 * K : 0; }
-      v *= k;
-      if (!v) return none('Nie masz budynków, więc nic nie płacisz.');
-      await w(banner('Opłaty za sprzęt', `Płacisz ${money(v)} do puli.`, '#D6534F'));
-      await pay(p, v, 'pool');
-      return;
-    }
-    case 'exam':
-      await w(banner('Warunek', `Płacisz ${money(150 * K * k)} do puli.`, '#D6534F'));
-      await pay(p, 150 * K * k, 'pool');
-      return;
-    case 'clock':
-      return moveBy(p, -3 * k);
-    case 'door':
-      return sendToJail(p, x2 ? 'Bez karty wyjścia' : '', x2);
-    case 'hourglass':
-      p.skip += k;
-      renderHud();
-      return w(banner('Kolokwium poprawkowe', `Tracisz ${k === 1 ? '1 kolejkę' : '2 kolejki'}.`, '#D6534F'));
-    case 'plagiarism': {
-      if (!p.cards.length) return none('Nie masz kart do oddania.');
-      const n = x2 ? p.cards.length : 1;
-      for (let j = 0; j < n; j++) returnCard(p, rnd(p.cards.length));
-      return w(banner('Wykryty plagiat', n === 1 ? 'Oddajesz 1 kartę do stosu.' : 'Oddajesz wszystkie karty do stosu.', '#D6534F'));
-    }
-  }
-}
-async function chance(p) {
-  const ok = await w(askQuestion(p, 'sem', 'Szansa: dobrze = ułatwienie, źle = utrudnienie'));
-  const kind = ok ? 'bonus' : 'penalty';
-  const card = drawCard(kind);
-  await w(liftCard(kind));
-  await w(revealCard(p, card));
-  let x2 = false;
-  if (card.x2) {   // drugie pytanie: przy ułatwieniu dobra odpowiedź podwaja, przy utrudnieniu zła
-    const ok2 = await w(askQuestion(p, 'sem', kind === 'bonus' ? 'dobra odpowiedź = działanie ×2' : 'zła odpowiedź = działanie ×2'));
-    x2 = kind === 'bonus' ? ok2 : !ok2;
-    if (x2) await w(banner('Działanie ×2', escHtml(card.x2), kind === 'bonus' ? '#2E9E8A' : '#D6534F'));
-  }
-  await applyCard(p, card, x2);
+function cardModal(d, p, pick) {
+  const card = d.card;
+  const back = cardBackUrl(card.kind === 'bonus' ? 'ulatwienia' : 'utrudnienia');
+  const bd = openModal(`<h2>${card.kind === 'bonus' ? 'Ułatwienie' : 'Utrudnienie'} dla: ${escHtml(p.name)}</h2>
+    <div class="g-card-show"><div class="flip static flipped"><span class="flip-inner"><span class="face front">${cardSvg(card)}</span><span class="face back"><img class="face-img" src="${back}" alt=""></span></span></div></div>
+    ${pick ? '<div class="g-opts"><button type="button" class="m-btn m-primary" data-ok>Dalej</button></div>' : ''}`);
+  setTimeout(() => { bd.querySelector('.flip')?.classList.remove('flipped'); sfx('card'); }, 250);
+  if (pick) bd.querySelector('[data-ok]').addEventListener('click', () => pick(null, bd));
+  return bd;
 }
 
 // ---------------------------------------------------------------------------
 // Dziekanat
 // ---------------------------------------------------------------------------
-async function sendToJail(p, why = '', noCard = false) {
+async function animateJail(p, title, sub) {
   const a = p.obj.position.clone(), b = spotPos(JAIL_CELL, p.idx);
   const r0 = p.obj.rotation.y, r1 = turnTo(p, cellPose(JAIL_CELL).rotY);
-  p.pos = JAIL_CELL;
-  p.jail = 2;
-  p.noCard = noCard;
-  renderHud();
   shake(0.18, 450);
-  await w(banner('Do dziekanatu!', `${escHtml(p.name)} stoi 2 kolejki.${why ? ` ${why}.` : ''}`, '#D6534F', 1500));
-  await w(tween(reduceMotion ? 100 : 900, t => {
+  await banner(fmt(title), fmt(sub), '#D6534F', 1500);
+  await tween(reduceMotion ? 100 : 900, t => {
     p.obj.position.lerpVectors(a, b, easeInOut(t));
     p.obj.position.y = TILE_H + 2.6 * Math.sin(Math.PI * t);
     p.obj.rotation.y = r0 + (r1 - r0) * t;
-  }));
+  });
   sfx('bad');
-}
-// Tura w dziekanacie. Zwraca 'out' (rzucasz normalnie), 'stay' albo 'moved' (wyszedł dubletem i już się ruszył)
-async function jailTurn(p) {
-  const cards = p.cards.filter(c => c.icon === 'exit').length;
-  const choice = await w(choose(p, {
-    title: `Dziekanat: kolejka ${3 - p.jail} z 2`,
-    text: 'Jak chcesz wyjść? Po 2 kolejkach wychodzisz sam.',
-    options: [
-      { label: `Zapłać za warunek: ${money(ECON.bail)}`, value: 'pay', disabled: p.cash < ECON.bail },
-      { label: 'Pytanie, a potem rzut: dublet = wyjście', value: 'roll', primary: true },
-      { label: `Karta „Wyjście z dziekanatu”${cards ? ` (masz ${cards})` : ' (nie masz)'}${p.noCard ? ': nie tym razem' : ''}`, value: 'card', disabled: !cards || p.noCard },
-    ],
-  }, () => (cards && !p.noCard ? 'card' : p.cash > (p.level === 'trudny' ? 400 * K : 800 * K) ? 'pay' : 'roll')));
-  if (choice === 'pay') {
-    await pay(p, ECON.bail, 'pool');
-    p.jail = 0;
-    await w(banner('Warunek zapłacony', 'Wychodzisz z dziekanatu.', p.hex, 1300));
-    return 'out';
-  }
-  if (choice === 'card') {
-    returnCard(p, p.cards.findIndex(c => c.icon === 'exit'));
-    p.jail = 0;
-    await w(banner('Wyjście z dziekanatu', 'Karta wraca do stosu ułatwień.', p.hex, 1300));
-    return 'out';
-  }
-  const ok = await w(askQuestion(p, 'sem', 'dziekanat: dobra odpowiedź = rzut kostkami'));
-  if (!ok) { p.jail -= 1; await w(banner('Zostajesz w dziekanacie', p.jail ? 'Spróbujesz w następnej turze.' : 'W następnej turze wychodzisz sam.', '', 1500)); return 'stay'; }
-  const [a, b] = await rollDice(p);
-  if (a !== b) { p.jail -= 1; await w(banner('Bez dubletu', p.jail ? 'Zostajesz w dziekanacie.' : 'W następnej turze wychodzisz sam.', '', 1500)); return 'stay'; }
-  p.jail = 0;
-  await w(banner('Dublet!', 'Wychodzisz z dziekanatu.', p.hex, 1300));
-  await w(movePlayer(p, a + b));
-  await landOn(p, 'roll');
-  return 'moved';
-}
-async function landJail(p, how) {
-  if (how !== 'roll') { await w(banner('Dziekanat', 'Tylko odwiedzasz.', '', 1200)); return; }
-  await w(banner('Dziekanat', 'Dziekanat zadaje pytanie. Za złą odpowiedź stoisz 1 kolejkę.', '#B8862B', 1500));
-  const ok = await w(askQuestion(p, 'dziekanat', 'pytanie dziekanatu'));
-  if (ok) await w(banner('Sprawa załatwiona', 'Idziesz dalej bez postoju.', p.hex, 1400));
-  else { p.skip += 1; renderHud(); await w(banner('Stoisz 1 kolejkę', 'Dziekanat ma jeszcze pytania.', '#D6534F', 1500)); }
 }
 
 // ---------------------------------------------------------------------------
 // Ruch i pola
 // ---------------------------------------------------------------------------
-async function passStart(p) {
-  const share = pct(p.lap.ok, p.lap.q) ?? 0;
-  const bonus = Math.round((ECON.startPay * share) / 100);
-  receive(p, ECON.startPay + bonus, cellTarget(START_CELL).setY(0.4));
-  fxRing(cellTarget(START_CELL), GOLD, 1.5);
-  p.lap = { q: 0, ok: 0 };
-  await w(banner(`START: +${money(ECON.startPay + bonus)}`, `${money(ECON.startPay)} i premia ${share}% za dobre odpowiedzi w tym okrążeniu.`, p.hex, 1700));
-}
-async function movePlayer(p, steps) {
-  const dir = Math.sign(steps);
-  for (let s = 0; s < Math.abs(steps); s++) {
-    const from = p.pos;
-    p.pos = (p.pos + dir + TOTAL) % TOTAL;
-    await w(hop(p, from, p.pos));
-    if (dir > 0 && p.pos === START_CELL) await passStart(p);
-  }
-  fxRing(p.obj.position, p.hex, 0.9);
-  renderHud();
-}
-async function landOn(p, how) {
-  const i = p.pos, f = FIELDS[i];
-  setStatus(`${p.name}: ${fname(i)}`);
-  if (i === START_CELL) return;
-  if (i === JAIL_CELL) return landJail(p, how);
-  if (i === GOTO_CELL) return sendToJail(p);
-  if (i === POOL_CELL) {
-    const v = G.pool;
-    G.pool = 0;
-    receive(p, v, 'pool');
-    if (v) fxConfetti(POOL_AT.clone(), [GOLD, '#FFFFFF', p.hex], 120, 0.8);
-    return w(banner('Stypendium rektorskie', v ? `Zabierasz całą pulę: ${money(v)}.` : 'Pula jest pusta. Następnym razem!', p.hex, 1900));
-  }
-  if (f?.type === 'tax') {
-    await w(banner('Czesne', `Płacisz ${money(ECON.tax)} do puli na środku.`, '#D6534F', 1500));
-    await pay(p, ECON.tax, 'pool');
-    return;
-  }
-  if (f?.type === 'chance') return chance(p);
-  if (buyable(i)) return landProperty(p, i);
-}
-function waitRoll(p) {
-  return new Promise(resolve => {
-    if (isBot(p)) { setTimeout(resolve, 700); return; }
-    const b = $('gRoll');
-    b.hidden = false;
-    b.innerHTML = `${diceIco}Rzuć kostkami`;
-    b.onclick = () => { b.hidden = true; b.onclick = null; audio(); resolve(); };
-    b.focus();
-  });
+function rollButton(onRoll) {
+  const b = $('gRoll');
+  b.hidden = false;
+  b.innerHTML = `${diceIco}Rzuć kostkami`;
+  b.onclick = () => { b.hidden = true; b.onclick = null; audio(); onRoll(); };
+  b.focus();
 }
 const diceIco = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="8.5" cy="8.5" r="1.6" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/></svg>';
-async function rollDice(p) {
-  setStatus(isBot(p) ? `${p.name} rzuca kostkami…` : `${p.name}: Twój rzut`);
-  await w(waitRoll(p));
-  const a = 1 + rnd(6), b = 1 + rnd(6);
-  await w(throwDice(a, b));
-  shake(0.07, 260);
-  setStatus(`${p.name}: ${a} + ${b} = ${a + b}${a === b ? ' · dublet!' : ''}`);
-  return [a, b];
+
+// ---------------------------------------------------------------------------
+// Odtwarzanie zdarzeń silnika: po kolei, z animacjami; pauza zatrzymuje kolejkę
+// ---------------------------------------------------------------------------
+let openUi = null;   // okno bieżącej decyzji: { id, kind, bd, d }
+const moneyEnd = x => (typeof x === 'number' ? G.players[x] : x === 'pool' ? 'pool' : x && x.cell != null ? cellTarget(x.cell).setY(0.4) : null);
+async function pump(g) {
+  if (g.pumping) return;
+  g.pumping = true;
+  try {
+    while (G === g && g.queue.length) {
+      while (G === g && g.paused) await sleep(150);
+      if (G !== g) return;
+      const ev = g.queue.shift();
+      applySnap(ev.snap);
+      renderHud();
+      try { await playEvent(ev); } catch (e) { console.error(e); }
+    }
+  } finally { g.pumping = false; }
 }
-// Na początku tury właściciela odliczają się: brak prądu na jego salach i ubezpieczenie
-function tickStatuses(p) {
-  for (const [i, o] of G.own) if (o.owner === p && o.off > 0) { o.off -= 1; refreshMarks(i); }
-  if (p.insured > 0) p.insured -= 1;
+async function playEvent(ev) {
+  const p = ev.player != null ? G.players[ev.player] : null;
+  switch (ev.type) {
+    case 'notice': return banner(fmt(ev.title), fmt(ev.sub), ev.color || '', ev.ms ?? 1700);
+    case 'status': setStatus(ev.text); return;
+    case 'turn': if (isLocalHuman(p)) setViewer(p); return;
+    case 'dice': await throwDice(ev.a, ev.b); shake(0.07, 260); return;
+    case 'step': return hop(p, ev.from, ev.to);
+    case 'landed': fxRing(p.obj.position, p.hex, 0.9); return;
+    case 'jail': return animateJail(p, ev.title, ev.sub);
+    case 'money':
+      sfx('coin');
+      fxTransfer(moneyEnd(ev.from), moneyEnd(ev.to), ev.amount);
+      if (ev.from?.cell === START_CELL) fxRing(cellTarget(START_CELL), GOLD, 1.5);
+      return;
+    case 'poolTaken': if (ev.amount) fxConfetti(POOL_AT.clone(), [GOLD, '#FFFFFF', p.hex], 120, 0.8); return;
+    case 'bought':
+      refreshMarks(ev.cell);
+      fxRing(cellTarget(ev.cell), p.hex, 1.4);
+      fxText(cellTarget(ev.cell).setY(1.6), 'KUPIONE', '#FFFFFF', 0.75);
+      if (ev.monopoly) fxMonopoly(p, FIELDS[ev.cell].group);
+      return;
+    case 'level': case 'owner': return showLevel(ev.cell, false);
+    case 'marks': refreshMarks(ev.cell); return;
+    case 'hotel': {
+      const o = G.own.get(ev.cell);
+      fxConfetti(cellTarget(ev.cell).setY(0.8), [o ? o.owner.hex : GOLD, GOLD, '#FFFFFF'], 110, 0.7);
+      shake(0.1, 350);
+      return;
+    }
+    case 'cardDrawn': return liftCard(ev.kind);
+    case 'shuffle': return shuffleAnim(ev.deck === 'dziekanat' ? 'Tasowanie pytań dziekanatu' : 'Tasowanie pytań');
+    case 'decision': showDecision(ev.decision); return;
+    case 'decided': return closeDecision(ev);
+    case 'answered': return showAnswer(ev);
+    case 'bankrupt': shrinkOut(p.obj, board); shake(0.25, 600); fxRing(p.obj.position, '#5B6475', 2); return;
+    case 'over': return showEnd(ev.result);
+  }
 }
-async function playTurn(p) {
-  if (!isBot(p)) setViewer(p);
-  renderHud();
-  const humans = G.players.filter(x => !isBot(x) && !x.out).length;
-  if (!isBot(p) && humans > 1) await w(banner(`Tura: ${escHtml(p.name)}`, '', p.hex, 1000));
-  tickStatuses(p);
-  if (p.skip > 0) {
-    p.skip -= 1;
-    renderHud();
-    await w(banner(`${escHtml(p.name)} traci kolejkę`, p.skip ? `Jeszcze ${p.skip}.` : '', p.hex, 1500));
-    return;
+// Decyzja: gracz przy tym komputerze dostaje przyciski; przy bocie okno pokazuje, co bot robi
+function showDecision(d) {
+  const g = G, p = g.players[d.player], mine = isLocalHuman(p);
+  const submit = v => { if (G === g) g.driver.submit(d.id, v); };
+  const done = (v, bd) => { bd.remove(); if (openUi?.id === d.id) openUi = null; submit(v); };
+  if (d.kind === 'roll') { if (mine) rollButton(() => submit(null)); }
+  else if (d.kind === 'choose') openUi = { id: d.id, kind: 'choose', d, bd: chooseModal(d, mine ? done : null) };
+  else if (d.kind === 'answer') openUi = questionModal(d, p, mine ? k => submit(k) : null);
+  else if (d.kind === 'ack') openUi = { id: d.id, kind: 'ack', d, bd: cardModal(d, p, mine ? done : null) };
+  g.driver.ready(d.id);
+}
+async function closeDecision(ev) {
+  $('gRoll').hidden = true;
+  const ui = openUi;
+  if (!ui || ui.id !== ev.id) return;
+  if (ui.kind === 'answer') { clearInterval(ui.timer); return; }   // wynik pokaże zdarzenie „answered”
+  openUi = null;
+  if (ui.kind === 'choose') {
+    const k = ui.d.options.findIndex(o => o.value === ev.value);
+    ui.bd.querySelector(`[data-k="${k}"]`)?.classList.add('m-primary');
+    await sleep(450);
   }
-  await resolvePending(p);
-  if (p.out) return;
-  if (p.jail > 0) {
-    const r = await jailTurn(p);
-    if (r !== 'out') return;
-  }
-  for (let doubles = 0; ;) {
-    const [a, b] = await rollDice(p);
-    if (a === b) doubles += 1;
-    if (doubles === 3) { await sendToJail(p, 'Trzeci dublet z rzędu'); return; }
-    await w(movePlayer(p, a + b));
-    await landOn(p, 'roll');
-    if (p.out || p.jail > 0 || p.skip > 0 || a !== b) return;
-    await w(banner('Dublet!', 'Rzucasz jeszcze raz.', p.hex, 1100));
-  }
+  ui.bd.remove();
 }
 
 // ---------------------------------------------------------------------------
@@ -5647,9 +5099,9 @@ function renderHud() {
   renderHands();
   renderHandPanel();
   const t = $('gTimer');
-  t.hidden = !G.timeLeft && !G.timeUp;
+  t.hidden = !timeLeft() && !G.timeUp;
   if (!t.hidden) {
-    const s = Math.max(0, Math.ceil(G.timeLeft / 1000));
+    const s = Math.max(0, Math.ceil(timeLeft() / 1000));
     t.innerHTML = `<small>Czas</small>${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
   }
 }
@@ -5668,88 +5120,54 @@ gameInfo = i => {
 // ---------------------------------------------------------------------------
 // Start, pauza, koniec gry
 // ---------------------------------------------------------------------------
-const FALLBACK_QUESTIONS = [
-  { q: 'Ile to jest 7 × 8?', a: ['54', '56', '64', '48'], ok: 1 },
-  { q: 'Ile to jest 12 + 15?', a: ['25', '27', '28', '17'], ok: 1 },
-  { q: 'Ile to jest 9 × 9?', a: ['81', '72', '99', '18'], ok: 0 },
-  { q: 'Ile to jest 100 − 37?', a: ['73', '67', '63', '53'], ok: 2 },
-];
-function questionList(sem) {
-  const B = window.BAZA_PYTAN || {};
-  const all = Object.entries(B.semestry || {}).flatMap(([k, qs]) => qs.map(q => ({ ...q, sem: +k })));
-  const list = sem === 8 ? all : all.filter(q => q.sem === sem);
-  return list.length ? list : all.length ? all : FALLBACK_QUESTIONS;
-}
+const timeLeft = () => G?.driver?.timeLeft ?? 0;
 function startGame() {
   saveSetup();
   quitGame();
   const slots = setup.slots.map((s, i) => ({ s, i })).filter(({ s }) => s.kind !== 'empty');
-  const teams = setup.teams && slots.length === 4;
-  G = {
-    players: [], turn: 0, own: new Map(), marks: new Map(), pool: 0, over: false, paused: false, teams,
-    semester: setup.semester, timeLeft: setup.timer * 60000, timeUp: false,
-    decks: {
-      sem: makeDeck(questionList(setup.semester)),
-      dziekanat: makeDeck((window.BAZA_PYTAN?.dziekanat || []).length ? window.BAZA_PYTAN.dziekanat : questionList(setup.semester)),
-    },
-    cardDecks: makeCardDecks(),
+  const players = slots.map(({ s, i }) => {
+    const pawnIdx = slotPawn(s), colorIdx = slotColor(s);
+    return {
+      slot: i, kind: s.kind === 'online' ? 'local' : s.kind, level: s.level || 'średni',
+      name: s.kind === 'me' ? profile.nick : s.kind === 'bot' ? `Bot ${i + 1}` : `Gracz ${i + 1}`,
+      pawnIdx, colorIdx, hex: PAWN_COLORS[colorIdx].hex,
+    };
+  });
+  const seed = crypto.getRandomValues(new Uint32Array(1))[0];
+  const engine = new GameEngine({ players, teams: setup.teams, semester: setup.semester, seed, timeLimitMin: setup.timer, online: setup.mode === 'online' },
+    buildBank(window.BAZA_PYTAN, setup.semester));
+  const g = G = {
+    players: engine.state.players.map(sp => ({ ...structuredClone(sp), obj: PLAYERS[sp.pawnIdx].make(sp.hex) })),
+    own: new Map(), marks: new Map(), pool: 0, turn: 0, over: false, paused: false, teams: engine.state.teams,
+    semester: setup.semester, timeUp: false, deckLeft: { bonus: 0, penalty: 0 }, snap: null,
+    queue: [], pumping: false, engine, driver: null,
     anim: { flags: flags.length, steams: steams.length, coins: coins.length },
   };
-  slots.forEach(({ s, i }, idx) => {
-    const pawnIdx = slotPawn(s), colorIdx = slotColor(s);
-    const p = {
-      idx, slot: i, kind: s.kind === 'online' ? 'local' : s.kind, level: s.level || 'średni',
-      name: s.kind === 'me' ? profile.nick : s.kind === 'bot' ? `Bot ${i + 1}` : `Gracz ${i + 1}`,
-      pawnIdx, colorIdx, hex: PAWN_COLORS[colorIdx].hex, team: i % 2,
-      cash: ECON.startCash, pos: START_CELL, out: false, jail: 0, noCard: false, skip: 0, insured: 0,
-      cards: [], pending: null, lap: { q: 0, ok: 0 }, total: { q: 0, ok: 0 },
-    };
-    p.obj = PLAYERS[pawnIdx].make(p.hex);
-    board.add(p.obj);
-    placePawn(p);
-    G.players.push(p);
-  });
+  applySnap(engine.publicState());
+  for (const p of g.players) { board.add(p.obj); placePawn(p); }
   $('gPlayers').dataset.sig = '';
-  G.view = (G.players.find(x => !isBot(x)) || G.players[0]).idx;
-  viewCorner = cornerOf(G.players[G.view]);
+  g.view = (g.players.find(x => !isBot(x)) || g.players[0]).idx;
+  viewCorner = cornerOf(g.players[g.view]);
   document.body.classList.add('in-game');
   layer.innerHTML = '';
+  openUi = null;
   setStatus('');
-  renderHud();
   closeMenu();
   controls.enableZoom = false;   // w grze kamerę można tylko obracać
-  const g = G;
-  g.clock = setInterval(() => {
-    if (G !== g || g.paused || g.over || !g.timeLeft) return;
-    g.timeLeft = Math.max(0, g.timeLeft - 1000);
-    if (!g.timeLeft && !g.timeUp) { g.timeUp = true; banner('Koniec czasu!', 'Kończymy bieżącą turę i liczymy majątek.', '#D6534F', 2200); }
-    renderHud();
-  }, 1000);
-  runGame(g, setup.mode === 'online');
-}
-async function runGame(g, online) {
-  try {
-    const sem = g.semester === 8 ? 'pytania mieszane (semestry 1–7)' : `pytania z semestru ${g.semester}`;
-    await w(banner('Zaczynamy!', `${sem} · ${g.timeLeft ? `czas gry ${g.timeLeft / 60000} min` : 'bez limitu czasu'}${online ? ' · tryb online ruszy z serwerem gry, teraz wszyscy grają przy tym komputerze' : ''}`, '', 2200));
-  } catch (e) { if (e !== STOP) throw e; return; }
-  while (G === g && !g.over) {
-    try {
-      await playTurn(g.players[g.turn]);
-    } catch (e) {
-      if (e !== STOP) console.error(e);
-    }
-    if (G !== g || g.over) return;
-    if (g.timeUp) { endGame('time'); return; }
-    do g.turn = (g.turn + 1) % g.players.length; while (g.players[g.turn].out);
-  }
+  g.driver = new LocalDriver(engine, { timeLimitMs: setup.timer * 60000, onTick: () => { if (G === g) renderHud(); } });
+  engine.on(ev => { if (G !== g) return; g.queue.push(ev); pump(g); });
+  renderHud();
+  g.driver.start().catch(e => console.error(e));
 }
 function quitGame() {
   if (!G) return;
   const g = G;
   G = null;
   g.over = true;
-  clearInterval(g.clock);
+  g.queue.length = 0;
+  g.driver?.stop();
   layer.innerHTML = '';
+  openUi = null;
   $('gRoll').hidden = true;
   setStatus('');
   document.body.classList.remove('in-game');
@@ -5766,7 +5184,9 @@ function quitGame() {
 }
 function pause() {
   if (!G || G.over) return;
-  G.paused = true;
+  const g = G;
+  g.paused = true;
+  g.driver.pause(true);
   const bd = openModal(`<h2>Pauza</h2><p>Gra czeka. Czas gry też stoi.</p>
     <div class="g-opts">
       <button type="button" class="m-btn m-primary" data-p="back">Wróć do gry</button>
@@ -5778,11 +5198,22 @@ function pause() {
     const b = e.target.closest('[data-p]');
     if (!b) return;
     bd.remove();
-    if (!G) return;
-    G.paused = false;
-    if (b.dataset.p === 'end') endGame('manual');
+    if (G !== g) return;
+    g.paused = false;
+    g.driver.pause(false);
+    if (b.dataset.p === 'end') endManual();
     if (b.dataset.p === 'quit') { quitGame(); openMenu(); }
   });
+}
+// Koniec na życzenie gracza: zaległe animacje nie mają już znaczenia, od razu liczymy wynik
+function endManual() {
+  const g = G;
+  if (!g || g.over) return;
+  g.queue.length = 0;
+  layer.querySelectorAll('.g-backdrop, .g-banner-wrap').forEach(el => el.remove());
+  openUi = null;
+  $('gRoll').hidden = true;
+  g.driver.endNow();
 }
 $('gMenuBtn').addEventListener('click', pause);
 document.addEventListener('keydown', e => {
@@ -5797,54 +5228,40 @@ const REASONS = {
   monopolies: '4 monopole: wygrana od razu!',
   manual: 'Gra zakończona. Wygrywa największy majątek.',
 };
-function endGame(reason, instantWinner = null) {
+function showEnd(result) {
   const g = G;
-  if (!g || g.over) return;
-  g.over = true;
-  clearInterval(g.clock);
+  if (!g) return;
+  g.driver.stop();
   $('gRoll').hidden = true;
   setStatus('');
-  const acc = p => pct(p.total.ok, p.total.q);
-  const rows = g.players.map(p => ({ p, wealth: p.out ? 0 : wealth(p), acc: acc(p) }));
-  const order = (a, b) => b.wealth - a.wealth || (b.acc ?? -1) - (a.acc ?? -1);
-  let winners;
-  if (instantWinner) winners = g.teams ? rows.filter(r => r.p.team === instantWinner.team) : rows.filter(r => r.p === instantWinner);
-  else if (g.teams) {
-    const team = t => rows.filter(r => r.p.team === t);
-    const sum = t => team(t).reduce((s, r) => s + r.wealth, 0);
-    const tacc = t => pct(team(t).reduce((s, r) => s + r.p.total.ok, 0), team(t).reduce((s, r) => s + r.p.total.q, 0)) ?? -1;
-    const wt = sum(0) - sum(1) || tacc(0) - tacc(1);
-    winners = team(wt >= 0 ? 0 : 1);
-  } else winners = [rows.slice().sort(order)[0]];
-  rows.sort(order);
-  const scored = rows.filter(r => r.acc != null);
-  const topAcc = scored.length ? Math.max(...scored.map(r => r.acc)) : null;
-  const prymus = topAcc == null ? null : scored.find(r => r.acc === topAcc);
-  const win = new Set(winners.map(r => r.p));
+  const rows = result.rows.map(r => ({ p: g.players[r.player], wealth: r.wealth, acc: r.acc }));
+  const win = new Set(result.winners.map(k => g.players[k]));
+  const winners = result.winners.map(k => g.players[k]);
   // statystyki gracza „Ty” zapisują się w profilu (ranking i profil)
   const me = g.players.find(p => p.kind === 'me');
-  if (me && profile && reason !== 'quit') {
+  if (me && profile) {
     const st = Object.assign({ games: 0, wins: 0, q: 0, ok: 0, best: null, wealth: null }, profile.stats);
     st.games += 1;
     if (win.has(me)) st.wins += 1;
     st.q += me.total.q; st.ok += me.total.ok;
-    const a = acc(me);
+    const a = pct(me.total.ok, me.total.q);
     if (a != null) st.best = Math.max(st.best ?? 0, a);
     st.wealth = Math.max(st.wealth ?? 0, rows.find(r => r.p === me).wealth);
     profile.stats = st;
     store.set('profil', profile);
   }
   layer.innerHTML = '';
+  openUi = null;
   sfx('fanfare');
-  for (let k = 0; k < 3; k++) sleep(k * 650).then(() => fxConfetti(new THREE.Vector3((Math.random() - 0.5) * 6, 0.5, (Math.random() - 0.5) * 6), [...winners.map(r => r.p.hex), GOLD, '#FFFFFF'], 180, 1.1));
-  const title = g.teams ? `Wygrywa ${TEAMS[winners[0].p.team].name}` : `Wygrywa ${escHtml(winners[0].p.name)}`;
+  for (let k = 0; k < 3; k++) sleep(k * 650).then(() => fxConfetti(new THREE.Vector3((Math.random() - 0.5) * 6, 0.5, (Math.random() - 0.5) * 6), [...winners.map(p => p.hex), GOLD, '#FFFFFF'], 180, 1.1));
+  const title = result.teams ? `Wygrywa ${TEAMS[winners[0].team].name}` : `Wygrywa ${escHtml(winners[0].name)}`;
   const bd = openModal(`
-    <div class="g-end-head">${winners.map(r => avatar(r.p.pawnIdx, r.p.colorIdx)).join('')}<div><h2>${title}!</h2><p>${REASONS[reason]}</p></div></div>
+    <div class="g-end-head">${winners.map(p => avatar(p.pawnIdx, p.colorIdx)).join('')}<div><h2>${title}!</h2><p>${REASONS[result.reason]}</p></div></div>
     <div class="m-table-wrap"><table class="m-table g-end">
       <thead><tr><th>#</th><th>Gracz</th><th>Majątek</th><th>Dobre odpowiedzi</th></tr></thead>
       <tbody>${rows.map((r, k) => `<tr${win.has(r.p) ? ' class="is-me"' : ''}>
         <td><span class="m-pos">${k + 1}</span></td>
-        <td><span class="m-player">${avatar(r.p.pawnIdx, r.p.colorIdx)}${escHtml(r.p.name)}${win.has(r.p) ? '<span class="g-title">Wygrana</span>' : ''}${prymus && prymus.p === r.p ? '<span class="g-title prymus">Prymus</span>' : ''}</span></td>
+        <td><span class="m-player">${avatar(r.p.pawnIdx, r.p.colorIdx)}${escHtml(r.p.name)}${win.has(r.p) ? '<span class="g-title">Wygrana</span>' : ''}${result.prymus === r.p.idx ? '<span class="g-title prymus">Prymus</span>' : ''}</span></td>
         <td>${r.p.out ? 'bankrut' : money(r.wealth)}</td>
         <td>${r.acc == null ? '–' : `<span class="m-bar"><i style="width:${r.acc}%"></i></span>${r.acc}%`}</td></tr>`).join('')}</tbody>
     </table></div>

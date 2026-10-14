@@ -36,3 +36,29 @@ test.describe('telefon', () => {
     expect(errors).toEqual([]);
   });
 });
+
+test('rozgrywka: gracz rzuca, decyduje i odpowiada, boty grają, koniec gry z pauzy', async ({ page, errors }) => {
+  test.setTimeout(420_000);
+  await startGame(page);
+  const turns = new Set();
+  let actions = 0;
+  // okna znikają same (np. po odpowiedzi bota), więc klik ma krótki limit i może się nie udać
+  const tap = async sel => {
+    const el = page.locator(sel).first();
+    if (!(await el.isVisible().catch(() => false))) return false;
+    return el.click({ force: true, timeout: 2000 }).then(() => true, () => false);
+  };
+  for (let k = 0; k < 160 && actions < 14; k++) {
+    // gracz działa tylko wtedy, gdy gra na niego czeka; boty grają same
+    if (await tap('#gRoll') || await tap('.g-ans button:not(:disabled)') || await tap('.g-modal [data-ok]') || await tap('.g-modal [data-k]:not(:disabled)')) actions++;
+    turns.add(await page.evaluate(() => window.__t.G()?.turn));
+    await page.waitForTimeout(1000);
+  }
+  expect(actions).toBeGreaterThan(3);
+  expect(turns.size).toBeGreaterThan(1);   // tury przeszły też do botów
+  await page.locator('#gMenuBtn').click();
+  await page.locator('[data-p="end"]').click();
+  await expect(page.locator('.g-end-head')).toBeVisible();
+  await expect(page.locator('.g-end tbody tr')).toHaveCount(4);
+  expect(errors).toEqual([]);
+});
