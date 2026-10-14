@@ -2,31 +2,35 @@
 // (RenderPipeline z Three.js: działa na WebGPU i na zapasowym WebGL2).
 //
 // - Niska: obraz prosto na ekran, 1 piksel obrazu na piksel CSS, mniejsze cienie.
-// - Średnia: do 1,5 piksela na piksel CSS, wygładzanie krawędzi MSAA 4x i delikatny bloom (poświata świateł).
-// - Wysoka: ostrość ekranu Retina (2x) i cienie kontaktowe GTAO, czyli przyciemnienie w zagłębieniach
-//   i przy styku przedmiotów (tylko światło otoczenia, jak w grach AAA), do tego bloom.
+// - Średnia: pełna ostrość ekranu (Retina 2x), wygładzanie krawędzi MSAA 4x, wyostrzenie i delikatny bloom.
+// - Wysoka: to samo i cienie kontaktowe GTAO, czyli przyciemnienie w zagłębieniach
+//   i przy styku przedmiotów (tylko światło otoczenia, jak w grach AAA).
 // - Ultra 4K: co najmniej 2 piksele obrazu na piksel CSS (na zwykłym ekranie Full HD scena liczy się
 //   w 4K i jest zmniejszana, czyli supersampling), do 3x na telefonach, GTAO w pełnej rozdzielczości.
 // - Wysoka i Ultra mają też głębię ostrości jak w obiektywie (plansza ostra, dalsze tło miękko rozmyte).
-// - Automatyczna: Wysoka na komputerze, Średnia na telefonie i tablecie; gdy klatki są wolne, najpierw
-//   spada rozdzielczość, potem znikają efekty (i wracają, gdy znów jest płynnie).
+// - Automatyczna: Wysoka na komputerze, Średnia na telefonie i tablecie. Gdy klatki są wolne, najpierw
+//   znikają najdroższe efekty (głębia ostrości, potem cienie kontaktowe), a rozdzielczość spada na końcu,
+//   bo od niej zależy, czy obraz jest ostry. Gdy przez dłuższy czas jest płynnie, efekty wracają.
+// Na końcu obraz przechodzi mapowanie tonów, lekkie podbicie kolorów i wyostrzenie (CAS), żeby napisy
+// na polach i krawędzie były wyraźne.
 import * as THREE from 'three/webgpu';
-import { pass, mrt, normalView, screenUV, builtinAOContext, vec4, mix, uniform } from 'three/tsl';
+import { pass, mrt, normalView, screenUV, builtinAOContext, vec4, mix, uniform, renderOutput, vibrance } from 'three/tsl';
 import { ao } from 'three/addons/tsl/display/GTAONode.js';
 import { bloom } from 'three/addons/tsl/display/BloomNode.js';
 import { dof } from 'three/addons/tsl/display/DepthOfFieldNode.js';
+import { sharpen } from 'three/addons/tsl/display/SharpenNode.js';
 
 export const LEVELS = [
   ['auto', 'Automatyczna'], ['low', 'Niska'], ['medium', 'Średnia'], ['high', 'Wysoka'], ['ultra', 'Ultra 4K'],
 ];
 export const PRESETS = {
-  low: { minDpr: 1, maxDpr: 1, shadow: 1024, msaa: false, ao: false, aoScale: 0, bloom: false },
-  medium: { minDpr: 1, maxDpr: 1.5, shadow: 2048, msaa: true, ao: false, aoScale: 0, bloom: true },
-  high: { minDpr: 1, maxDpr: 2, shadow: 4096, msaa: true, ao: true, aoScale: 0.5, bloom: true, dof: true },
-  ultra: { minDpr: 2, maxDpr: 3, shadow: 4096, msaa: true, ao: true, aoScale: 1, bloom: true, dof: true },
+  // sharp: siła wyostrzenia (0 = najmocniejsze, 2 = bez wyostrzenia)
+  low: { minDpr: 1, maxDpr: 1, shadow: 1024, msaa: false, ao: false, aoScale: 0, bloom: false, sharp: 2 },
+  medium: { minDpr: 1, maxDpr: 2, shadow: 2048, msaa: true, ao: false, aoScale: 0, bloom: true, sharp: 0.55 },
+  high: { minDpr: 1, maxDpr: 2, shadow: 4096, msaa: true, ao: true, aoScale: 0.5, bloom: true, dof: true, sharp: 0.5 },
+  ultra: { minDpr: 2, maxDpr: 3, shadow: 4096, msaa: true, ao: true, aoScale: 1, bloom: true, dof: true, sharp: 0.45 },
 };
-const ORDER = ['low', 'medium', 'high', 'ultra'];
-const MAX_PIXELS = { low: 2.1e6, medium: 4.2e6, high: 8.9e6, ultra: 17e6 };   // limit pikseli obrazu (Ultra: 5K)
+const MAX_PIXELS = { low: 2.1e6, medium: 7.5e6, high: 9e6, ultra: 17e6 };   // limit pikseli obrazu (Ultra: 5K)
 
 export class Graphics {
   /**
@@ -50,7 +54,7 @@ export class Graphics {
     this.bloomPass = null;
     this.night = false;
     this.ratio = 1;
-    this.slow = { acc: 0, n: 0, wait: 0 };
+    this.slow = { acc: 0, n: 0, wait: 0, good: 0, noUpUntil: 0 };
     // głębia ostrości: odległość ostrzenia i zakres ostrości (jednostki sceny); ustawia gra co klatkę
     this.focus = { distance: uniform(20), range: uniform(18), dead: uniform(10), bokeh: uniform(0) };
     this.dofOn = true;
@@ -69,6 +73,7 @@ export class Graphics {
   set(setting) {
     this.setting = setting;
     this.level = setting === 'auto' ? (this.mobile ? 'medium' : 'high') : setting;
+    this.dofOn = true;
     this.apply();
   }
 
@@ -93,6 +98,7 @@ export class Graphics {
     const p = this.preset;
     if (!p.msaa && !p.ao && !p.bloom) return;
     this.pipeline ??= new THREE.RenderPipeline(this.renderer);
+    this.pipeline.outputColorTransform = false;   // robimy to sami w renderOutput (przed wyostrzeniem)
     const scenePass = pass(this.scene, this.camera, { samples: p.msaa ? 4 : 0 });
     this.nodes.push(scenePass);
     let aoValue = null;
@@ -113,7 +119,7 @@ export class Graphics {
     // cień kontaktowy także w świetle słońca, ale lżej (makieta wygląda na postawioną, a nie wklejoną)
     let out = aoValue ? vec4(scenePass.rgb.mul(mix(1, aoValue, 0.35)), scenePass.a) : scenePass;
     // głębia ostrości jak w obiektywie: plansza ostra, pokój za nią miękko rozmyty (Wysoka i Ultra)
-    if (p.dof) {
+    if (p.dof && this.dofOn) {
       // strefa w pełni ostra wokół punktu ostrzenia (cała plansza), rozmycie zaczyna się dopiero za nią
       const f = this.focus, signed = scenePass.getViewZNode().negate().sub(f.distance);
       const shrunk = signed.sign().mul(signed.abs().sub(f.dead).max(0));
@@ -127,7 +133,14 @@ export class Graphics {
       out = vec4(out.rgb.add(this.bloomPass.rgb), out.a);
       this.setNight(this.night);
     }
-    this.pipeline.outputNode = out;
+    // mapowanie tonów i przestrzeń barw tutaj (a nie na samym końcu), żeby wyostrzenie działało na gotowym obrazie
+    let final = renderOutput(vec4(vibrance(out.rgb, 0.12), out.a));
+    if (p.sharp < 2) {
+      const sh = sharpen(final, p.sharp);
+      this.nodes.push(sh);
+      final = sh;
+    }
+    this.pipeline.outputNode = final;
     this.pipeline.needsUpdate = true;
     this.active = true;
   }
@@ -157,30 +170,34 @@ export class Graphics {
     else this.renderer.render(this.scene, this.camera);
   }
 
-  // Tylko w trybie Automatyczna: wolne klatki (średnio > 24 ms) obniżają rozdzielczość, potem poziom;
-  // szybkie (< 13 ms) przywracają. Zmiana najwyżej co 4 s, żeby obraz nie migał.
+  // Tylko w trybie Automatyczna. Okna po 2,5 s: średnio ponad 24 ms na klatkę (poniżej ok. 42 kl./s)
+  // to „wolno”: najpierw znika głębia ostrości, potem cienie kontaktowe (Średnia), dopiero potem spada
+  // rozdzielczość (najniżej do 75% ekranu), a na końcu poziom Niski. Powrót: po 3 płynnych oknach z rzędu
+  // (do 17,5 ms, czyli pełne 60 kl./s), ale nie wcześniej niż minutę po ostatnim obniżeniu.
   frame(ms) {
     if (this.setting !== 'auto' || ms > 250) return;
     const s = this.slow;
     s.acc += ms; s.n++;
     if (s.acc < 2500) return;
-    const avg = s.acc / s.n;
+    const avg = s.acc / s.n, now = performance.now();
     s.acc = 0; s.n = 0;
-    if (performance.now() < s.wait) return;
-    const top = this.mobile ? 'medium' : 'high', idx = ORDER.indexOf(this.level);
-    const full = this.targetRatio();
-    let changed = false;
+    if (now < s.wait) return;
+    const full = this.targetRatio(), floor = Math.max(1, full * 0.75), top = this.mobile ? 'medium' : 'high';
+    const setRatio = r => { this.ratio = r; this.renderer.setPixelRatio(r); this.onResize(); };
     if (avg > 24) {
-      if (this.ratio > 1) { this.ratio = Math.max(1, this.ratio - 0.25); changed = true; }
-      else if (idx > 0) { this.level = ORDER[idx - 1]; this.apply(); s.wait = performance.now() + 4000; return; }
-    } else if (avg < 13) {
-      if (this.ratio < full) { this.ratio = Math.min(full, this.ratio + 0.25); changed = true; }
-      else if (idx < ORDER.indexOf(top)) { this.level = ORDER[idx + 1]; this.apply(); s.wait = performance.now() + 4000; return; }
+      s.good = 0; s.wait = now + 4000; s.noUpUntil = now + 60000;
+      if (this.preset.dof && this.dofOn) { this.dofOn = false; this.build(); }
+      else if (this.level === 'high' || this.level === 'ultra') { this.level = 'medium'; this.apply(); }
+      else if (this.ratio > floor + 0.01) setRatio(Math.max(floor, this.ratio - 0.25));
+      else if (this.level === 'medium') { this.level = 'low'; this.apply(); }
+      return;
     }
-    if (!changed) return;
-    this.renderer.setPixelRatio(this.ratio);
-    this.onResize();
-    s.wait = performance.now() + 4000;
+    if (avg > 17.5 || now < s.noUpUntil || ++s.good < 3) return;
+    s.good = 0; s.wait = now + 4000;
+    if (this.level === 'low') { this.level = 'medium'; this.apply(); setRatio(floor); }
+    else if (this.ratio < full - 0.01) setRatio(Math.min(full, this.ratio + 0.25));
+    else if (this.level === 'medium' && top === 'high') { this.level = 'high'; this.dofOn = false; this.apply(); }
+    else if (this.preset.dof && !this.dofOn) { this.dofOn = true; this.build(); }
   }
 
   // Opis do ustawień: silnik i rozmiar obrazu

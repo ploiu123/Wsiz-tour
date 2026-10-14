@@ -426,11 +426,15 @@ function drawCorner(g, i, w, h) {
     });
   }
 }
+// Tekstury pól: rysunek 384 × 640 (narożnik 640 × 640) w skali 1,5x na komputerze i 2x na ekranach 4K i 5K,
+// żeby napisy były ostre także przy najeździe kamery i na poziomie Ultra
+const TILE_SCALE = lowEnd ? 1 : Math.max(screen.width, screen.height) * (devicePixelRatio || 1) >= 3400 ? 2 : 1.5;
 function tileTexture(i) {
   const corner = i % SIDE === 0;
   const field = FIELDS[i];
-  const [c, g] = makeCanvas(corner ? 640 : 384, 640);
-  const w = c.width, h = c.height;
+  const w = corner ? 640 : 384, h = 640;
+  const [c, g] = makeCanvas(Math.round(w * TILE_SCALE), Math.round(h * TILE_SCALE));
+  g.scale(TILE_SCALE, TILE_SCALE);
   g.textAlign = 'center'; g.textBaseline = 'middle';
   g.fillStyle = LOOK.paper; g.fillRect(0, 0, w, h);
   if (corner) {
@@ -2438,7 +2442,8 @@ for (let i = 0; i < TOTAL; i++) {
   const w = p.corner ? D : W;
   const body = mesh(p.corner ? cornerGeo : tileGeo, tileBodyMat, false, true);
   body.position.y = TILE_H / 2;
-  const top = mesh(new THREE.PlaneGeometry(w - 0.1, D - 0.1), new THREE.MeshStandardMaterial({ map: tileTexture(i), roughness: 0.55 }), false, true);
+  // matowy, drukowany papier: kolory są czyste i nie bieleją od odbić lampy i okna
+  const top = mesh(new THREE.PlaneGeometry(w - 0.1, D - 0.1), new THREE.MeshStandardMaterial({ map: tileTexture(i), roughness: 0.82, envMapIntensity: 0.6 }), false, true);
   top.rotation.x = -Math.PI / 2;
   top.position.y = TILE_H + 0.002;
   top.userData.cell = i;
@@ -4906,15 +4911,19 @@ async function playEvent(ev) {
 }
 // Najazd kamery na kupione pole (i na hotel): kamera podjeżdża z tego samego kierunku, chwilę patrzy
 // z bliska (ostrość na polu, reszta planszy miękko rozmyta) i wraca tam, gdzie była. Wyłączane w Ustawieniach.
+let cineActive = false;
 async function cineCell(cell) {
   if (!prefs.cine || reduceMotion || view !== 'board' || P.on || !G || menuOpen) return;
   const g = G, back = [camera.position.clone(), controls.target.clone()];
   const t = cellTarget(cell).setY(0.3);
   const dir = camera.position.clone().sub(controls.target).normalize();
-  await flyTo([t.clone().add(dir.multiplyScalar(boardDist() * 0.4)), t], 650);
-  await sleep(750);
-  if (G !== g) return;
-  await flyTo(back, 650);
+  cineActive = true;
+  try {
+    await flyTo([t.clone().add(dir.multiplyScalar(boardDist() * 0.4)), t], 650);
+    await sleep(750);
+    if (G !== g) return;
+    await flyTo(back, 650);
+  } finally { cineActive = false; }
 }
 
 // Decyzja: gracz przy tym komputerze dostaje przyciski; przy bocie okno pokazuje, co bot robi
@@ -6716,6 +6725,7 @@ jumpTo(presetBoard());
 const testTarget = __TEST_HOOKS__ && new URLSearchParams(location.search).has('rtonly')
   ? new THREE.RenderTarget(1, 1, { colorSpace: THREE.SRGBColorSpace, type: THREE.UnsignedByteType, samples: 4 }) : null;
 const focusDir = new THREE.Vector3(), focusPt = new THREE.Vector3();
+const FOCUS_AREA = [[11, 11], [-11, 11], [11, -11], [-11, -11]];   // narożniki stołu z planszą, pieniędzmi i kartami
 const timer = new THREE.Timer();
 timer.connect(document);   // karta w tle nie daje potem jednego wielkiego skoku czasu
 // Płynność: gdy przez dłuższą chwilę klatki są wolne, gra rysuje w trochę mniejszej rozdzielczości;
@@ -6763,8 +6773,15 @@ function frame() {
   {
     const look = camera.getWorldDirection(focusDir);
     const d = Math.max(1, focusPt.copy(controls.target).sub(camera.position).dot(look));
-    const wide = controls.target.lengthSq() < 1;   // patrzymy na całą planszę (a nie z bliska na pole)
-    gfx.setFocus(d, wide ? 22 : 6, menuOpen || P.on || view !== 'board' ? 0 : 1, wide ? 10.5 : 1.2);
+    let dead = 1.2, range = 6;   // najazd na pole: ostre tylko pole, reszta planszy miękko rozmyta
+    if (!cineActive) {
+      // zwykły widok: cała plansza i stół z pieniędzmi i kartami graczy są zawsze w pełni ostre,
+      // rozmywa się dopiero dalsze tło (krzesła, ściany pokoju)
+      dead = 0;
+      for (const [x, z] of FOCUS_AREA) dead = Math.max(dead, Math.abs(focusPt.set(x, 0, z).sub(camera.position).dot(look) - d));
+      dead += 1.5; range = 28;
+    }
+    gfx.setFocus(d, range, menuOpen || P.on || view !== 'board' ? 0 : 1, dead);
   }
   if (__TEST_HOOKS__ && testTarget) {   // testy WebGPU bez karty graficznej: klatka w pamięci
     const sz = renderer.getDrawingBufferSize(new THREE.Vector2());
