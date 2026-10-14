@@ -122,7 +122,7 @@ Tam, gdzie autor jeszcze nie zdecydował, przyjęte są ustawienia tymczasowe. W
 
 **Dźwięk i animacje**
 - Dźwięki (kostki, kroki pionka, monety, odpowiedzi, karty) są generowane w kodzie, bez plików. Żeby użyć nagrania kostek (własnego albo CC0), wpisz ścieżkę do pliku w `DICE_SOUND_FILE` w `index.html`. Głośność ustawia suwak „Efekty dźwiękowe”.
-- Kostki 3D lecą na środek planszy i pokazują wynik, pionek przeskakuje po polach, budynki spadają na pola, karta unosi się ze stosu i obraca na ekranie.
+- Kostki 3D lecą na środek planszy z prawdziwą fizyką (od 14.10.2026: odbijają się od siebie i od stosów kart, stukają przy każdym uderzeniu) i pokazują wynik wylosowany przez silnik gry, pionek przeskakuje po polach, budynki spadają na pola, karta unosi się ze stosu i obraca na ekranie. Przy kupnie pola i hotelu kamera na chwilę podjeżdża do pola.
 
 **Menu (w trakcie, 13.10.2026)**
 - Menu otwiera się na start. W tle jest plansza, która powoli się obraca, rozmyta (blur), a na niej panele menu.
@@ -232,7 +232,7 @@ Do ustalenia: co z Kuchnią.
 - **Ranking:** podium z medalami i tabela: rozegrane, wygrane, procent wygranych, dobre odpowiedzi, najlepsza gra, najwyższy majątek. Sortowanie: wygrane, skuteczność, rozegrane, majątek. Dane innych graczy są przykładowe do czasu serwera gry. Twój wiersz liczy się z gier rozegranych w tej przeglądarce.
 - **Zasady:** 8 ponumerowanych kart (wersja robocza) i przykładowe pytanie z matematyki z minutnikiem, które nigdy nie pada w grze.
 - **Profil:** nick, pionek, kolor i statystyki.
-- **Ustawienia:** motyw (systemowy, jasny, ciemny), głośność muzyki i efektów (dźwięki dojdą z rozgrywką), rozmiar elementów (mały, średni, duży), jakość grafiki (Automatyczna, Niska, Średnia, Wysoka, Ultra 4K; pod nazwą widać silnik WebGPU albo WebGL2 i rozmiar obrazu), wygląd planszy, środek planszy, obracanie planszy w menu.
+- **Ustawienia:** motyw (systemowy, jasny, ciemny), głośność muzyki i efektów (dźwięki dojdą z rozgrywką), rozmiar elementów (mały, średni, duży), jakość grafiki (Automatyczna, Niska, Średnia, Wysoka, Ultra 4K; pod nazwą widać silnik WebGPU albo WebGL2 i rozmiar obrazu), wygląd planszy, środek planszy, obracanie planszy w menu, najazdy kamery (przy kupnie pola i hotelu, domyślnie włączone).
 - Profil, ustawienia i ustawienia nowej gry zapisują się w przeglądarce gracza.
 
 ## Tyły kart ułatwień i utrudnień
@@ -330,9 +330,10 @@ Ilustracje kart są wektorowe (SVG), rysowane w kodzie przez asystenta AI (Claud
 
 ## Wygląd planszy do wyboru (od 13.10.2026)
 
-W Ustawieniach → „Wygląd planszy” są dwie wersje (zapamiętuje się wybór):
+W Ustawieniach → „Wygląd planszy” są trzy wersje (zapamiętuje się wybór):
 
-1. **Diorama nad wodą** (domyślna, w stylu makiety „Harbor Jelly”): plansza leży prosto na placu uczelni z kostki granitowej (bez stołu; granatowy stół usunięty 13.10.2026). Całość to wycięty blok jak makieta w przekroju: na bokach warstwy ziemi, a woda jest przezroczysta, turkusowa i widoczna z boku jak galaretka. Tło jest jasne i czyste, pod blokiem miękki cień.
+0. **Pokój ze stołem** (domyślny od 14.10.2026, główna scena z planu technicznego): plansza leży na stole z ciemnego orzecha (lakier z połyskiem, drobny słój, cztery deski) w jasnym pokoju uczelni. Dębowa podłoga z desek, dywan w kolorach uczelni, ściany z granatową boazerią i białymi listwami, duże okno z widokiem na zieleń kampusu i jasną plamą światła na podłodze, regał z książkami, lampa w granatowym kloszu nad stołem (ciepłe światło), dwa krzesła z giętym oparciem, a na stole kubek z kawą, zeszyt z ołówkiem i roślinka w doniczce (poza miejscami na pieniądze i karty graczy). Odbicia w lakierze stołu i na pionkach pokazują prawdziwy pokój (kamera sześcienna nad stołem robi „zdjęcie” otoczenia). Skala jak w rzeczywistości: plansza ok. 50 cm, stół 1,8 × 1,2 m, pokój 6 × 5 m. Wszystko rysowane w kodzie (`src/scene/room.js`), tekstury drewna liczone przy starcie (2048 px na dużych ekranach, 1024 px na telefonach). Prezentacja gry zostaje na dioramie.
+1. **Diorama nad wodą** (w stylu makiety „Harbor Jelly”, do 14.10.2026 domyślna): plansza leży prosto na placu uczelni z kostki granitowej (bez stołu; granatowy stół usunięty 13.10.2026). Całość to wycięty blok jak makieta w przekroju: na bokach warstwy ziemi, a woda jest przezroczysta, turkusowa i widoczna z boku jak galaretka. Tło jest jasne i czyste, pod blokiem miękki cień.
    - **Realistyczny teren wokół planszy:** kostka granitowa w wiązaniu (każda kostka w innym odcieniu, z ziarnem kamienia, fugą i fazowanymi brzegami, które łapią światło), granitowa opaska na brzegach placu, krawężnik promenady nad plażą, piasek ze zmarszczkami, mokry pas piasku przy wodzie i piana, która przypływa i odpływa. Pod ludźmi, ławkami, latarniami, parasolami i palmami leżą miękkie cienie. Z tyłu placu: kosze na śmieci, stojak z rowerami i donica z kwiatami.
    - **Przed planszą nic wysokiego nie stoi** (pusty kawałek plaży i placu od strony kamery), więc w grze nic nie jest ogromne ani ucięte przy dolnej krawędzi ekranu.
    - **Kolory bez granatu:** dachy z dachówki (jak na starówce w Bielsku-Białej), jasne kamienne gzymsy, latarnie i ławki w grafitowym kolorze.

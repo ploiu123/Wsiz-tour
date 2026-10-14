@@ -145,3 +145,10 @@ body {
 .qc-fit > .qc-card { position: absolute; left: 0; top: 0; transform: scale(var(--s, 1)); transform-origin: 0 0; }
 @media (max-width: 760px) { .qc-layout { grid-template-columns: minmax(0, 1fr); } .qc-layout .card-slot { max-width: 400px; width: 100%; margin: 0 auto; } }
 .hud-bottom { bottom: 16px; align-items: flex-end; flex-wrap: wrap; }
+
+/* Pokój ze stołem: zasłona menu w ciepłych kolorach (na ciemnym orzechu szaroniebieska wyglądała na brudną) */
+:root[data-skin="pokoj"] { --veil-top: rgba(248, 244, 238, .6); --veil-bottom: rgba(234, 228, 219, .8); }
+@media (prefers-color-scheme: dark) {
+  :root[data-skin="pokoj"]:not([data-theme="light"]) { --veil-top: rgba(18, 14, 10, .5); --veil-bottom: rgba(10, 8, 6, .8); }
+}
+:root[data-skin="pokoj"][data-theme="dark"] { --veil-top: rgba(18, 14, 10, .5); --veil-bottom: rgba(10, 8, 6, .8); }

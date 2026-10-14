@@ -222,7 +222,7 @@ body.in-game .hud { display: none !important; }
   .g-player .g-cash { font-size: 27px; line-height: 1.05; letter-spacing: -.01em; }
   .g-player .g-pmeta { font-size: 12px; }
   .g-player .g-badges { grid-area: badges; margin-top: 8px; }
-  .g-player.is-turn { border-color: var(--c); transform: translateY(-3px) scale(1.02); animation: g-turn-card 1.8s ease-in-out infinite; }
+  .g-player.is-turn { border-color: var(--c); background: var(--panel); transform: translateY(-3px) scale(1.02); animation: g-turn-card 1.8s ease-in-out infinite; }
   @keyframes g-turn-card { 0%, 100% { box-shadow: var(--shadow), 0 0 0 0 color-mix(in srgb, var(--c) 0%, transparent); } 50% { box-shadow: var(--shadow), 0 0 0 7px color-mix(in srgb, var(--c) 26%, transparent); } }
   .g-player.is-out { filter: grayscale(.9); }
   .g-turn { position: absolute; top: -13px; right: 18px; padding: 5px 11px 5px 22px; border-radius: 999px; background: var(--c); color: #fff; font: 700 12px var(--display); letter-spacing: .02em; box-shadow: 0 6px 14px color-mix(in srgb, var(--c) 45%, transparent); }

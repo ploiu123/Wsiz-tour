@@ -4,6 +4,8 @@
 import * as THREE from 'three/webgpu';
 import * as TSL from 'three/tsl';
 import { Graphics, LEVELS as GFX_LEVELS } from '../render/graphics.js';
+import { buildRoom } from '../scene/room.js';
+import { loadDicePhysics, diceReady, simulateThrow, FACE_AXES } from '../render/dice.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
@@ -173,7 +175,8 @@ controls.minPolarAngle = 0;
 controls.maxPolarAngle = 1.2;   // można obracać na boki i patrzeć z góry, ale nie od spodu
 controls.minDistance = 5;
 
-scene.add(new THREE.HemisphereLight(LOOK.hemi[0], LOOK.hemi[1], LOOK.hemi[2]));
+const hemi = new THREE.HemisphereLight(LOOK.hemi[0], LOOK.hemi[1], LOOK.hemi[2]);
+scene.add(hemi);
 const sun = new THREE.DirectionalLight(LOOK.sun[0], LOOK.sun[1]);
 sun.position.set(...LOOK.sun[2]);
 sun.castShadow = true;
@@ -2363,25 +2366,62 @@ const paperMat = (() => {
   cardboard.add(table);
 }
 const cardboardBg = gradientTexture('#F4F1EC', '#E2DCD2');
-let curSkin = 'diorama', boardBg = null;
-const SKIN_NAMES = [['diorama', 'Diorama nad wodą'], ['tektura', 'Czysta tektura']];
+const roomBg = new THREE.Color('#D9D2C6');
+let curSkin = 'diorama', boardBg = null, room = null, roomEnv = null, baseEnv = null;
+const SKIN_NAMES = [['pokoj', 'Pokój ze stołem'], ['diorama', 'Diorama nad wodą'], ['tektura', 'Czysta tektura']];
 // Świat wokół planszy: widoczny tylko na widoku planszy, zależnie od wybranego wyglądu
 function showWorld(on) {
   world.visible = on && curSkin === 'diorama';
   cardboard.visible = on && curSkin === 'tektura';
+  if (room) room.group.visible = on && curSkin === 'pokoj';
+}
+// Pokój budujemy dopiero, gdy jest potrzebny (tekstury drewna liczą się chwilę)
+function ensureRoom() {
+  if (room) return room;
+  const big = !lowEnd && Math.max(screen.width, screen.height) * (devicePixelRatio || 1) > 1600;
+  room = buildRoom({ baseH: BASE_H, aniso: maxAniso, texSize: big ? 2048 : 1024 });
+  room.group.visible = false;
+  scene.add(room.group);
+  return room;
+}
+// Odbicia w pokoju: kamera sześcienna nad stołem fotografuje pokój (okno, ściany, lampę),
+// a materiały (lakier stołu, pionki, kubek) odbijają prawdziwe otoczenie zamiast studia
+function captureRoomEnv() {
+  if (roomEnv) return roomEnv;
+  const rt = new THREE.CubeRenderTarget(512, { type: THREE.HalfFloatType });
+  const cam = new THREE.CubeCamera(0.5, 400, rt);
+  cam.position.copy(room.envProbe);
+  const hidden = [board, floorGroup].filter(o => o.visible);
+  hidden.forEach(o => { o.visible = false; });
+  room.group.visible = true;
+  cam.update(renderer, scene);
+  hidden.forEach(o => { o.visible = true; });
+  roomEnv = rt.texture;
+  return roomEnv;
 }
 function applySkin(name) {
-  curSkin = name === 'tektura' ? 'tektura' : 'diorama';
-  const t = curSkin === 'tektura';
+  curSkin = SKIN_NAMES.some(([v]) => v === name) ? name : 'pokoj';
+  document.documentElement.dataset.skin = curSkin;
+  const t = curSkin === 'tektura', r = curSkin === 'pokoj';
   boardBg ||= scene.background;
+  baseEnv ||= scene.environment;
+  if (r) ensureRoom();
   showWorld(view === 'board' && board.visible);
+  scene.environment = r ? captureRoomEnv() : baseEnv;
+  // w pokoju światło jest cieplejsze i spokojniejsze: odbicia z prawdziwego pokoju, mniej światła z „nieba”
+  scene.environmentIntensity = r ? 0.42 : LOOK.env;
+  hemi.color.set(r ? '#FFF3E4' : LOOK.hemi[0]);
+  hemi.groundColor.set(r ? '#7A5A40' : LOOK.hemi[1]);
+  hemi.intensity = r ? 0.3 : LOOK.hemi[2];
+  sun.color.set(r ? '#FFEBD2' : LOOK.sun[0]);
+  sun.intensity = r ? 2.1 : LOOK.sun[1];
   base.material = t ? [kraftMat, kraftMat, paperMat, kraftMat, kraftMat, kraftMat] : [baseSideMat, baseSideMat, baseTopMat, baseSideMat, baseSideMat, baseSideMat];
   tileBodyMat.map = t ? kraftTex : null;
   tileBodyMat.color.set(t ? '#FFFFFF' : LOOK.tileBody);
   tileBodyMat.needsUpdate = true;
   contact.material.opacity = t ? 0.6 : 0.45;
-  scene.background = t ? cardboardBg : boardBg;
-  document.body.style.background = t ? 'linear-gradient(180deg, #F4F1EC, #E2DCD2)' : `linear-gradient(180deg, ${LOOK.bg[0]}, ${LOOK.bg[1]})`;
+  scene.background = t ? cardboardBg : r ? roomBg : boardBg;
+  document.body.style.background = t ? 'linear-gradient(180deg, #F4F1EC, #E2DCD2)' : r ? '#D9D2C6' : `linear-gradient(180deg, ${LOOK.bg[0]}, ${LOOK.bg[1]})`;
 }
 
 const tileGeo = new THREE.BoxGeometry(W - 0.06, TILE_H, D - 0.06);
@@ -2742,7 +2782,9 @@ const chipHtml = (label, attrs, pressed, disabled = false) =>
 let profile = store.get('profil', null);
 // statystyki z gier sprzed zmiany skali (kwoty były w tysiącach): przelicz na nowe kwoty
 if (profile?.stats?.wealth > 200000) { profile.stats.wealth = Math.round(profile.stats.wealth / 1000); store.set('profil', profile); }
-const prefs = Object.assign({ theme: 'system', music: 60, effects: 80, scale: 1, spin: true, skin: 'diorama', gfx: 'auto' }, store.get('preferencje', {}));
+const prefs = Object.assign({ theme: 'system', music: 60, effects: 80, scale: 1, spin: true, skin: 'pokoj', gfx: 'auto', cine: true }, store.get('preferencje', {}));
+// 14.10.2026: nowa główna scena (pokój ze stołem) dla wszystkich; wcześniejszy wygląd można wybrać w Ustawieniach
+if (prefs.skinV !== 2) { prefs.skin = 'pokoj'; prefs.skinV = 2; }
 const savePrefs = () => store.set('preferencje', prefs);
 const defaultSlots = () => [
   { kind: 'me' },
@@ -3229,7 +3271,8 @@ function renderSettingsPage() {
     <div class="m-set"><span>Rozmiar elementów</span>${chips([[0.9, 'Mały'], [1, 'Średni'], [1.15, 'Duży']], prefs.scale, 'data-scale')}</div>
     <div class="m-set"><span>Jakość grafiki<small id="gfxInfo">${gfx.describe()}</small></span>${chips(GFX_LEVELS, prefs.gfx, 'data-gfx')}</div>
     <div class="m-set"><span>Wygląd planszy</span>${chips(SKIN_NAMES, prefs.skin, 'data-skin')}</div>
-    <div class="m-set"><span>Obracanie planszy w menu</span>${chips([[1, 'Włączone'], [0, 'Wyłączone']], prefs.spin ? 1 : 0, 'data-spin')}</div>`;
+    <div class="m-set"><span>Obracanie planszy w menu</span>${chips([[1, 'Włączone'], [0, 'Wyłączone']], prefs.spin ? 1 : 0, 'data-spin')}</div>
+    <div class="m-set"><span>Najazdy kamery<small>Przy kupnie pola i hotelu</small></span>${chips([[1, 'Włączone'], [0, 'Wyłączone']], prefs.cine ? 1 : 0, 'data-cine')}</div>`;
 }
 $('settingsBox').addEventListener('click', e => {
   const b = e.target.closest('button');
@@ -3240,6 +3283,7 @@ $('settingsBox').addEventListener('click', e => {
   else if (d.skin) { prefs.skin = d.skin; applySkin(prefs.skin); }
   else if (d.gfx) { prefs.gfx = d.gfx; gfx.set(d.gfx); }
   else if (d.spin !== undefined) { prefs.spin = d.spin === '1'; controls.autoRotate = menuOpen && prefs.spin && !reduceMotion; }
+  else if (d.cine !== undefined) prefs.cine = d.cine === '1';
   else return;
   savePrefs();
   renderSettingsPage();
@@ -4379,7 +4423,46 @@ const dice = [0, 1].map(() => {
   board.add(m);
   return m;
 });
-function throwDice(a, b, slow = 1) {
+// Rzut w grze: prawdziwa fizyka (src/render/dice.js), gdy biblioteka już się wczytała; seed z numeru zdarzenia
+// daje ten sam lot u wszystkich graczy online. Wynik a, b jest z silnika: kość pokazuje go po wylądowaniu.
+const diceFix = [new THREE.Quaternion(), new THREE.Quaternion()];
+function throwDicePhysics(a, b, seed) {
+  if (!diceReady() || reduceMotion) return null;
+  const from = new THREE.Vector2(camera.position.x, camera.position.z);
+  if (from.lengthSq() < 1e-6) from.set(1, 1);
+  from.normalize();
+  const sim = simulateThrow({
+    floorY: CENTER_Y, half: INNER / 2, die: DIE, round: 0.07, from: [from.x, from.y], seed,
+    obstacles: DECKS.map(d => ({ x: d.x, z: d.z, hx: CARD_W / 2 + 0.03, hy: 0.09, hz: CARD_L / 2 + 0.03 })),
+  });
+  if (!sim) return null;
+  // „nadruk”: obrót siatki w bryle, po którym na ściance, która wylądowała na górze, są wylosowane oczka
+  [a, b].forEach((v, k) => {
+    const landed = new THREE.Vector3(...FACE_AXES[sim.faces[k]][0]);
+    const want = new THREE.Vector3(...FACE_AXES.find(([, n]) => n === v)[0]);
+    diceFix[k].setFromUnitVectors(want, landed);
+  });
+  const qa = new THREE.Quaternion(), qb = new THREE.Quaternion(), f = sim.frames;
+  dice.forEach(d => { d.visible = true; });
+  // dźwięk: krótkie potrząśnięcie w dłoni, potem stuknięcie przy każdym uderzeniu kości
+  const ac = (prefs.effects ?? 80) > 0 ? audio() : null;
+  if (ac) {
+    const vol = (prefs.effects ?? 80) / 100, t0 = ac.currentTime + 0.02;
+    for (let k = 0; k < 5; k++) click(ac, t0 + k * 0.04, 2600 + Math.random() * 1200, 0.14 * vol, 0.03);
+    for (const imp of sim.impacts.slice(0, 14)) click(ac, t0 + 0.2 + imp.t, 1400 + Math.random() * 2600, (0.25 + 0.6 * imp.v) * vol, 0.04 + 0.03 * imp.v);
+  }
+  return sleep(200).then(() => tween(sim.count * sim.dt * 1000, t => {
+    const x = t * (sim.count - 1), i = Math.floor(x), u = x - i, j = Math.min(i + 1, sim.count - 1);
+    dice.forEach((d, k) => {
+      const A = i * 14 + k * 7, B = j * 14 + k * 7;
+      d.position.set(f[A] + (f[B] - f[A]) * u, f[A + 1] + (f[B + 1] - f[A + 1]) * u, f[A + 2] + (f[B + 2] - f[A + 2]) * u);
+      qa.set(f[A + 3], f[A + 4], f[A + 5], f[A + 6]); qb.set(f[B + 3], f[B + 4], f[B + 5], f[B + 6]);
+      d.quaternion.slerpQuaternions(qa, qb, u).multiply(diceFix[k]);
+    });
+  }));
+}
+function throwDice(a, b, slow = 1, opts = {}) {
+  if (opts.physics) { const p = throwDicePhysics(a, b, opts.seed ?? Math.floor(Math.random() * 2 ** 31)); if (p) return p; }
   const lands = [
     new THREE.Vector3(-1.0 + (Math.random() - 0.5) * 0.5, CENTER_Y + DIE / 2, 1.2 + (Math.random() - 0.5) * 0.5),
     new THREE.Vector3(0.15 + (Math.random() - 0.5) * 0.5, CENTER_Y + DIE / 2, 1.75 + (Math.random() - 0.5) * 0.4),
@@ -4788,7 +4871,7 @@ async function playEvent(ev) {
     case 'notice': return banner(fmt(ev.title), fmt(ev.sub), ev.color || '', ev.ms ?? 1700);
     case 'status': setStatus(ev.text); return;
     case 'turn': if (isLocalHuman(p)) setViewer(p); return;
-    case 'dice': await throwDice(ev.a, ev.b); shake(0.07, 260); return;
+    case 'dice': await throwDice(ev.a, ev.b, 1, { physics: true, seed: ev.seq * 7919 + ev.a * 13 + ev.b }); shake(0.07, 260); return;
     case 'step': return hop(p, ev.from, ev.to);
     case 'landed': fxRing(p.obj.position, p.hex, 0.9); return;
     case 'jail': return animateJail(p, ev.title, ev.sub);
@@ -4803,14 +4886,14 @@ async function playEvent(ev) {
       fxRing(cellTarget(ev.cell), p.hex, 1.4);
       fxText(cellTarget(ev.cell).setY(1.6), 'KUPIONE', '#FFFFFF', 0.75);
       if (ev.monopoly) fxMonopoly(p, FIELDS[ev.cell].group);
-      return;
+      return cineCell(ev.cell);
     case 'level': case 'owner': return showLevel(ev.cell, false);
     case 'marks': refreshMarks(ev.cell); return;
     case 'hotel': {
       const o = G.own.get(ev.cell);
       fxConfetti(cellTarget(ev.cell).setY(0.8), [o ? o.owner.hex : GOLD, GOLD, '#FFFFFF'], 110, 0.7);
       shake(0.1, 350);
-      return;
+      return cineCell(ev.cell);
     }
     case 'cardDrawn': return liftCard(ev.kind);
     case 'shuffle': return shuffleAnim(ev.deck === 'dziekanat' ? 'Tasowanie pytań dziekanatu' : 'Tasowanie pytań');
@@ -4821,6 +4904,19 @@ async function playEvent(ev) {
     case 'over': return showEnd(ev.result);
   }
 }
+// Najazd kamery na kupione pole (i na hotel): kamera podjeżdża z tego samego kierunku, chwilę patrzy
+// z bliska (ostrość na polu, reszta planszy miękko rozmyta) i wraca tam, gdzie była. Wyłączane w Ustawieniach.
+async function cineCell(cell) {
+  if (!prefs.cine || reduceMotion || view !== 'board' || P.on || !G || menuOpen) return;
+  const g = G, back = [camera.position.clone(), controls.target.clone()];
+  const t = cellTarget(cell).setY(0.3);
+  const dir = camera.position.clone().sub(controls.target).normalize();
+  await flyTo([t.clone().add(dir.multiplyScalar(boardDist() * 0.4)), t], 650);
+  await sleep(750);
+  if (G !== g) return;
+  await flyTo(back, 650);
+}
+
 // Decyzja: gracz przy tym komputerze dostaje przyciski; przy bocie okno pokazuje, co bot robi
 function showDecision(d) {
   const g = G, p = g.players[d.player], mine = isLocalHuman(p);
@@ -5281,6 +5377,7 @@ function beginGame(players, snap, { teams, semester, view, online = false }) {
   setStatus('');
   closeMenu();
   controls.enableZoom = false;   // w grze kamerę można tylko obracać
+  loadDicePhysics();             // fizyka kości wczytuje się w tle (osobny plik)
   return g;
 }
 function startGame() {
@@ -6618,6 +6715,7 @@ jumpTo(presetBoard());
 // gubi kartę graficzną przy pokazywaniu klatki na ekranie, a tak można odczytać obraz i sprawdzić shadery.
 const testTarget = __TEST_HOOKS__ && new URLSearchParams(location.search).has('rtonly')
   ? new THREE.RenderTarget(1, 1, { colorSpace: THREE.SRGBColorSpace, type: THREE.UnsignedByteType, samples: 4 }) : null;
+const focusDir = new THREE.Vector3(), focusPt = new THREE.Vector3();
 const timer = new THREE.Timer();
 timer.connect(document);   // karta w tle nie daje potem jednego wielkiego skoku czasu
 // Płynność: gdy przez dłuższą chwilę klatki są wolne, gra rysuje w trochę mniejszej rozdzielczości;
@@ -6660,6 +6758,14 @@ function frame() {
   if (Math.abs(near - camera.near) > 0.005) { camera.near = near; camera.updateProjectionMatrix(); }
   const sh = shakeOffset(performance.now());
   if (sh) camera.position.add(sh);
+  // głębia ostrości: ostrość na punkcie, na który patrzy kamera (plansza albo pole przy najeździe);
+  // w menu i w prezentacji bez rozmycia (menu ma własne rozmycie tła)
+  {
+    const look = camera.getWorldDirection(focusDir);
+    const d = Math.max(1, focusPt.copy(controls.target).sub(camera.position).dot(look));
+    const wide = controls.target.lengthSq() < 1;   // patrzymy na całą planszę (a nie z bliska na pole)
+    gfx.setFocus(d, wide ? 22 : 6, menuOpen || P.on || view !== 'board' ? 0 : 1, wide ? 10.5 : 1.2);
+  }
   if (__TEST_HOOKS__ && testTarget) {   // testy WebGPU bez karty graficznej: klatka w pamięci
     const sz = renderer.getDrawingBufferSize(new THREE.Vector2());
     if (testTarget.width !== sz.x || testTarget.height !== sz.y) testTarget.setSize(sz.x, sz.y);

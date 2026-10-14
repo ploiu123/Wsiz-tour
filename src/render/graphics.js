@@ -7,12 +7,14 @@
 //   i przy styku przedmiotów (tylko światło otoczenia, jak w grach AAA), do tego bloom.
 // - Ultra 4K: co najmniej 2 piksele obrazu na piksel CSS (na zwykłym ekranie Full HD scena liczy się
 //   w 4K i jest zmniejszana, czyli supersampling), do 3x na telefonach, GTAO w pełnej rozdzielczości.
+// - Wysoka i Ultra mają też głębię ostrości jak w obiektywie (plansza ostra, dalsze tło miękko rozmyte).
 // - Automatyczna: Wysoka na komputerze, Średnia na telefonie i tablecie; gdy klatki są wolne, najpierw
 //   spada rozdzielczość, potem znikają efekty (i wracają, gdy znów jest płynnie).
 import * as THREE from 'three/webgpu';
-import { pass, mrt, normalView, screenUV, builtinAOContext, vec4, mix } from 'three/tsl';
+import { pass, mrt, normalView, screenUV, builtinAOContext, vec4, mix, uniform } from 'three/tsl';
 import { ao } from 'three/addons/tsl/display/GTAONode.js';
 import { bloom } from 'three/addons/tsl/display/BloomNode.js';
+import { dof } from 'three/addons/tsl/display/DepthOfFieldNode.js';
 
 export const LEVELS = [
   ['auto', 'Automatyczna'], ['low', 'Niska'], ['medium', 'Średnia'], ['high', 'Wysoka'], ['ultra', 'Ultra 4K'],
@@ -20,8 +22,8 @@ export const LEVELS = [
 export const PRESETS = {
   low: { minDpr: 1, maxDpr: 1, shadow: 1024, msaa: false, ao: false, aoScale: 0, bloom: false },
   medium: { minDpr: 1, maxDpr: 1.5, shadow: 2048, msaa: true, ao: false, aoScale: 0, bloom: true },
-  high: { minDpr: 1, maxDpr: 2, shadow: 4096, msaa: true, ao: true, aoScale: 0.5, bloom: true },
-  ultra: { minDpr: 2, maxDpr: 3, shadow: 4096, msaa: true, ao: true, aoScale: 1, bloom: true },
+  high: { minDpr: 1, maxDpr: 2, shadow: 4096, msaa: true, ao: true, aoScale: 0.5, bloom: true, dof: true },
+  ultra: { minDpr: 2, maxDpr: 3, shadow: 4096, msaa: true, ao: true, aoScale: 1, bloom: true, dof: true },
 };
 const ORDER = ['low', 'medium', 'high', 'ultra'];
 const MAX_PIXELS = { low: 2.1e6, medium: 4.2e6, high: 8.9e6, ultra: 17e6 };   // limit pikseli obrazu (Ultra: 5K)
@@ -49,6 +51,9 @@ export class Graphics {
     this.night = false;
     this.ratio = 1;
     this.slow = { acc: 0, n: 0, wait: 0 };
+    // głębia ostrości: odległość ostrzenia i zakres ostrości (jednostki sceny); ustawia gra co klatkę
+    this.focus = { distance: uniform(20), range: uniform(18), dead: uniform(10), bokeh: uniform(0) };
+    this.dofOn = true;
   }
 
   get preset() { return PRESETS[this.level]; }
@@ -107,6 +112,15 @@ export class Graphics {
     }
     // cień kontaktowy także w świetle słońca, ale lżej (makieta wygląda na postawioną, a nie wklejoną)
     let out = aoValue ? vec4(scenePass.rgb.mul(mix(1, aoValue, 0.35)), scenePass.a) : scenePass;
+    // głębia ostrości jak w obiektywie: plansza ostra, pokój za nią miękko rozmyty (Wysoka i Ultra)
+    if (p.dof) {
+      // strefa w pełni ostra wokół punktu ostrzenia (cała plansza), rozmycie zaczyna się dopiero za nią
+      const f = this.focus, signed = scenePass.getViewZNode().negate().sub(f.distance);
+      const shrunk = signed.sign().mul(signed.abs().sub(f.dead).max(0));
+      const dofPass = dof(out, f.distance.add(shrunk).negate(), f.distance, f.range, f.bokeh);
+      this.nodes.push(dofPass);
+      out = vec4(dofPass.rgb, out.a);
+    }
     if (p.bloom) {
       this.bloomPass = bloom(scenePass, 0, 0.35, 0.9);
       this.nodes.push(this.bloomPass);
@@ -127,6 +141,15 @@ export class Graphics {
     this.bloomPass.strength.value = night ? 0.8 : 0.2;
     this.bloomPass.threshold.value = night ? 0.7 : 2.6;
     this.bloomPass.radius.value = night ? 0.5 : 0.25;
+  }
+
+  // Ostrość na punkt w odległości dist od kamery: w promieniu dead wszystko jest ostre, potem rozmycie
+  // rośnie i jest pełne po kolejnych range jednostkach. strength 0 wyłącza rozmycie (menu ma własne).
+  setFocus(dist, range, strength = 1, dead = 0) {
+    this.focus.distance.value = dist;
+    this.focus.range.value = range;
+    this.focus.dead.value = dead;
+    this.focus.bokeh.value = this.dofOn ? strength * (this.level === 'ultra' ? 1.6 : 1.2) : 0;
   }
 
   render() {
