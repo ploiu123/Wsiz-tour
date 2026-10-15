@@ -1,0 +1,23 @@
+# Testy przy każdej zmianie: sprawdzenie stylu kodu, typy, testy jednostkowe i paczka do wdrożenia.
+# Testy w przeglądarce (npm run e2e) trwają kilkanaście minut bez karty graficznej, więc uruchamia się je ręcznie.
+name: Testy
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build

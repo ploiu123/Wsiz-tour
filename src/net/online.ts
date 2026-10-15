@@ -32,6 +32,7 @@ export class OnlineClient {
   onClosed: (text: string) => void = () => {};   // gospodarz zamknął party
   onLost: () => void = () => {};             // zerwane połączenie (socket.io sam próbuje połączyć się znowu)
   onBack: (j: Joined) => void = () => {};    // połączenie wróciło: miejsce w grze odzyskane
+  onEmote: (m: { player: number; k: number }) => void = () => {};   // emotka gracza nad jego pionkiem
 
   constructor() {
     this.socket = io(serverUrl(), { timeout: 6000, reconnectionDelayMax: 4000 });
@@ -40,6 +41,7 @@ export class OnlineClient {
     this.socket.on('event', (ev: GameEvent) => this.onEvent(ev));
     this.socket.on('clock', (ms: number) => this.onClock(ms));
     this.socket.on('note', (text: string) => this.onNote(text));
+    this.socket.on('emote', (m: { player: number; k: number }) => this.onEmote(m));
     this.socket.on('closed', (text: string) => { forget(); this.token = ''; this.onClosed(text); });
     this.socket.on('disconnect', reason => { if (reason !== 'io client disconnect') this.onLost(); });
     this.socket.io.on('reconnect', async () => {
@@ -82,6 +84,7 @@ export class OnlineClient {
   join(code: string, name: string, pawnIdx: number) { return this.enter('join', { code, name, pawnIdx }); }
   resume(code: string, token: string) { return this.enter('resume', { code, token }); }
   start() { return this.call<{ ok: true }>('start'); }
+  emote(k: number): void { this.socket.emit('emote', k); }
 
   close(): void {
     forget();

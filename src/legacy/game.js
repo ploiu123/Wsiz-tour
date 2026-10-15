@@ -8,6 +8,8 @@ import { buildRoom } from '../scene/room.js';
 import { loadDicePhysics, diceReady, simulateThrow, FACE_AXES } from '../render/dice.js';
 import { loadModels, cloneModel } from '../render/assets.js';
 import { RippleSim } from '../scene/ripples.js';
+import { ACHIEVEMENTS, unlock } from '../ui/achievements.js';
+import { wealthChartSvg } from '../ui/wealthChart.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
@@ -3243,7 +3245,8 @@ const chipHtml = (label, attrs, pressed, disabled = false) =>
 let profile = store.get('profil', null);
 // statystyki z gier sprzed zmiany skali (kwoty były w tysiącach): przelicz na nowe kwoty
 if (profile?.stats?.wealth > 200000) { profile.stats.wealth = Math.round(profile.stats.wealth / 1000); store.set('profil', profile); }
-const prefs = Object.assign({ theme: 'system', music: 60, effects: 80, scale: 1, spin: true, skin: 'diorama', gfx: 'auto', cine: true, time: 'dzien', promoMusic: 'kod' }, store.get('preferencje', {}));
+const prefs = Object.assign({ theme: 'system', music: 60, effects: 80, scale: 1, spin: true, skin: 'diorama', gfx: 'auto', cine: true, time: 'dzien', promoMusic: 'kod', tips: true, tipsSeen: [], fps: false }, store.get('preferencje', {}));
+if (!Array.isArray(prefs.tipsSeen)) prefs.tipsSeen = [];
 // 14.10.2026 (decyzja autora): główna scena to makieta nad wodą; pokój ze stołem jest do wyboru w Ustawieniach
 if (prefs.skinV !== 3) { prefs.skin = 'diorama'; prefs.skinV = 3; }
 const savePrefs = () => store.set('preferencje', prefs);
@@ -3510,6 +3513,7 @@ function attachNet(mod, client, r) {
   client.onLobby = l => { if (NET !== net) return; net.lobby = l; if (!$('pgLobby').hidden) renderLobby(); };
   client.onStart = m => { if (NET === net) beginOnline(m); };
   client.onNote = text => { if (NET === net) toast(text); };
+  client.onEmote = m => { if (NET === net) showEmote(m.player, m.k); };
   client.onClosed = text => {
     if (NET !== net) return;
     NET = null;
@@ -3678,6 +3682,10 @@ $('rules').addEventListener('click', e => {
 });
 
 // Profil
+// Odznaka osiągnięcia: zdobyta w kolorze uczelni ze złotą gwiazdką, niezdobyta szara z opisem, co zrobić
+const achHtml = (a, got, date) => `<div class="m-ach${got ? ' is-got' : ''}">
+  <span class="m-ach-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2.8l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 16.8l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg></span>
+  <span class="m-ach-txt"><b>${a.name}</b><small>${a.desc}${date ? ` · ${date.split('-').reverse().join('.')}` : ''}</small></span></div>`;
 function renderProfilePage() {
   $('profNick').value = profile.nick;
   $('profErr').hidden = true;
@@ -3688,6 +3696,9 @@ function renderProfilePage() {
   const st = profile.stats || {};
   $('profStats').innerHTML = [[fmtNum(st.games || 0), 'rozegrane gry'], [fmtNum(st.wins || 0), 'wygrane'], [st.q ? `${Math.round((100 * st.ok) / st.q)}%` : '–', 'dobre odpowiedzi']]
     .map(([b, s]) => `<div class="m-stat"><b>${b}</b><span>${s}</span></div>`).join('');
+  const have = profile.achievements || {};
+  $('profAch').innerHTML = ACHIEVEMENTS.map(a => achHtml(a, !!have[a.id], have[a.id])).join('');
+  $('profAchCount').textContent = `${Object.keys(have).length} z ${ACHIEVEMENTS.length}`;
 }
 $('pawnPick').addEventListener('click', e => {
   const b = e.target.closest('[data-v]');
@@ -3727,7 +3738,9 @@ function renderSettingsPage() {
     <div class="m-set"><span>Wygląd planszy</span>${chips(SKIN_NAMES, prefs.skin, 'data-skin')}</div>
     <div class="m-set"><span>Pora dnia<small>Makieta i czysta tektura; „Jak teraz” według zegara</small></span>${chips(TIME_NAMES, prefs.time, 'data-time')}</div>
     <div class="m-set"><span>Obracanie planszy w menu</span>${chips([[1, 'Włączone'], [0, 'Wyłączone']], prefs.spin ? 1 : 0, 'data-spin')}</div>
-    <div class="m-set"><span>Najazdy kamery<small>Przy kupnie pola i hotelu</small></span>${chips([[1, 'Włączone'], [0, 'Wyłączone']], prefs.cine ? 1 : 0, 'data-cine')}</div>`;
+    <div class="m-set"><span>Najazdy kamery<small>Przy kupnie pola i hotelu</small></span>${chips([[1, 'Włączone'], [0, 'Wyłączone']], prefs.cine ? 1 : 0, 'data-cine')}</div>
+    <div class="m-set"><span>Podpowiedzi w grze<small>Samouczek przy pierwszych grach${prefs.tipsSeen.length ? ` · pokazane: ${prefs.tipsSeen.length} z ${Object.keys(TIPS).length}` : ''}</small></span><div class="chips">${chipHtml('Włączone', 'data-tips="1"', prefs.tips)}${chipHtml('Wyłączone', 'data-tips="0"', !prefs.tips)}${chipHtml('Pokaż od nowa', 'data-tips-reset', false, !prefs.tipsSeen.length)}</div></div>
+    <div class="m-set"><span>Licznik klatek<small>Płynność gry (FPS) w rogu ekranu</small></span>${chips([[1, 'Włączony'], [0, 'Wyłączony']], prefs.fps ? 1 : 0, 'data-fps')}</div>`;
 }
 $('settingsBox').addEventListener('click', e => {
   const b = e.target.closest('button');
@@ -3741,6 +3754,9 @@ $('settingsBox').addEventListener('click', e => {
   else if (d.gfx) { prefs.gfx = d.gfx; gfx.set(d.gfx); }
   else if (d.spin !== undefined) { prefs.spin = d.spin === '1'; controls.autoRotate = menuOpen && prefs.spin && !reduceMotion; }
   else if (d.cine !== undefined) prefs.cine = d.cine === '1';
+  else if (d.tips !== undefined) prefs.tips = d.tips === '1';
+  else if (d.tipsReset !== undefined) { prefs.tipsSeen = []; prefs.tips = true; }
+  else if (d.fps !== undefined) { prefs.fps = d.fps === '1'; fpsMeter(); }
   else return;
   savePrefs();
   renderSettingsPage();
@@ -4859,6 +4875,8 @@ function sfx(name) {
     const g = a.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.18 * v, t + 0.1); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.28);
     n.connect(f).connect(g).connect(a.destination); n.start(t); n.stop(t + 0.3);
     click(a, t + 0.27, 3200, 0.2 * v, 0.03);
+  } else if (name === 'shutter') {   // migawka aparatu: dwa krótkie trzaski
+    click(a, t, 4200, 0.22 * v, 0.02); click(a, t + 0.07, 2600, 0.18 * v, 0.03);
   } else if (name === 'build') {   // budowa: stuknięcia metalu o rusztowanie i głuche lądowanie
     [0, 0.09, 0.2].forEach((d, k) => { click(a, t + d, 2800 + k * 600, 0.16 * v, 0.06); tone(a, t + d, 880 + k * 220, 0.18, 0.05 * v, 'triangle'); });
     tone(a, t + 0.32, 170, 0.32, 0.38 * v, 'sine', 55);
@@ -5329,7 +5347,7 @@ function rollButton(onRoll) {
   const b = $('gRoll');
   b.hidden = false;
   b.innerHTML = `${diceIco}Rzuć kostkami`;
-  b.onclick = () => { b.hidden = true; b.onclick = null; audio(); onRoll(); };
+  b.onclick = () => { b.hidden = true; b.onclick = null; $('gTip').hidden = true; audio(); onRoll(); };
   b.focus();
 }
 const diceIco = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="8.5" cy="8.5" r="1.6" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/></svg>';
@@ -5339,6 +5357,20 @@ const diceIco = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" w
 // ---------------------------------------------------------------------------
 let openUi = null;   // okno bieżącej decyzji: { id, kind, bd, d }
 const moneyEnd = x => (typeof x === 'number' ? G.players[x] : x === 'pool' ? 'pool' : x && x.cell != null ? cellTarget(x.cell).setY(0.4) : null);
+// Statystyki do ekranu końca gry: majątek po każdej turze (wykres) i to, co zrobił gracz „Ty” (osiągnięcia)
+function trackStats(g, ev) {
+  g.hist ??= [];
+  g.mine ??= { monopoly: false, hotel: false, doubles: 0, jailEscapes: 0, inJail: false };
+  if (ev.type === 'turn' || !g.hist.length) g.hist.push(g.players.map(p => (p.out ? 0 : wealth(p))));
+  const me = g.players.find(p => p.kind === 'me');
+  if (!me) return;
+  const p = ev.player != null ? g.players[ev.player] : null, m = g.mine;
+  if (ev.type === 'bought' && p === me && ev.monopoly) m.monopoly = true;
+  if (ev.type === 'hotel' && g.own.get(ev.cell)?.owner === me) m.hotel = true;
+  if (ev.type === 'dice' && p === me && ev.a === ev.b) m.doubles += 1;
+  if (me.jail > 0) m.inJail = true;
+  else if (m.inJail && !me.out) { m.inJail = false; m.jailEscapes += 1; }
+}
 async function pump(g) {
   if (g.pumping) return;
   g.pumping = true;
@@ -5349,6 +5381,8 @@ async function pump(g) {
       const ev = g.queue.shift();
       applySnap(ev.snap);
       renderHud();
+      trackStats(g, ev);
+      if (ev.type === 'bought' && isLocalHuman(g.players[ev.player])) tip('bought');
       try { await playEvent(ev); } catch (e) { console.error(e); }
     }
   } finally { g.pumping = false; }
@@ -5415,12 +5449,105 @@ function showDecision(d) {
   const g = G, p = g.players[d.player], mine = isLocalHuman(p);
   const submit = v => { if (G === g) g.driver.submit(d.id, v); };
   const done = (v, bd) => { bd.remove(); if (openUi?.id === d.id) openUi = null; submit(v); };
-  if (d.kind === 'roll') { if (mine) rollButton(() => submit(null)); }
-  else if (d.kind === 'choose') openUi = { id: d.id, kind: 'choose', d, bd: chooseModal(d, mine ? done : null) };
-  else if (d.kind === 'answer') openUi = questionModal(d, p, mine ? k => submit(k) : null);
-  else if (d.kind === 'ack') openUi = { id: d.id, kind: 'ack', d, bd: cardModal(d, p, mine ? done : null) };
+  if (mine && photo) exitPhoto();   // decyzja gracza: tryb zdjęć się zamyka (gra online nie czeka)
+  if (d.kind === 'roll') {
+    if (mine) { rollButton(() => submit(null)); tip(prefs.tipsSeen.includes('roll') ? 'menu' : 'roll'); }
+  } else if (d.kind === 'choose') {
+    openUi = { id: d.id, kind: 'choose', d, bd: chooseModal(d, mine ? done : null) };
+    if (mine && /^Wolne pole/.test(d.title)) tipIn(openUi.bd, 'buy');
+  } else if (d.kind === 'answer') {
+    openUi = questionModal(d, p, mine ? k => submit(k) : null);
+    if (mine) tipIn(openUi.bd, 'answer');
+  } else if (d.kind === 'ack') {
+    openUi = { id: d.id, kind: 'ack', d, bd: cardModal(d, p, mine ? done : null) };
+    if (mine) tipIn(openUi.bd, 'card');
+  }
   g.driver.ready(d.id);
 }
+
+// ---------------------------------------------------------------------------
+// Samouczek: w pierwszych grach krótkie podpowiedzi w chwili, gdy są potrzebne. Każda pokazuje się raz;
+// w Ustawieniach można je wyłączyć albo pokazać od nowa. Przy rzucie i po kupnie pola podpowiedź stoi
+// pod przyciskiem rzutu, a przy pytaniu, kupnie i karcie jest w środku okna decyzji (nic nie zasłania).
+// ---------------------------------------------------------------------------
+const TIPS = {
+  roll: ['Rzut kostkami', 'Kliknij przycisk albo naciśnij spację. Pionek przejdzie tyle pól, ile wypadnie na kostkach.'],
+  menu: ['Menu gry', 'Przycisk Menu w prawym górnym rogu zatrzymuje grę. Tam włączysz też tryb zdjęć albo zakończysz grę i policzysz wynik.'],
+  buy: ['Wolne pole', 'Żeby kupić pole, trzeba dobrze odpowiedzieć na pytanie o studia. Gdy inni gracze staną na Twoim polu, zapłacą Ci czynsz.'],
+  answer: ['Pytanie', 'Wybierz jedną z czterech odpowiedzi, zanim skończy się czas na zegarze.'],
+  bought: ['Twoje pierwsze pole', 'Zbierz wszystkie sale jednego koloru, a czynsz wzrośnie. Na swoich salach postawisz potem budynki, od telefonu aż do serwerowni.'],
+  card: ['Karta', 'Karty do użycia trafiają do panelu „Twoje karty”. Kliknij w nim „Pokaż”, żeby je obejrzeć.'],
+};
+const tipWanted = id => prefs.tips && !prefs.tipsSeen.includes(id);
+const tipSeen = id => { prefs.tipsSeen.push(id); savePrefs(); };
+function tip(id) {
+  if (!tipWanted(id)) return;
+  tipSeen(id);
+  $('gTipTitle').textContent = TIPS[id][0];
+  $('gTipText').textContent = TIPS[id][1];
+  $('gTip').hidden = false;
+}
+function tipIn(bd, id) {
+  if (!tipWanted(id) || !bd) return;
+  tipSeen(id);
+  $('gTip').hidden = true;
+  bd.querySelector('.g-modal')?.insertAdjacentHTML('beforeend', `<aside class="g-tipbox"><p><b>Podpowiedź</b> ${TIPS[id][1]}</p><button type="button" data-tips-off>Wyłącz podpowiedzi</button></aside>`);
+}
+function tipsOff() { prefs.tips = false; savePrefs(); $('gTip').hidden = true; layer.querySelectorAll('.g-tipbox').forEach(el => el.remove()); }
+$('gTipOk').addEventListener('click', () => { $('gTip').hidden = true; });
+$('gTipOff').addEventListener('click', tipsOff);
+layer.addEventListener('click', e => { if (e.target.closest('[data-tips-off]')) { e.stopPropagation(); tipsOff(); } }, true);
+
+// ---------------------------------------------------------------------------
+// Tryb zdjęć: panele znikają, kamerę można swobodnie obracać, przybliżać i przesuwać, a zdjęcie zapisuje się
+// w 4K (3840 pikseli szerokości). W grze z komputerem gra stoi; online toczy się dalej.
+// ---------------------------------------------------------------------------
+let photo = null;   // zapamiętana kamera i ograniczenia sprzed trybu zdjęć
+function enterPhoto(g) {
+  if (photo) return;
+  photo = { g, pos: camera.position.clone(), target: controls.target.clone(), minD: controls.minDistance, maxD: controls.maxDistance, polar: controls.maxPolarAngle, pan: controls.enablePan, zoom: controls.enableZoom };
+  document.body.classList.add('photo-mode');
+  $('gTip').hidden = true;
+  camera.clearViewOffset();
+  camera.updateProjectionMatrix();
+  Object.assign(controls, { enabled: true, enablePan: true, enableZoom: true, minDistance: 1.5, maxDistance: 150, maxPolarAngle: 1.5 });
+  $('photoHint').textContent = matchMedia('(pointer: coarse)').matches
+    ? 'Przesuń palcem, żeby obrócić kamerę. Dwoma palcami przybliżasz i przesuwasz.'
+    : 'Przeciągnij, żeby obrócić kamerę. Kółkiem myszy przybliżasz, a prawym przyciskiem przesuwasz.';
+  $('photoBar').hidden = false;
+  $('photoShot').focus();
+}
+function exitPhoto(resume = true) {
+  if (!photo) return;
+  const p = photo;
+  photo = null;
+  document.body.classList.remove('photo-mode');
+  $('photoBar').hidden = true;
+  Object.assign(controls, { enablePan: p.pan, enableZoom: p.zoom, minDistance: p.minD, maxDistance: p.maxD, maxPolarAngle: p.polar });
+  applyView();
+  if (!resume) return;
+  flyTo([p.pos, p.target]);
+  if (G === p.g && !p.g.online && !p.g.over) { p.g.paused = false; p.g.driver.pause(false); }
+}
+$('photoShot').addEventListener('click', async () => {
+  const b = $('photoShot');
+  b.disabled = true;
+  try {
+    const blob = await gfx.capture(3840);
+    if (!blob) throw new Error('pusty obraz');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `wsiz-tour-${new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-')}.png`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
+    sfx('shutter');
+    const f = $('photoFlash');
+    f.classList.remove('is-on'); void f.offsetWidth; f.classList.add('is-on');
+  } catch { toast('Nie udało się zapisać zdjęcia. Spróbuj niższej jakości grafiki w Ustawieniach.'); }
+  b.disabled = false;
+});
+$('photoExit').addEventListener('click', () => exitPhoto());
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && photo) exitPhoto(); });
 async function closeDecision(ev) {
   $('gRoll').hidden = true;
   const ui = openUi;
@@ -5640,6 +5767,27 @@ function textSprite(text, color, size) {
   sp.scale.set(size * 4.57, size, 1);
   return sp;
 }
+// Emotki w grze online: napis nad pionkiem gracza (wszyscy w pokoju widzą to samo)
+const EMOTES = ['Brawo', 'Ups', 'Hej', 'Szybciej', 'Dobra gra'];
+function showEmote(player, k) {
+  const p = G?.players[player];
+  if (!p || p.out || !EMOTES[k]) return;
+  fxText(p.obj.position.clone().add(V3(0, 1.7, 0)), EMOTES[k], p.hex, 0.62);
+  sfx('click');
+}
+function renderEmotes() {
+  const box = $('gEmotes');
+  box.hidden = !G?.online;
+  if (box.hidden || box.childElementCount) return;
+  box.innerHTML = EMOTES.map((e, k) => `<button type="button" class="chip" data-emote="${k}">${e}</button>`).join('');
+}
+$('gEmotes').addEventListener('click', e => {
+  const b = e.target.closest('[data-emote]');
+  if (!b || !NET?.client || b.disabled) return;
+  NET.client.emote(+b.dataset.emote);
+  $('gEmotes').querySelectorAll('button').forEach(x => { x.disabled = true; });
+  setTimeout(() => $('gEmotes').querySelectorAll('button').forEach(x => { x.disabled = false; }), 1600);
+});
 function fxText(pos, text, color = '#FFFFFF', size = 0.8) {
   const sp = textSprite(text, color, size);
   sp.position.copy(pos);
@@ -5862,6 +6010,7 @@ function beginGame(players, snap, { teams, semester, view, online = false }) {
   };
   applySnap(snap);
   for (const p of g.players) { board.add(p.obj); placePawn(p); }
+  renderEmotes();
   $('gPlayers').dataset.sig = '';
   g.view = view;
   viewCorner = cornerOf(g.players[g.view]);
@@ -5945,6 +6094,8 @@ function quitGame(keep = false) {
   layer.innerHTML = '';
   openUi = null;
   $('gRoll').hidden = true;
+  $('gTip').hidden = true;
+  exitPhoto(false);
   setStatus('');
   document.body.classList.remove('in-game');
   applyView();
@@ -5967,12 +6118,14 @@ function pause() {
     ? `<h2>Menu gry</h2><p>Gra online toczy się dalej, a inni gracze nie czekają.${g.host ? '' : ' Grę może zakończyć gospodarz.'}</p>
     <div class="g-opts">
       <button type="button" class="m-btn m-primary" data-p="back">Wróć do gry</button>
+      <button type="button" class="m-btn m-secondary" data-p="photo">Tryb zdjęć</button>
       ${g.host ? '<button type="button" class="m-btn m-secondary" data-p="end">Zakończ grę dla wszystkich i policz wynik</button>' : ''}
       <button type="button" class="m-btn m-secondary" data-p="quit">Wyjdź do menu (dalej zagra za Ciebie bot)</button>
     </div>`
     : `<h2>Pauza</h2><p>Gra czeka. Czas gry też stoi.</p>
     <div class="g-opts">
       <button type="button" class="m-btn m-primary" data-p="back">Wróć do gry</button>
+      <button type="button" class="m-btn m-secondary" data-p="photo">Tryb zdjęć</button>
       <button type="button" class="m-btn m-secondary" data-p="end">Zakończ grę i policz wynik</button>
       <button type="button" class="m-btn m-secondary" data-p="quit">Wyjdź do menu (bez wyniku)</button>
     </div>`);
@@ -5982,6 +6135,7 @@ function pause() {
     if (!b) return;
     bd.remove();
     if (G !== g) return;
+    if (b.dataset.p === 'photo') { enterPhoto(g); return; }   // gra z komputerem stoi do końca trybu zdjęć
     if (!g.online) { g.paused = false; g.driver.pause(false); }
     if (b.dataset.p === 'end') endManual();
     if (b.dataset.p === 'quit') { quitGame(); openMenu(); }
@@ -5999,7 +6153,7 @@ function endManual() {
 }
 $('gMenuBtn').addEventListener('click', pause);
 document.addEventListener('keydown', e => {
-  if (!G || e.key !== ' ' || $('gRoll').hidden || layer.querySelector('.g-backdrop')) return;
+  if (!G || e.key !== ' ' || photo || $('gRoll').hidden || layer.querySelector('.g-backdrop')) return;
   e.preventDefault();
   $('gRoll').click();
 });
@@ -6031,6 +6185,16 @@ function showEnd(result) {
     if (a != null) st.best = Math.max(st.best ?? 0, a);
     st.wealth = Math.max(st.wealth ?? 0, rows.find(r => r.p === me).wealth);
     profile.stats = st;
+    // osiągnięcia: nowe zapisują się z datą w profilu
+    const m = g.mine || {}, mine = rows.find(r => r.p === me);
+    profile.achievements ??= {};
+    const fresh = unlock({
+      won: win.has(me), monopoly: !!m.monopoly, hotel: !!m.hotel, doubles: m.doubles || 0, jailEscapes: m.jailEscapes || 0,
+      acc: pct(me.total.ok, me.total.q) ?? 0, answered: me.total.q, wealth: mine.wealth, bankrupt: !!me.out,
+    }, st, profile.achievements);
+    const today = new Date().toISOString().slice(0, 10);
+    for (const a of fresh) profile.achievements[a.id] = today;
+    g.freshAch = fresh;
     store.set('profil', profile);
   }
   layer.innerHTML = '';
@@ -6049,6 +6213,8 @@ function showEnd(result) {
         <td>${r.p.out ? 'bankrut' : money(r.wealth)}</td>
         <td>${r.acc == null ? '–' : `<span class="m-bar"><i style="width:${r.acc}%"></i></span>${r.acc}%`}</td></tr>`).join('')}</tbody>
     </table></div>
+    ${g.hist?.length > 1 ? `<div class="g-wealth-wrap"><h3>Majątek w czasie gry</h3>${wealthChartSvg(g.hist, g.players.map(p => ({ name: p.name, color: p.hex, out: p.out })))}</div>` : ''}
+    ${g.freshAch?.length ? `<div class="g-ach"><h3>Nowe osiągnięcia</h3><div class="m-achv">${g.freshAch.map(a => achHtml(a, true)).join('')}</div></div>` : ''}
     <p class="g-ctx">Majątek to gotówka oraz sale i budynki. „Prymus” ma najwyższy procent dobrych odpowiedzi. Pytań i odpowiedzi nie pokazujemy.</p>
     <div class="g-opts two"><button type="button" class="m-btn m-primary" data-e="again">${g.online ? 'Nowa gra' : 'Zagraj jeszcze raz'}</button><button type="button" class="m-btn m-secondary" data-e="menu">Wróć do menu</button></div>`, 'wide');
   bd.addEventListener('click', e => {
@@ -7316,6 +7482,7 @@ function measureSafe(w, h) {
     $('gPlayers').querySelectorAll('.g-player').forEach(el => add(el.getBoundingClientRect()));
     add($('gSide').querySelector('.g-tr').getBoundingClientRect());
     add($('gStatus').getBoundingClientRect());
+    if (!$('gEmotes').hidden) add($('gEmotes').getBoundingClientRect());
     // szuflada rośnie w górę nad planszę tylko po otwarciu: liczy się miejsce zamkniętej szuflady (sam nagłówek przy dole)
     const hand = $('gHand').getBoundingClientRect(), head = $('gHand').querySelector('.g-hand-head')?.getBoundingClientRect();
     if (hand.height) add({ left: hand.left, right: hand.right, bottom: hand.bottom, top: hand.bottom - Math.min(hand.height, (head?.height || 30) + 26), width: hand.width, height: 1 });
@@ -7339,6 +7506,7 @@ function measureSafe(w, h) {
 function applyView() {
   const w = stage.clientWidth, h = stage.clientHeight;
   if (!w || !h) return;
+  if (photo) { camera.clearViewOffset(); camera.updateProjectionMatrix(); return; }   // tryb zdjęć: obraz bez paneli, środek na środku
   measureSafe(w, h);
   for (const k of ['l', 'r', 't', 'b']) stage.style.setProperty(`--s${k}`, `${Math.round(safe[k])}px`);
   setViewOffset();
@@ -7352,7 +7520,7 @@ function resize() {
   camera.aspect = w / h;
   applyView();
   // w grze po zmianie rozmiaru okna kamera zostaje w tym samym kierunku, zmienia się tylko odległość
-  if (G && safe.fit && view === 'board' && !P.on && controls.enabled) {
+  if (G && safe.fit && view === 'board' && !P.on && controls.enabled && !photo) {
     const d = camera.position.clone().sub(controls.target).setLength(boardDist());
     camera.position.copy(controls.target).add(d);
   }
@@ -7381,10 +7549,19 @@ gfx.set(GFX_LEVELS.some(([v]) => v === prefs.gfx) ? prefs.gfx : 'auto');
 // pora dnia ustawiona przy starcie (zanim powstał gfx): poświata i korekcja kolorów
 gfx.setNight(TIMES[worldTime].lights);
 gfx.setGrade(TIMES[worldTime].grade);
+// Licznik klatek (Ustawienia): średnia z ostatnich pół sekundy
+const fps = { n: 0, t0: performance.now(), el: $('fpsMeter') };
+function fpsMeter() { fps.el.hidden = !prefs.fps; fps.n = 0; fps.t0 = performance.now(); }
+fpsMeter();
 function frame() {
   timer.update();
   const raw = timer.getDelta(), dt = Math.min(raw, 0.05);
   gfx.frame(raw * 1000);
+  if (prefs.fps) {
+    fps.n++;
+    const now = performance.now();
+    if (now - fps.t0 >= 500) { fps.el.textContent = `${Math.round((fps.n * 1000) / (now - fps.t0))} FPS · ${gfx.describe()}`; fps.n = 0; fps.t0 = now; }
+  }
   const t = timer.getElapsed();
   runTweens(performance.now());
   if (P.on) promoTick(dt);
@@ -7429,7 +7606,8 @@ function frame() {
     const look = camera.getWorldDirection(focusDir);
     const d = Math.max(1, focusPt.copy(controls.target).sub(camera.position).dot(look));
     let dead = 1.2, range = 6;   // najazd na pole: ostre tylko pole, reszta planszy miękko rozmyta
-    if (!cineActive) {
+    if (photo) { dead = 2.5; range = 14; }   // tryb zdjęć: ostry punkt, na który patrzy kamera, tło miękko rozmyte
+    else if (!cineActive) {
       // zwykły widok: cała plansza i stół z pieniędzmi i kartami graczy są zawsze w pełni ostre,
       // rozmywa się dopiero dalsze tło (krzesła, ściany pokoju)
       dead = 0;

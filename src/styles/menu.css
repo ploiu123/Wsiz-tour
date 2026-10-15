@@ -329,3 +329,16 @@ body.menu-open .hud, body.menu-open .vignette { display: none !important; }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
+/* Osiągnięcia w profilu i na ekranie końca gry */
+.m-achv { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.m-ach { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 14px; background: var(--chip); opacity: .62; }
+.m-ach.is-got { opacity: 1; background: color-mix(in srgb, #00276F 10%, var(--panel)); box-shadow: inset 0 0 0 1px color-mix(in srgb, #E0B04A 55%, transparent); }
+.m-ach-ico { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: var(--panel-line); }
+.m-ach-ico svg { width: 18px; height: 18px; fill: var(--ink-soft); }
+.m-ach.is-got .m-ach-ico { background: #00276F; }
+.m-ach.is-got .m-ach-ico svg { fill: #E0B04A; }
+.m-ach-txt { display: grid; gap: 1px; min-width: 0; }
+.m-ach-txt b { font: 700 13.5px var(--body); color: var(--ink); }
+.m-ach-txt small { font-size: 12px; color: var(--ink-soft); }
+.m-ach-count { font: 500 12px var(--body); color: var(--ink-soft); margin-left: 6px; }
+

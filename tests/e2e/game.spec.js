@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import { test, expect, startGame, brightness } from './fixtures.js';
 
 test('menu: logo, nazwa gry i przycisk Graj', async ({ page, errors }) => {
@@ -25,6 +26,27 @@ test('prezentacja: link ?prezentacja i pierwsza scena', async ({ page, errors })
   await page.locator('#prStartBtn').click();
   await expect(page.locator('#prStage .pr-scene').first()).toBeVisible();
   await expect.poll(() => page.evaluate(() => window.__t.P.idx)).toBeGreaterThanOrEqual(0);
+  expect(errors).toEqual([]);
+});
+
+test('samouczek i tryb zdjęć: podpowiedź przy rzucie, zdjęcie 4K, powrót do gry', async ({ page, errors }) => {
+  test.setTimeout(240_000);
+  await startGame(page);
+  await expect(page.locator('#gTip')).toBeVisible();
+  await expect(page.locator('#gTipTitle')).toHaveText('Rzut kostkami');
+  await page.locator('#gTipOk').click();
+  await expect(page.locator('#gTip')).toBeHidden();
+  await page.locator('#gMenuBtn').click();
+  await page.locator('[data-p="photo"]').click();
+  await expect(page.locator('#photoBar')).toBeVisible();
+  await expect(page.locator('#gHud')).toBeHidden();
+  const [file] = await Promise.all([page.waitForEvent('download', { timeout: 150_000 }), page.locator('#photoShot').click()]);
+  expect(file.suggestedFilename()).toMatch(/^wsiz-tour-.+\.png$/);
+  const png = fs.readFileSync(await file.path());
+  expect(png.readUInt32BE(16)).toBeGreaterThanOrEqual(3800);   // szerokość obrazu z nagłówka PNG
+  await page.locator('#photoExit').click();
+  await expect(page.locator('#photoBar')).toBeHidden();
+  await expect(page.locator('#gRoll')).toBeVisible();   // gra stała w trybie zdjęć i dalej czeka na rzut
   expect(errors).toEqual([]);
 });
 
@@ -58,7 +80,11 @@ test('rozgrywka: gracz rzuca, decyduje i odpowiada, boty grają, koniec gry z pa
   }
   expect(actions).toBeGreaterThan(3);
   expect(turns.size).toBeGreaterThan(1);   // tury przeszły też do botów
-  await page.locator('#gMenuBtn').click();
+  // gra mogła akurat czekać na decyzję gracza (okno zasłania menu): najpierw ją kończymy, potem pauza
+  await expect(async () => {
+    await tap('.g-ans button:not(:disabled)') || await tap('.g-modal [data-ok]') || await tap('.g-modal [data-k]:not(:disabled)');
+    await page.locator('#gMenuBtn').click({ timeout: 1500 });
+  }).toPass({ timeout: 120_000 });
   await page.locator('[data-p="end"]').click();
   await expect(page.locator('.g-end-head')).toBeVisible();
   await expect(page.locator('.g-end tbody tr')).toHaveCount(4);

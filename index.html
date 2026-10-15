@@ -60,13 +60,26 @@
         <span class="g-chip" id="gTimer" hidden></span>
       </div>
       <section class="m-card g-hand" id="gHand" aria-label="Twoje karty"></section>
+      <div class="g-emotes" id="gEmotes" aria-label="Emotki dla innych graczy" hidden></div>
     </div>
     <div class="g-bottom">
       <button class="m-btn m-primary g-roll" id="gRoll" type="button" hidden></button>
+      <aside class="m-card g-tip" id="gTip" role="status" hidden>
+        <p><b id="gTipTitle"></b> <span id="gTipText"></span></p>
+        <div class="g-tip-btns"><button class="m-btn m-primary" id="gTipOk" type="button">Rozumiem</button><button class="m-btn m-secondary" id="gTipOff" type="button">Wyłącz podpowiedzi</button></div>
+      </aside>
       <p class="g-status" id="gStatus" hidden></p>
     </div>
   </div>
   <div class="g-layer" id="gLayer"></div>
+
+  <div class="photo-bar m-card" id="photoBar" role="toolbar" aria-label="Tryb zdjęć" hidden>
+    <p><b>Tryb zdjęć</b> <span id="photoHint"></span></p>
+    <button class="m-btn m-primary" id="photoShot" type="button">Zrób zdjęcie 4K</button>
+    <button class="m-btn m-secondary" id="photoExit" type="button">Wróć do gry</button>
+  </div>
+  <div class="photo-flash" id="photoFlash" aria-hidden="true"></div>
+  <output class="fps-meter" id="fpsMeter" hidden></output>
 
 
   <section class="menu" id="menu" aria-label="Menu gry" hidden>
@@ -195,6 +208,7 @@
         <div class="m-card m-section"><h3>Pionek</h3><div class="m-pawn-pick" id="pawnPick"></div></div>
         <div class="m-card m-section"><h3>Kolor</h3><div class="row" id="colorPick"></div></div>
         <div class="m-card m-section"><h3>Statystyki</h3><div class="m-stats" id="profStats"></div></div>
+        <div class="m-card m-section"><h3>Osiągnięcia <small class="m-ach-count" id="profAchCount"></small></h3><div class="m-achv" id="profAch"></div></div>
       </div>
 
       <div class="m-page" id="pgSettings" hidden>

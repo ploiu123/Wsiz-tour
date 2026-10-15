@@ -25,6 +25,8 @@ const WAIT_FOR_RETURN = 20_000;    // gracz rozłączony: tyle czekamy na jego p
 const ANSWER_GRACE = 3000;         // zapas na opóźnienie sieci przy odpowiedzi na pytanie
 const LEVELS: BotLevel[] = ['łatwy', 'średni', 'trudny'];
 
+export const EMOTES = 5;            // emotki nad pionkiem (napisy w przeglądarce): Brawo, Ups, Hej, Szybciej, Dobra gra
+const EMOTE_GAP = 1500;            // najwyżej jedna emotka na 1,5 s z jednego miejsca
 export const newToken = (): string => randomBytes(18).toString('base64url');
 export const newCode = (): string => Array.from({ length: 6 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[randomInt(32)]).join('');
 
@@ -85,6 +87,17 @@ export class Room {
     const semester = Number(c.semester), timer = Number(c.timer);
     if (!Number.isInteger(semester) || semester < 1 || semester > 8 || !Number.isInteger(timer) || timer < 0 || timer > 180) return null;
     return { seats, teams: !!c.teams && seats.length === 4, semester, timer };
+  }
+
+  // Emotka gracza: trafia do wszystkich w pokoju (tylko w trakcie gry, tylko numer z listy, nie częściej niż co 1,5 s)
+  private lastEmote = new Map<number, number>();
+  emote(token: string, k: unknown, now = Date.now()): boolean {
+    const seat = this.seatOf(token);
+    if (seat < 0 || !this.engine || !Number.isInteger(k) || (k as number) < 0 || (k as number) >= EMOTES) return false;
+    if (now - (this.lastEmote.get(seat) ?? -Infinity) < EMOTE_GAP) return false;
+    this.lastEmote.set(seat, now);
+    for (const [sid] of this.viewers()) this.send(sid, 'emote', { player: seat, k });
+    return true;
   }
 
   seatOf(token: string | undefined): number {

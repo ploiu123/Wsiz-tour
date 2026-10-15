@@ -99,6 +99,7 @@ export function createGameServer({ staticDir = process.env.STATIC_DIR ?? `${ROOT
       safe(ack)({ ok });
     });
     socket.on('end', (_msg, ack) => safe(ack)({ ok: !!room && room.endNow(token) }));
+    socket.on('emote', (k: unknown) => { room?.emote(token, k); });
     socket.on('leave', () => { room?.leave(socket.id); room = null; token = ''; });
     socket.on('disconnect', () => { room?.disconnect(socket.id); });
   });

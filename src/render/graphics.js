@@ -218,6 +218,17 @@ export class Graphics {
     else this.renderer.render(this.scene, this.camera);
   }
 
+  // Zdjęcie (tryb zdjęć): jedna klatka narysowana w szerokości width pikseli, potem powrót do zwykłej rozdzielczości.
+  // Obraz trzeba skopiować z płótna w tym samym zadaniu co rysowanie (toBlob robi kopię od razu).
+  capture(width = 3840) {
+    const c = this.renderer.domElement, css = c.clientWidth || innerWidth, old = this.ratio;
+    this.renderer.setPixelRatio(width / css);
+    this.render();
+    const shot = new Promise(res => c.toBlob(res, 'image/png'));
+    this.renderer.setPixelRatio(old);
+    return shot;
+  }
+
   // Tylko w trybie Automatyczna. Okna po 2,5 s: średnio ponad 24 ms na klatkę (poniżej ok. 42 kl./s)
   // to „wolno”: najpierw znika głębia ostrości, potem cienie kontaktowe (Średnia), dopiero potem spada
   // rozdzielczość (najniżej do 75% ekranu), a na końcu poziom Niski. Powrót: po 3 płynnych oknach z rzędu

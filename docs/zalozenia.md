@@ -408,6 +408,15 @@ Do każdej pory dnia jest delikatna korekcja kolorów (tablica LUT liczona w kod
 - **Menu:** ciche „tyk” przy przyciskach.
 - **Tło dźwiękowe:** na makiecie szum fal, który przypływa i odpływa, wiatr i czasem mewy; w pokoju tykanie zegara i ptaki za oknem. Głośność z suwaka „Efekty dźwiękowe”, w prezentacji cisza (gra jej muzyka).
 
+## Po grze, osiągnięcia, samouczek i tryb zdjęć (od 15.10.2026, Etap 5 planu AAA)
+
+- **Ekran po grze:** pod tabelą wyników wykres majątku każdego gracza po kolejnych turach (linia w kolorze gracza, przerywana po bankructwie) i nowe osiągnięcia z tej gry.
+- **Osiągnięcia** (zapis w profilu z datą, lista w profilu): Pierwszy semestr (pierwsza gra), Pierwsza wygrana, Monopolista (wszystkie sale jednej grupy), Serwerownia (hotel), Kujon (co najmniej 90% dobrych odpowiedzi przy co najmniej 8 pytaniach), Krezus (co najmniej 5000 zł majątku na koniec), Szczęściarz (trzy dublety w grze), Wolny student (wyjście z dziekanatu), Weteran (10 gier), Mistrz sesji (5 wygranych).
+- **Emotki online:** pięć przycisków (Brawo, Ups, Hej, Szybciej, Dobra gra) obok kart gracza; emotka pojawia się nad pionkiem u wszystkich graczy. Najwyżej jedna na 1,5 s, żeby nikt nie zasypywał innych.
+- **Samouczek:** przy pierwszych grach krótkie podpowiedzi w chwili, gdy są potrzebne: rzut kostkami, menu gry, wolne pole, pytanie, pierwsze kupione pole, karta. Każda pokazuje się raz. W Ustawieniach „Podpowiedzi w grze”: włączone, wyłączone albo pokaż od nowa.
+- **Tryb zdjęć:** w menu gry przycisk „Tryb zdjęć”. Panele znikają, kamerę można obracać, przybliżać i przesuwać, a „Zrób zdjęcie 4K” zapisuje obraz PNG o szerokości 3840 pikseli. W grze z komputerem gra w tym czasie stoi, online toczy się dalej.
+- **Licznik klatek:** w Ustawieniach „Licznik klatek”: u góry ekranu liczba klatek na sekundę i rozmiar obrazu.
+
 ## Efekty w grze (od 13.10.2026)
 
 - Nad pionkiem pojawia się kwota (+ zielona, − czerwona).

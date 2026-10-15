@@ -126,4 +126,22 @@ describe('serwer gry online', () => {
     expect(await call<{ error?: string }>(again, 'resume', { code, token: 'zly-token' })).toHaveProperty('error');
     host.close(); again.close();
   });
+
+  it('emotki: trafiają do wszystkich w pokoju, najwyżej jedna na 1,5 s, tylko z listy', async () => {
+    const host = client(), guest = client();
+    const { code } = await call<{ code: string }>(host, 'create', { name: 'Gospodarz', config: { seats: [seats[0], seats[1]], teams: false, semester: 8, timer: 0 } });
+    await call(guest, 'join', { code, name: 'Gość' });
+    const got: { player: number; k: number }[] = [];
+    guest.on('emote', (m: { player: number; k: number }) => got.push(m));
+    host.emit('emote', 1);   // przed startem gry: ignorowana
+    expect((await call<{ ok?: boolean }>(host, 'start')).ok).toBe(true);
+    host.emit('emote', 2);
+    host.emit('emote', 3);    // za szybko po poprzedniej
+    host.emit('emote', 99);   // spoza listy
+    guest.emit('emote', 'x'); // nie liczba
+    await new Promise(r => setTimeout(r, 200));
+    expect(got).toEqual([{ player: 0, k: 2 }]);
+    host.close(); guest.close();
+  });
 });
+

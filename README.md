@@ -54,6 +54,7 @@ Paczkę można sprawdzić przed wysłaniem: `npm run preview` (adres http://loca
 | `npm run server` | serwer gry: tryb online (pokoje z kodem) i pliki gry z `dist/` |
 | `npm run check` | lint, typy, testy i paczka naraz |
 | `npm run sim -- 300` | symulacja 300 gier botów: długość gier, bankructwa, majątek (do strojenia ekonomii) |
+| GitHub Actions | przy każdej zmianie na GitHubie sam uruchamia lint, typy, testy i paczkę (`.github/workflows/testy.yml`) |
 | `npm run assets` | modele z Blendera od nowa (pionki, budynki, ikony pól) do `assets/models/`; potrzebny Blender jako moduł Pythona, raz: `python3 -m venv tools/blender/.venv && tools/blender/.venv/bin/pip install bpy==5.0.1`. Gotowe modele są w repozytorium, więc do gry Blender nie jest potrzebny |
 
 ## Co jest w repozytorium
@@ -68,6 +69,7 @@ Paczkę można sprawdzić przed wysłaniem: `npm run preview` (adres http://loca
 | `src/render/` | Jakość grafiki: poziomy od Niskiej do Ultra 4K, cienie kontaktowe, poświata, wygładzanie krawędzi; fizyka kości; wczytywanie modeli z Blendera (`assets.js`) |
 | `src/scene/` | Pokój ze stołem: drugi wygląd do wyboru w Ustawieniach (stół, pokój, światło, odbicia), rysowany w kodzie; główny wygląd to makieta nad wodą |
 | `src/net/` | Połączenie z serwerem gry w trybie online (Socket.IO) |
+| `src/ui/` | Osiągnięcia i wykres majątku na ekranie po grze |
 | `server/` | Serwer gry (Node.js, TypeScript): pokoje online, silnik gry po stronie serwera, pliki gry |
 | `src/styles/` | Wygląd: podstawy, menu, rozgrywka, prezentacja |
 | `tests/` | Testy jednostkowe (`unit`) i w przeglądarce (`e2e`) |

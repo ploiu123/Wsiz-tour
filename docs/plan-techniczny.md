@@ -109,7 +109,7 @@ Autor uruchomił grę na MacBooku i chce gry klasy AAA: plansza wielkością jak
 | Etap 2 | makieta v2, realistyczna woda (widmo fal JONSWAP, piana, odbicia, załamanie i pochłanianie światła) i fizyka wody (symulacja zmarszczek, klin fal za łodziami) | **zrobione 15.10.2026** |
 | Etap 3 | pora dnia, korekcja kolorów LUT, poświata zależna od pory dnia (promienie słońca, SSR, TRAA, SSGI i niebo fizyczne świadomie pominięte, niżej dlaczego) | **zrobione 15.10.2026** |
 | Etap 4 | muzyka prezentacji w kodzie, nowe efekty dźwiękowe i tło dźwiękowe, nowe sceny prezentacji, nowe zrzuty na stronie-wizytówce i w filmie | **zrobione 15.10.2026** |
-| Etap 5 | wykres majątku po grze, osiągnięcia, emotki online, samouczek, tryb zdjęć, ekonomia z filmu wzorcowego, GitHub Actions, licznik klatek | |
+| Etap 5 | wykres majątku po grze, osiągnięcia, emotki online, samouczek, tryb zdjęć, GitHub Actions, licznik klatek (ekonomia z filmu wzorcowego czeka na film) | **zrobione 15.10.2026, bez ekonomii** |
 
 ### Krok 0: co się zmieniło
 
@@ -151,4 +151,15 @@ Autor uruchomił grę na MacBooku i chce gry klasy AAA: plansza wielkością jak
 - **Efekty i tło dźwiękowe:** `knock` (kości według powierzchni), nowe `coin`, `card`, `build`, `click`, `createAmbience` (fale, wiatr, mewy; zegar i ptaki w pokoju).
 - **Prezentacja:** sceny „Woda” i „Online” (styl `.pr-code` w `src/styles/promo.css`).
 - **Strona-wizytówka i film:** nowe zrzuty z gry (makieta, woda, pionki, budynki, ekran gry) w `prezentacja-strona/img` i `film/assets/img`, film wyrenderowany od nowa.
+
+### Etap 5: nowe funkcje i technika
+
+- **Ekran po grze:** wykres majątku graczy po każdej turze (`src/ui/wealthChart.js`, SVG bez bibliotek; historia zbierana w `trackStats`) i nowe osiągnięcia.
+- **Osiągnięcia** (`src/ui/achievements.js`, test `tests/unit/achievements.test.ts`): 10 osiągnięć liczonych po grze ze statystyk tej gry i profilu, zapis z datą w profilu (`profile.achievements`), lista w profilu.
+- **Emotki online:** 5 emotek, serwer przyjmuje najwyżej jedną na 1,5 s od gracza (`Room.emote` w `server/room.ts`, test w `tests/unit/server.test.ts`) i wysyła je wszystkim; w grze napis nad pionkiem w kolorze gracza.
+- **Samouczek:** podpowiedzi `TIPS` w `src/legacy/game.js`, każda pokazuje się raz (`prefs.tipsSeen`); przy rzucie i po kupnie pola pod przyciskiem rzutu (`#gTip`), przy pytaniu, kupnie i karcie w środku okna decyzji (`tipIn`), więc nic nie zasłania przycisków. W Ustawieniach: włącz, wyłącz, pokaż od nowa.
+- **Tryb zdjęć:** z menu pauzy (`enterPhoto`, `exitPhoto`): panele znikają, kamera bez ograniczeń (obrót, przybliżenie, przesuwanie), głębia ostrości na punkcie, na który patrzy kamera. Zdjęcie: `Graphics.capture(3840)` rysuje jedną klatkę w szerokości 3840 pikseli i od razu kopiuje ją z płótna (`toBlob`), potem wraca do zwykłej rozdzielczości. Gra z komputerem stoi, online toczy się dalej, a gdy przychodzi decyzja gracza, tryb zdjęć sam się zamyka.
+- **Licznik klatek:** ustawienie `prefs.fps`, średnia z pół sekundy i rozmiar obrazu u góry ekranu.
+- **GitHub Actions** (`.github/workflows/testy.yml`): przy każdej zmianie na `main` i w pull requestach lint, typy, testy jednostkowe i paczka. Testy w przeglądarce trwają kilkanaście minut bez karty graficznej, więc zostają lokalne (`npm run e2e`).
+- **Nie zrobione:** ekonomia jak w grze z filmu wzorcowego (potrzebny film MP4 od autora), powtórka najlepszych momentów, widzowie w grze online, dalsze dzielenie `game.js` na moduły.
 
