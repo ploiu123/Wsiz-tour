@@ -14,7 +14,8 @@
 // Na końcu obraz przechodzi mapowanie tonów, lekkie podbicie kolorów i wyostrzenie (CAS), żeby napisy
 // na polach i krawędzie były wyraźne.
 import * as THREE from 'three/webgpu';
-import { pass, mrt, normalView, screenUV, builtinAOContext, vec4, mix, uniform, renderOutput, vibrance } from 'three/tsl';
+import { pass, mrt, normalView, screenUV, builtinAOContext, vec4, mix, uniform, renderOutput, vibrance, texture3D } from 'three/tsl';
+import { lut3D } from 'three/addons/tsl/display/Lut3DNode.js';
 import { ao } from 'three/addons/tsl/display/GTAONode.js';
 import { bloom } from 'three/addons/tsl/display/BloomNode.js';
 import { dof } from 'three/addons/tsl/display/DepthOfFieldNode.js';
@@ -31,6 +32,7 @@ export const PRESETS = {
   ultra: { minDpr: 2, maxDpr: 3, shadow: 4096, msaa: true, ao: true, aoScale: 1, bloom: true, dof: true, sharp: 0.45 },
 };
 const MAX_PIXELS = { low: 2.1e6, medium: 7.5e6, high: 9e6, ultra: 17e6 };   // limit pikseli obrazu (Ultra: 5K)
+const LUT_N = 32;   // rozmiar tablicy korekcji kolorów
 
 export class Graphics {
   /**
@@ -52,7 +54,8 @@ export class Graphics {
     this.active = false;
     this.nodes = [];
     this.bloomPass = null;
-    this.night = false;
+    this.night = 0;
+    this.gradeAmount = uniform(1);
     this.ratio = 1;
     this.slow = { acc: 0, n: 0, wait: 0, good: 0, noUpUntil: 0 };
     // głębia ostrości: odległość ostrzenia i zakres ostrości (jednostki sceny); ustawia gra co klatkę
@@ -135,6 +138,10 @@ export class Graphics {
     }
     // mapowanie tonów i przestrzeń barw tutaj (a nie na samym końcu), żeby wyostrzenie działało na gotowym obrazie
     let final = renderOutput(vec4(vibrance(out.rgb, 0.12), out.a));
+    // korekcja kolorów z tablicy LUT liczonej w kodzie (odcień zależy od pory dnia, setGrade)
+    const grade = lut3D(final, texture3D(this.lut()), LUT_N, this.gradeAmount);
+    this.nodes.push(grade);
+    final = grade;
     if (p.sharp < 2) {
       const sh = sharpen(final, p.sharp);
       this.nodes.push(sh);
@@ -145,15 +152,54 @@ export class Graphics {
     this.active = true;
   }
 
-  // Noc: mocniejsza poświata okien i latarń. Dzień: tylko błyski słońca na wodzie i lakierze.
+  // Noc (1): mocniejsza poświata okien i latarń. Dzień (0): tylko błyski słońca na wodzie i lakierze.
+  // Wartości pośrednie (zachód słońca) dają pośrednią poświatę.
   setNight(night) {
-    this.night = night;
+    const n = Math.min(1, Math.max(0, +night));
+    this.night = n;
     if (!this.bloomPass) return;
     // próg w jasności sceny przed mapowaniem tonów: w dzień oświetlone słońcem jasne powierzchnie mają ok. 1–2,
     // więc świecą tylko odblaski (woda, lakier), nocą także okna i latarnie
-    this.bloomPass.strength.value = night ? 0.8 : 0.2;
-    this.bloomPass.threshold.value = night ? 0.7 : 2.6;
-    this.bloomPass.radius.value = night ? 0.5 : 0.25;
+    this.bloomPass.strength.value = 0.2 + 0.6 * n;
+    this.bloomPass.threshold.value = 2.6 - 1.9 * n;
+    this.bloomPass.radius.value = 0.25 + 0.25 * n;
+  }
+
+  // Tablica LUT 32 x 32 x 32 (wejście: kolor na ekranie, wyjście: kolor po korekcji), jedna na cały czas gry
+  lut() {
+    if (!this.lutTex) {
+      const t = new THREE.Data3DTexture(new Uint8Array(LUT_N ** 3 * 4), LUT_N, LUT_N, LUT_N);
+      t.format = THREE.RGBAFormat;
+      t.type = THREE.UnsignedByteType;
+      t.minFilter = t.magFilter = THREE.LinearFilter;
+      t.wrapS = t.wrapT = t.wrapR = THREE.ClampToEdgeWrapping;
+      t.unpackAlignment = 1;
+      this.lutTex = t;
+      this.setGrade(this.gradeSpec);
+    }
+    return this.lutTex;
+  }
+
+  // Korekcja kolorów: chłodniejsze albo cieplejsze cienie i światła (shadow, high: dodatki RGB), lekki kontrast
+  // i nasycenie. Liczona raz przy zmianie pory dnia, potem karta graficzna tylko czyta tablicę.
+  setGrade(spec) {
+    this.gradeSpec = spec || this.gradeSpec;
+    const t = this.lutTex, g = this.gradeSpec;
+    if (!t || !g) return;
+    const d = t.image.data, N = LUT_N;
+    for (let b = 0; b < N; b++) for (let gg = 0; gg < N; gg++) for (let r = 0; r < N; r++) {
+      let c = [r / (N - 1), gg / (N - 1), b / (N - 1)];
+      const L = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+      const ws = (1 - L) * (1 - L), wh = L * L;
+      c = c.map((v, k) => v + g.shadow[k] * ws + g.high[k] * wh);
+      c = c.map(v => { const x = Math.min(1, Math.max(0, v)); return x + g.contrast * (x * x * (3 - 2 * x) - x); });
+      const L2 = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+      c = c.map(v => L2 + (v - L2) * g.sat);
+      const o = ((b * N + gg) * N + r) * 4;
+      for (let k = 0; k < 3; k++) d[o + k] = Math.round(255 * Math.min(1, Math.max(0, c[k])));
+      d[o + 3] = 255;
+    }
+    t.needsUpdate = true;
   }
 
   // Ostrość na punkt w odległości dist od kamery: w promieniu dead wszystko jest ostre, potem rozmycie

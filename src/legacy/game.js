@@ -1162,6 +1162,7 @@ const WAVES = (() => {
 })();
 const WAVE_MAX = WAVES.reduce((s2, [, , L, st]) => s2 + st * L / (2 * Math.PI), 0);   // najwyższy możliwy grzbiet
 const WAVE_SPEED = 0.55;
+const waterLight = TSL.uniform(1);   // ile światła rozprasza się w wodzie (dzień 1, nocą mało), ustawia pora dnia
 // Zmarszczki z symulacji (równanie falowe, src/scene/ripples.js) na całej powierzchni wody: fale od łodzi i ryb
 const ripples = new RippleSim({ nx: 200, nz: 56, x0: -BX, x1: BX, z0: WZ0, z1: BZF, speed: 2.6, decay: 0.55 });
 const smooth01 = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
@@ -1925,7 +1926,7 @@ function motorboat(stripe = '#F2B72E') {
   const cosV = max(abs(normalize(cameraPosition.sub(positionWorld)).y), 0.2);
   const T = exp(vec3(0.42, 0.11, 0.075).mul(depth.div(cosV)).negate());   // Beer–Lambert: ile światła przechodzi
   const refr = screenUV.add(vec2(nW.x, nW.z.negate()).mul(0.045).mul(smoothstep(0, 1.4, depth)));
-  waterMat.backdropNode = viewportSharedTexture(refr).rgb.mul(T).add(vec3(0.02, 0.27, 0.38).mul(T.oneMinus()));
+  waterMat.backdropNode = viewportSharedTexture(refr).rgb.mul(T).add(vec3(0.02, 0.27, 0.38).mul(waterLight).mul(T.oneMinus()));
   waterMat.backdropAlphaNode = float(1);
   // po oświetleniu: odbicie nieba pod małym kątem i piana: na najwyższych grzbietach (poszarpana szumem)
   // i tam, gdzie łodzie i ryby mocno wzburzyły wodę
@@ -1975,7 +1976,7 @@ function motorboat(stripe = '#F2B72E') {
   {
     const k = clamp(positionWorld.y.sub(FLOOR_Y).div(WATER_Y - FLOOR_Y), 0, 1), edge = k.greaterThan(0.975);
     const c = mix(vec3(0.02, 0.33, 0.46), vec3(0.36, 0.88, 0.86), pow(k, 1.4));
-    sideWaterMat.colorNode = select(edge, mix(c, vec3(0.92, 1, 1), 0.65), c);
+    sideWaterMat.colorNode = select(edge, mix(c, vec3(0.92, 1, 1), 0.65), c).mul(waterLight.max(0.3));
     sideWaterMat.opacityNode = select(edge, float(0.9), mix(0.86, 0.6, k));
   }
   const frontW = new THREE.Mesh(new THREE.PlaneGeometry(BX * 2, WATER_Y - FLOOR_Y), sideWaterMat);
@@ -2509,19 +2510,85 @@ skyMat.colorNode = TSL.mix(skyU.bottom, skyU.top, TSL.normalize(TSL.positionLoca
 const sky = new THREE.Mesh(new THREE.SphereGeometry(190, 32, 16), skyMat);
 sky.renderOrder = -1;
 world.add(sky);
-const DAY = { top: '#DCE6EF', bottom: '#F4F1EB' };
-const NIGHT = { top: '#04081A', bottom: '#0E1C44' };
-let worldNight = false;
-// Dzień w grze i w menu, noc w prezentacji (okna i latarnie świecą, latarnia morska mocniej)
-function setWorldMood(night) {
-  worldNight = night;
-  const m = night ? NIGHT : DAY;
-  skyU.top.value.set(m.top); skyU.bottom.value.set(m.bottom);
-  gfx?.setNight(night);
-  scene.fog = null;
-  for (const [mt, on, off = 0, prop = 'emissiveIntensity'] of nightMats) mt[prop] = night ? on : off;
+// Pora dnia (Ustawienia → Pora dnia): kolory nieba, słońce (kolor, siła, kierunek), światło otoczenia,
+// świecące okna i latarnie (0 = zgaszone, 1 = wszystkie), poświata i korekcja kolorów (tablica LUT w graphics.js).
+// Na zachodzie słońce stoi nisko, więc cienie są długie, a woda odbija ciepłe niebo. Nocą świeci księżyc,
+// na niebie są gwiazdy, a nad planszą pali się ciepła lampa, żeby pola były czytelne.
+const TIMES = {
+  dzien: {
+    top: '#DCE6EF', bottom: '#F4F1EB', sun: ['#FFF4E2', 2.4, [9, 18, 6]], hemi: ['#FFFFFF', '#A8C8E8', 0.55], env: LOOK.env, lights: 0, water: 1, lamp: 0,
+    grade: { shadow: [-0.01, 0, 0.022], high: [0.018, 0.01, -0.012], contrast: 0.1, sat: 1.04 },
+  },
+  zachod: {
+    top: '#E7B49B', bottom: '#FBE4CD', sun: ['#FFAE68', 2.7, [-15, 6.5, 8]], hemi: ['#FFDDBF', '#6C7CB0', 0.45], env: 0.5, lights: 0.45, water: 0.8, lamp: 8,
+    grade: { shadow: [0, -0.006, 0.04], high: [0.055, 0.022, -0.03], contrast: 0.14, sat: 1.08 },
+  },
+  noc: {
+    top: '#04081A', bottom: '#0E1C44', sun: ['#A9BEFF', 0.55, [-8, 16, -6]], hemi: ['#41558A', '#0B1024', 0.34], env: 0.24, lights: 1, water: 0.16, lamp: 34,
+    grade: { shadow: [-0.01, 0, 0.05], high: [0.03, 0.02, -0.012], contrast: 0.1, sat: 0.96 },
+  },
+};
+const TIME_NAMES = [['auto', 'Jak teraz'], ['dzien', 'Dzień'], ['zachod', 'Zachód słońca'], ['noc', 'Noc']];
+// „Jak teraz”: pora dnia według zegara komputera
+function timeNow(pref) {
+  if (pref !== 'auto') return TIMES[pref] ? pref : 'dzien';
+  const d = new Date(), h = d.getHours() + d.getMinutes() / 60;
+  return h >= 7 && h < 17.5 ? 'dzien' : (h >= 17.5 && h < 20.5) || (h >= 5.5 && h < 7) ? 'zachod' : 'noc';
 }
-setWorldMood(false);
+// Gwiazdy i księżyc (tylko nocą), lampa nad planszą (zachód i noc)
+const stars = (() => {
+  // gwiazdy narysowane na teksturze nieba (działa tak samo w WebGPU i WebGL2): drobne, różnej jasności, gęściej wysoko
+  const w = 2048, h = 1024, [c, g] = makeCanvas(w, h);
+  let seed = 3;
+  const r = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let k = 0; k < 1400; k++) {
+    const y = Math.pow(r(), 1.6) * h * 0.46, x = r() * w, rad = 0.6 + Math.pow(r(), 3) * 1.8;
+    g.fillStyle = `rgba(255,255,${235 + Math.floor(r() * 20)},${0.35 + r() * 0.65})`;
+    g.beginPath(); g.arc(x, y, rad, 0, Math.PI * 2); g.fill();
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  const m = new THREE.Mesh(new THREE.SphereGeometry(185, 48, 24), new THREE.MeshBasicMaterial({ map: t, transparent: true, side: THREE.BackSide, depthWrite: false, fog: false }));
+  m.visible = false;
+  m.renderOrder = -1;
+  return m;
+})();
+sky.add(stars);
+const moon = new THREE.Mesh(new THREE.CircleGeometry(7, 48), new THREE.MeshBasicMaterial({ color: '#F4F1E4', fog: false, toneMapped: false }));
+moon.position.set(-80, 95, -120);
+moon.lookAt(0, 0, 0);
+moon.visible = false;
+sky.add(moon);
+const boardLamp = new THREE.SpotLight('#FFE0B5', 0, 60, 0.62, 0.7, 1.2);
+boardLamp.position.set(2, 16, 6);
+boardLamp.target.position.set(0, 0, 0);
+scene.add(boardLamp, boardLamp.target);
+let worldNight = false, worldTime = 'dzien', worldSkin = 'diorama';
+// Dzień, zachód albo noc na makiecie (prezentacja: dzień, a noc tylko w finale z fajerwerkami)
+function setWorldMood(mood) {
+  const key = mood === true ? 'noc' : mood === false ? 'dzien' : TIMES[mood] ? mood : 'dzien';
+  const m = TIMES[key];
+  worldTime = key;
+  worldNight = key === 'noc';
+  skyU.top.value.set(m.top); skyU.bottom.value.set(m.bottom);
+  gfx?.setNight(m.lights);
+  gfx?.setGrade(m.grade);
+  scene.fog = null;
+  for (const [mt, on, off = 0, prop = 'emissiveIntensity'] of nightMats) mt[prop] = off + (on - off) * m.lights;
+  stars.visible = moon.visible = worldNight;
+  boardLamp.intensity = m.lamp;
+  waterLight.value = m.water;
+  applyLights();
+}
+// Słońce i światło otoczenia według pory dnia (pokój ze stołem ma własne światło)
+function applyLights() {
+  if (worldSkin === 'pokoj') return;
+  const m = TIMES[worldTime];
+  sun.color.set(m.sun[0]); sun.intensity = m.sun[1]; sun.position.set(...m.sun[2]);
+  hemi.color.set(m.hemi[0]); hemi.groundColor.set(m.hemi[1]); hemi.intensity = m.hemi[2];
+  scene.environmentIntensity = m.env;
+}
+setWorldMood('dzien');
 function worldTick(t, dt) {
   if (!world.visible) return;
   for (const f of worldAnim) f(t, dt);
@@ -2602,6 +2669,7 @@ function captureRoomEnv() {
 }
 function applySkin(name) {
   curSkin = SKIN_NAMES.some(([v]) => v === name) ? name : 'diorama';
+  worldSkin = curSkin;
   document.documentElement.dataset.skin = curSkin;
   const t = curSkin === 'tektura', r = curSkin === 'pokoj';
   boardBg ||= scene.background;
@@ -2609,13 +2677,14 @@ function applySkin(name) {
   if (r) ensureRoom();
   showWorld(view === 'board' && board.visible);
   scene.environment = r ? captureRoomEnv() : baseEnv;
-  // w pokoju światło jest cieplejsze i spokojniejsze: odbicia z prawdziwego pokoju, mniej światła z „nieba”
-  scene.environmentIntensity = r ? 0.42 : LOOK.env;
-  hemi.color.set(r ? '#FFF3E4' : LOOK.hemi[0]);
-  hemi.groundColor.set(r ? '#7A5A40' : LOOK.hemi[1]);
-  hemi.intensity = r ? 0.3 : LOOK.hemi[2];
-  sun.color.set(r ? '#FFEBD2' : LOOK.sun[0]);
-  sun.intensity = r ? 2.1 : LOOK.sun[1];
+  // w pokoju światło jest cieplejsze i spokojniejsze: odbicia z prawdziwego pokoju, mniej światła z „nieba”;
+  // poza pokojem światło zależy od pory dnia
+  if (r) {
+    scene.environmentIntensity = 0.42;
+    hemi.color.set('#FFF3E4'); hemi.groundColor.set('#7A5A40'); hemi.intensity = 0.3;
+    sun.color.set('#FFEBD2'); sun.intensity = 2.1; sun.position.set(...LOOK.sun[2]);
+  } else applyLights();
+  boardLamp.visible = !r;
   base.material = t ? [kraftMat, kraftMat, paperMat, kraftMat, kraftMat, kraftMat] : [baseSideMat, baseSideMat, baseTopMat, baseSideMat, baseSideMat, baseSideMat];
   inlay.visible = !t;
   tileBodyMat.map = t ? kraftTex : null;
@@ -3174,7 +3243,7 @@ const chipHtml = (label, attrs, pressed, disabled = false) =>
 let profile = store.get('profil', null);
 // statystyki z gier sprzed zmiany skali (kwoty były w tysiącach): przelicz na nowe kwoty
 if (profile?.stats?.wealth > 200000) { profile.stats.wealth = Math.round(profile.stats.wealth / 1000); store.set('profil', profile); }
-const prefs = Object.assign({ theme: 'system', music: 60, effects: 80, scale: 1, spin: true, skin: 'diorama', gfx: 'auto', cine: true }, store.get('preferencje', {}));
+const prefs = Object.assign({ theme: 'system', music: 60, effects: 80, scale: 1, spin: true, skin: 'diorama', gfx: 'auto', cine: true, time: 'dzien', promoMusic: 'kod' }, store.get('preferencje', {}));
 // 14.10.2026 (decyzja autora): główna scena to makieta nad wodą; pokój ze stołem jest do wyboru w Ustawieniach
 if (prefs.skinV !== 3) { prefs.skin = 'diorama'; prefs.skinV = 3; }
 const savePrefs = () => store.set('preferencje', prefs);
@@ -3651,10 +3720,12 @@ function renderSettingsPage() {
     <div class="m-set"><span>Motyw</span>${chips([['system', 'Systemowy'], ['light', 'Jasny'], ['dark', 'Ciemny']], prefs.theme, 'data-theme-set')}</div>
     <div class="m-set"><span>Muzyka<small>W menu, w grze i w prezentacji</small></span><div class="m-range"><input type="range" id="volMusic" min="0" max="100" step="5" value="${prefs.music}" aria-label="Głośność muzyki"><output id="volMusicOut">${prefs.music}%</output></div></div>
     <div class="m-set"><span>Efekty dźwiękowe<small>Np. rzut kostkami</small></span><div class="m-range"><input type="range" id="volFx" min="0" max="100" step="5" value="${prefs.effects}" aria-label="Głośność efektów"><output id="volFxOut">${prefs.effects}%</output></div></div>
-    <div class="m-set"><span>Autorzy muzyki<small>Licencje: assets/muzyka/AUTORZY.md</small></span><p class="m-credits">Prezentacja: „Epic Cinematic Trailer | ELITE”, Alex-Productions (onsound.eu), licencja CC BY 3.0, źródło chosic.com.<br>Menu i gra: „Tropical Sun”, All Good Folks oraz „New Life”, Moire (Uppbeat), gdy pliki są w folderze gry. Bez nich gra muzyka napisana w kodzie.</p></div>
+    <div class="m-set"><span>Muzyka prezentacji</span>${chips([['kod', 'Nasza, z kodu gry'], ['alex', 'Epic Cinematic Trailer']], prefs.promoMusic, 'data-promo-music')}</div>
+    <div class="m-set"><span>Autorzy muzyki<small>Licencje: assets/muzyka/AUTORZY.md</small></span><p class="m-credits">Prezentacja: utwór filmowy skomponowany w kodzie gry (Web Audio) albo do wyboru „Epic Cinematic Trailer | ELITE”, Alex-Productions (onsound.eu), licencja CC BY 3.0, źródło chosic.com.<br>Menu i gra: „Tropical Sun”, All Good Folks oraz „New Life”, Moire (Uppbeat), gdy pliki są w folderze gry. Bez nich gra muzyka napisana w kodzie.</p></div>
     <div class="m-set"><span>Rozmiar elementów</span>${chips([[0.9, 'Mały'], [1, 'Średni'], [1.15, 'Duży']], prefs.scale, 'data-scale')}</div>
     <div class="m-set"><span>Jakość grafiki<small id="gfxInfo">${gfx.describe()}</small></span>${chips(GFX_LEVELS, prefs.gfx, 'data-gfx')}</div>
     <div class="m-set"><span>Wygląd planszy</span>${chips(SKIN_NAMES, prefs.skin, 'data-skin')}</div>
+    <div class="m-set"><span>Pora dnia<small>Makieta i czysta tektura; „Jak teraz” według zegara</small></span>${chips(TIME_NAMES, prefs.time, 'data-time')}</div>
     <div class="m-set"><span>Obracanie planszy w menu</span>${chips([[1, 'Włączone'], [0, 'Wyłączone']], prefs.spin ? 1 : 0, 'data-spin')}</div>
     <div class="m-set"><span>Najazdy kamery<small>Przy kupnie pola i hotelu</small></span>${chips([[1, 'Włączone'], [0, 'Wyłączone']], prefs.cine ? 1 : 0, 'data-cine')}</div>`;
 }
@@ -3664,7 +3735,9 @@ $('settingsBox').addEventListener('click', e => {
   const d = b.dataset;
   if (d.themeSet) { prefs.theme = d.themeSet; applyTheme(); }
   else if (d.scale) { prefs.scale = +d.scale; applyScale(); }
-  else if (d.skin) { prefs.skin = d.skin; applySkin(prefs.skin); }
+  else if (d.skin) { prefs.skin = d.skin; applySkin(prefs.skin); if (actx) ambience(); }
+  else if (d.time) { prefs.time = d.time; setWorldMood(timeNow(prefs.time)); }
+  else if (d.promoMusic) prefs.promoMusic = d.promoMusic;
   else if (d.gfx) { prefs.gfx = d.gfx; gfx.set(d.gfx); }
   else if (d.spin !== undefined) { prefs.spin = d.spin === '1'; controls.autoRotate = menuOpen && prefs.spin && !reduceMotion; }
   else if (d.cine !== undefined) prefs.cine = d.cine === '1';
@@ -3674,7 +3747,7 @@ $('settingsBox').addEventListener('click', e => {
 });
 $('settingsBox').addEventListener('input', e => {
   if (e.target.id === 'volMusic') { prefs.music = +e.target.value; $('volMusicOut').textContent = `${prefs.music}%`; gameMusic(); }
-  if (e.target.id === 'volFx') { prefs.effects = +e.target.value; $('volFxOut').textContent = `${prefs.effects}%`; }
+  if (e.target.id === 'volFx') { prefs.effects = +e.target.value; $('volFxOut').textContent = `${prefs.effects}%`; ambience(); }
   savePrefs();
 });
 $('btnTheme').addEventListener('click', () => {
@@ -3746,6 +3819,9 @@ $('btnMenu').addEventListener('click', openMenu);
 applyTheme();
 applyScale();
 applySkin(prefs.skin);
+setWorldMood(timeNow(prefs.time));
+// „Jak teraz”: co minutę sprawdzamy, czy nie zmieniła się pora dnia (nie w prezentacji)
+setInterval(() => { if (prefs.time === 'auto' && !P.on && timeNow('auto') !== worldTime) setWorldMood(timeNow('auto')); }, 60_000);
 
 $('viewBoard').addEventListener('click', () => setView('board'));
 $('viewModels').addEventListener('click', () => setView('models'));
@@ -4745,6 +4821,11 @@ function tone(a, t, freq, dur, gain, type = 'sine', to = null) {
   o.connect(g).connect(a.destination);
   o.start(t); o.stop(t + dur + 0.02);
 }
+// Uderzenie kości o powierzchnię: suchy trzask plus krótki ton „pudła” (drewno stołu niżej i dłużej, tektura planszy wyżej)
+function knock(a, t, vel, wood) {
+  click(a, t, wood ? 1300 + Math.random() * 900 : 2000 + Math.random() * 1800, vel, wood ? 0.07 : 0.045);
+  tone(a, t, wood ? 190 + Math.random() * 60 : 320 + Math.random() * 80, wood ? 0.12 : 0.06, 0.22 * vel, 'sine', wood ? 150 : 260);
+}
 let diceAudio = null;
 function sfx(name) {
   const vol = (prefs.effects ?? 80) / 100;
@@ -4766,9 +4847,23 @@ function sfx(name) {
   } else if (name === 'hop') tone(a, t, 520, 0.08, 0.12 * v, 'triangle', 760);
   else if (name === 'good') [523, 659, 784].forEach((f, k) => tone(a, t + k * 0.09, f, 0.32, 0.22 * v, 'triangle'));
   else if (name === 'bad') { tone(a, t, 330, 0.28, 0.2 * v, 'sawtooth', 220); tone(a, t + 0.18, 220, 0.4, 0.18 * v, 'sawtooth', 150); }
-  else if (name === 'coin') { tone(a, t, 1320, 0.12, 0.16 * v); tone(a, t + 0.08, 1760, 0.3, 0.16 * v); }
-  else if (name === 'card') for (let k = 0; k < 4; k++) click(a, t + k * 0.03, 900 + k * 500, 0.12 * v, 0.08);
-  else if (name === 'build') tone(a, t, 180, 0.25, 0.35 * v, 'sine', 60);
+  else if (name === 'coin') {   // kilka monet: każda trochę inna, z metalicznym dzwonieniem
+    for (let k = 0; k < 3; k++) {
+      const f = 1250 + Math.random() * 600, at = t + k * 0.06 + Math.random() * 0.02;
+      tone(a, at, f, 0.18, 0.12 * v); tone(a, at, f * 2.76, 0.12, 0.05 * v); click(a, at, 6000, 0.05 * v, 0.02);
+    }
+  } else if (name === 'card') {   // karta: szelest wysuwania i trzask papieru
+    const n = a.createBufferSource(); n.buffer = noise(a);
+    const f = a.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 1.2;
+    f.frequency.setValueAtTime(900, t); f.frequency.exponentialRampToValueAtTime(4200, t + 0.22);
+    const g = a.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.18 * v, t + 0.1); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.28);
+    n.connect(f).connect(g).connect(a.destination); n.start(t); n.stop(t + 0.3);
+    click(a, t + 0.27, 3200, 0.2 * v, 0.03);
+  } else if (name === 'build') {   // budowa: stuknięcia metalu o rusztowanie i głuche lądowanie
+    [0, 0.09, 0.2].forEach((d, k) => { click(a, t + d, 2800 + k * 600, 0.16 * v, 0.06); tone(a, t + d, 880 + k * 220, 0.18, 0.05 * v, 'triangle'); });
+    tone(a, t + 0.32, 170, 0.32, 0.38 * v, 'sine', 55);
+    click(a, t + 0.32, 600, 0.28 * v, 0.12);
+  } else if (name === 'click') tone(a, t, 1900, 0.035, 0.05 * v, 'sine', 1500);   // przycisk w menu: ciche „tyk”
   else if (name === 'fanfare') [523, 659, 784, 1046].forEach((f, k) => tone(a, t + k * 0.13, f, 0.5, 0.2 * v, 'triangle'));
 }
 
@@ -4833,7 +4928,7 @@ function throwDicePhysics(a, b, seed) {
   if (ac) {
     const vol = (prefs.effects ?? 80) / 100, t0 = ac.currentTime + 0.02;
     for (let k = 0; k < 5; k++) click(ac, t0 + k * 0.04, 2600 + Math.random() * 1200, 0.14 * vol, 0.03);
-    for (const imp of sim.impacts.slice(0, 14)) click(ac, t0 + 0.2 + imp.t, 1400 + Math.random() * 2600, (0.25 + 0.6 * imp.v) * vol, 0.04 + 0.03 * imp.v);
+    for (const imp of sim.impacts.slice(0, 14)) knock(ac, t0 + 0.2 + imp.t, (0.25 + 0.6 * imp.v) * vol, curSkin === 'pokoj');
   }
   return sleep(200).then(() => tween(sim.count * sim.dt * 1000, t => {
     const x = t * (sim.count - 1), i = Math.floor(x), u = x - i, j = Math.min(i + 1, sim.count - 1);
@@ -6129,6 +6224,15 @@ const SCENES = [
       ${fadeP('pr-sub', 'Na plaży stoją parasole, po wodzie pływają żaglówki, a na falochronie stoi latarnia. Za planszą czeka gmach z wieżą zegarową, boisko i dziedziniec. Tu zawsze coś się dzieje.', 1.9)}</div>`,
   },
   {
+    name: 'Woda', dur: 7200, cut: 'soft', energy: 1,
+    cam: shot(V3(-21, 2.4, 27.5), V3(-11, -1.1, 20.5), V3(-4, 2.1, 29.5), V3(4, -1.3, 21.5), linear),
+    events: [[1200, () => ripples.disturb(-7, 21.5, 0.08, 0.8)], [3400, () => ripples.disturb(1, 23, 0.1, 0.8)]],
+    html: () => `<div class="pr-scene at-top-left">
+      ${fadeP('pr-eyebrow', 'Woda', 0.4)}
+      <h2 class="pr-h md">${bline('Fale, które', 0.6)}${bline('<span class="pr-silver">liczy fizyka</span>', 1.0)}</h2>
+      ${fadeP('pr-sub', 'Przez wodę widać dno, a fale je zniekształcają. Łodzie zostawiają za sobą klin fal, ryby robią kręgi. Każda klatka liczy równanie falowe.', 1.7)}</div>`,
+  },
+  {
     name: 'Sztandar', dur: 3900, energy: 1, studio: 0, light: true,
     cam: orbit(STUDIO_AT, 8.2, 6.8, 0.9, 0.35, Q + 0.55, Q + 0.2),
     events: [[150, () => P.music?.thump()]], tick: studioSpin,
@@ -6264,6 +6368,16 @@ const SCENES = [
       <h2 class="pr-h xl">${bline('Wiedza', 0.3)}${bline('<span class="pr-gold">się opłaca.</span>', 0.7)}</h2></div>`,
   },
   {
+    name: 'Online', dur: 6800, energy: 2, blur: true,
+    cam: u => { const a = Q + 0.9 - u * 0.5; return [V3(15 * Math.cos(a), 11.5, 15 * Math.sin(a)), V3(0, -0.4, 0)]; },
+    events: [[700, () => P.music?.chime()]],
+    html: () => `<div class="pr-scene at-center">
+      ${fadeP('pr-eyebrow', 'Gra online', 0.2)}
+      <h2 class="pr-h">${bline('Podaj kod.', 0.3)}${bline('<span class="pr-silver">Grajcie razem.</span>', 0.65)}</h2>
+      <div class="pr-code pr-fade" style="--d:.9s">${'WSIZ24'.split('').map((ch, k) => `<b style="--k:${k}">${ch}</b>`).join('')}</div>
+      ${fadeP('pr-sub', 'Stwórz party i wyślij znajomym kod. Serwer pilnuje rzutów, pieniędzy i czasu, a za gracza, który wyjdzie, dokończy bot.', 1.4)}</div>`,
+  },
+  {
     name: 'Wszędzie', dur: 7400, energy: 2, blur: true, mirror: true,
     cam: u => { const a = Q - 0.25 + u * 0.7; return [V3(17 * Math.cos(a), 13.5 - 1.5 * u, 17 * Math.sin(a)), V3(0, -0.4, 0)]; },
     events: [[900, () => P.music?.chime()]],
@@ -6293,7 +6407,7 @@ const SCENES = [
         <button type="button" class="is-ghost" data-cta="replay">Obejrzyj jeszcze raz</button>
       </div>
       ${fadeP('pr-legal', 'Wyższa Szkoła Informatyki i Zarządzania w Bielsku-Białej', 2.2)}
-      ${fadeP('pr-legal pr-credit', 'Muzyka: „Epic Cinematic Trailer | ELITE”, Alex-Productions (onsound.eu), CC BY 3.0', 2.4)}</div>`,
+      ${fadeP('pr-legal pr-credit', prefs.promoMusic === 'alex' ? 'Muzyka: „Epic Cinematic Trailer | ELITE”, Alex-Productions (onsound.eu), CC BY 3.0' : 'Muzyka skomponowana w kodzie gry', 2.4)}</div>`,
   },
 ];
 
@@ -6489,12 +6603,14 @@ const SONGS = {
       [41, [52, 55, 57, 60]], [40, [50, 55, 59, 64]], [38, [53, 57, 60, 64]], [43, [53, 57, 60, 65]]],
     hook: [[0, 76], [6, 74], [8, 72], [14, 69]],   // krótka melodia co drugi takt: [krok, nuta]
   },
-  promo: {  // F-dur, 112 BPM. Część A: Dm9 Bbmaj9 Fmaj9 Cadd9, część B: Bbmaj9 Cadd9 Am7 Dm9 (co 8 taktów na zmianę)
-    bpm: 112, swing: 0,
-    chords: [[38, [53, 57, 60, 64]], [34, [53, 57, 60, 62]], [41, [55, 57, 60, 64]], [36, [55, 60, 62, 64]]],
-    chordsB: [[34, [53, 57, 62, 65]], [36, [55, 60, 62, 64]], [33, [55, 57, 60, 64]], [38, [53, 57, 60, 65]]],
-    lead: [[69, 0, 72, 0, 74, 72, 69, 0], [74, 0, 72, 0, 69, 0, 67, 0], [69, 0, 72, 0, 77, 0, 76, 0], [74, 0, 72, 0, 67, 0, 0, 0]],
-    leadB: [[74, 0, 77, 0, 76, 74, 72, 0], [72, 0, 74, 0, 76, 0, 79, 0], [76, 0, 72, 0, 69, 0, 72, 0], [74, 0, 0, 0, 69, 0, 0, 0]],
+  // Prezentacja: utwór filmowy w d-moll, 100 BPM, napisany pod sceny (energia sceny 0–3 dokłada instrumenty).
+  // Część A: Dm Bb F C (i–VI–III–VII), część B: Gm Bb Dm A (A-dur na końcu frazy buduje napięcie), co 8 taktów.
+  promo: {
+    bpm: 100, swing: 0,
+    chords: [[38, [50, 57, 62, 65]], [34, [50, 58, 62, 65]], [41, [53, 57, 60, 65]], [36, [52, 55, 60, 64]]],
+    chordsB: [[43, [50, 55, 58, 62]], [34, [53, 58, 62, 65]], [38, [53, 57, 62, 65]], [33, [52, 57, 61, 64]]],
+    lead: [[74, 0, 72, 74, 77, 0, 76, 74], [74, 0, 0, 72, 70, 0, 69, 0], [72, 0, 74, 0, 77, 76, 74, 72], [76, 0, 0, 0, 72, 0, 0, 0]],
+    leadB: [[74, 0, 79, 0, 77, 0, 74, 0], [77, 0, 74, 0, 70, 0, 74, 0], [77, 0, 76, 0, 74, 0, 72, 74], [73, 0, 0, 0, 76, 0, 0, 0]],
   },
 };
 const ARP = [0, 1, 2, 3, 2, 1, 3, 2];
@@ -6555,7 +6671,11 @@ function createMusic(style, opts = {}) {
     hats: bus(mix, promo ? 3 : 3.2, 0.05),
     snare: bus(mix, promo ? 1.2 : 1.1, 0.28),
     fx: bus(mix, 1, 0.45),
+    strings: bus(duck, 1.6, 0.6),
+    choir: bus(duck, 0.9, 0.8),
   };
+  const strF = filter('lowpass', 900, 0.5);   // jasność smyczków rośnie z energią sceny
+  strF.connect(B.strings);
   // pad: trzy lekko rozstrojone piły na dźwięk, filtr powoli „oddycha”
   const padF = filter('lowpass', 700, 0.6);
   padF.connect(B.pad);
@@ -6666,6 +6786,61 @@ function createMusic(style, opts = {}) {
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.16, t + len * 0.95); g.gain.linearRampToValueAtTime(0.0001, t + len + 0.04);
     n.connect(f).connect(g).connect(B.fx);
   }
+  // ----- instrumenty filmowe (prezentacja) -----
+  function strings(t, notes, len, vel = 1) {   // smyczki: trzy rozstrojone piły na dźwięk, miękkie wejście i wybrzmienie
+    notes.forEach((m, k) => [-9, 0, 9].forEach((det, j) => {
+      const o = osc('sawtooth', midiHz(m));
+      o.detune.value = det + (Math.random() - 0.5) * 6;
+      const vib = osc('sine', 5 + Math.random()), vg = gain(3);
+      vib.connect(vg).connect(o.detune);
+      const g = gain(0);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(0.012 * vel, t + 0.45);
+      g.gain.setValueAtTime(0.012 * vel, t + len - 0.2);
+      g.gain.linearRampToValueAtTime(0.0001, t + len + 0.9);
+      o.connect(g).connect(panner([-0.6, 0, 0.6][j] * (k % 2 ? 1 : -1))).connect(strF);
+      play(o, t, t + len + 1); play(vib, t, t + len + 1);
+    }));
+  }
+  function pulse(t, m, len, vel = 1) {   // niskie smyczki staccato (spiccato): piła z krótką obwiednią filtra
+    const f = midiHz(m), o = osc('sawtooth', f), lp = filter('lowpass', 1800, 1.2), g = gain(0);
+    lp.frequency.setValueAtTime(2200, t); lp.frequency.exponentialRampToValueAtTime(320, t + len);
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.09 * vel, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+    o.connect(lp).connect(g).connect(B.bass);
+    play(o, t, t + len + 0.02);
+  }
+  function taiko(t, vel = 1, f0 = 90) {   // bęben taiko: niski ton z opadającą wysokością i uderzenie w skórę
+    const o = osc('sine', f0), g = gain(0);
+    o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f0 * 0.48, t + 0.35);
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.75 * vel, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
+    o.connect(g).connect(B.drums);
+    play(o, t, t + 0.75);
+    const n = hiss(t, t + 0.12), ng = gain(0);
+    ng.gain.setValueAtTime(0.35 * vel, t); ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.1);
+    n.connect(filter('lowpass', 420)).connect(ng).connect(B.drums);
+  }
+  function brass(t, notes, len, vel = 1) {   // dęte blachy: piły z filtrem, który otwiera się przy ataku
+    notes.forEach((m, k) => {
+      const f = midiHz(m), o = osc('sawtooth', f), o2 = osc('sawtooth', f * 1.003), lp = filter('lowpass', 400, 1.4), g = gain(0);
+      lp.frequency.setValueAtTime(400, t); lp.frequency.exponentialRampToValueAtTime(2600 + 300 * vel, t + 0.07);
+      lp.frequency.exponentialRampToValueAtTime(900, t + Math.min(len, 0.6));
+      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.05 * vel, t + 0.03);
+      g.gain.setTargetAtTime(0.03 * vel, t + 0.05, 0.15); g.gain.setTargetAtTime(0.0001, t + len, 0.12);
+      o.connect(lp); o2.connect(lp); lp.connect(g).connect(panner((k - 1.5) * 0.25)).connect(B.lead);
+      play(o, t, t + len + 0.6); play(o2, t, t + len + 0.6);
+    });
+  }
+  function choir(t, notes, len, vel = 1) {   // chór „aa”: piły przez dwa filtry formantowe
+    notes.forEach((m, k) => {
+      const o = osc('sawtooth', midiHz(m)), f1 = filter('bandpass', 750, 6), f2 = filter('bandpass', 1150, 7), g = gain(0);
+      o.detune.value = (k - 1.5) * 7;
+      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.06 * vel, t + 0.8);
+      g.gain.setValueAtTime(0.06 * vel, t + len - 0.3); g.gain.linearRampToValueAtTime(0.0001, t + len + 1.2);
+      o.connect(f1).connect(g); o.connect(f2).connect(g);
+      g.connect(panner((k - 1.5) * 0.4)).connect(B.choir);
+      play(o, t, t + len + 1.3);
+    });
+  }
   function crackle(t) {   // trzask płyty winylowej, bardzo cicho
     const n = hiss(t, t + 0.01), g = gain(0);
     g.gain.setValueAtTime(0.012 + Math.random() * 0.03, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.004);
@@ -6680,31 +6855,36 @@ function createMusic(style, opts = {}) {
     const phraseEnd = bar % 8 === 7;
     if (e >= 2 && bar > 0 && bar % 8 === 0 && s === 0) crash(t, e === 3 ? 1 : 0.7);
     if (e >= 2 && phraseEnd && s === 0) riser(t, BEAT * 4);
-    if (e >= 2 && phraseEnd && s >= 12) clap(t, 0.45 + (s - 12) * 0.15);   // przejście: werbel coraz głośniej
+    if (e >= 2 && phraseEnd && s >= 12) taiko(t, 0.45 + (s - 12) * 0.14, 110);   // przejście: werble na taiko
     if (s === 0) {
-      padF.frequency.setTargetAtTime([600, 950, 1500, 2400][e], t, 0.8);
-      pad(t, notes, BEAT * 4);
-      if (e <= 1) notes.forEach((m, k) => keys(t + k * 0.014, m + 12, 0.55, BEAT * 3.6, (k - 1.5) * 0.3));
+      strF.frequency.setTargetAtTime([900, 1500, 2300, 3400][e], t, 0.8);
+      strings(t, notes.map(m => m + 12), BEAT * 4, [0.42, 0.7, 0.95, 1.2][e]);
+      if (e === 0) bass(t, root, BEAT * 3.8, 0.3);   // niski bordun
+      if (e >= 3) choir(t, notes.slice(1).map(m => m + 12), BEAT * 4, 0.9);
     }
-    if (e === 0 && (s === 10 || s === 14)) keys(t, notes[s === 10 ? 3 : 2] + 24, 0.3, BEAT * 1.2, 0.4);
+    // fortepian: ostinato ósemkami na dźwiękach akordu (cichnie, gdy wchodzą bębny)
+    if (e <= 2 && s % 2 === 0) {
+      const pat = [1, 2, 3, 2, 1, 2, 3, 2][s / 2];
+      keys(t, notes[pat] + 12, [0.3, 0.38, 0.26][e], BEAT * 0.9, (pat - 2) * 0.3);
+    }
     if (e >= 1) {
-      if (e === 1 && (s === 0 || s === 8)) bass(t, root + 12, BEAT * 1.9, 0.9);
-      if (e >= 2 && s % 4 === 2) bass(t, root + 12, BEAT * 0.42, e === 3 ? 1 : 0.85);   // bas na „i”, jak w house
-      if (e === 2 && s === 0) bass(t, root, BEAT * 0.9, 0.8);
-      if (s % (e >= 2 ? 1 : 2) === 0) pluck(t, notes[ARP[(s >> (e >= 2 ? 0 : 1)) % 8]] + 12, s % 4 === 0 ? 1 : 0.7, s % 2 ? 0.45 : -0.45);
-      if (e === 1 && s % 2 === 0) shaker(t, s % 4 === 2 ? 1 : 0.6);
+      if (s % 2 === 0) pulse(t, root + (s % 4 === 2 ? 12 : 0), STEP * 1.6, s % 8 === 0 ? 1 : 0.75);
+      if (e === 1 && (s === 0 || s === 8)) taiko(t, 0.55, 80);
     }
     if (e >= 2) {
-      const kickOn = (e === 3 ? s % 4 === 0 : s === 0 || s === 8 || s === 11) && !(phraseEnd && s >= 12);
-      if (kickOn) kick(t, 1, e === 3 ? 0.62 : 0.4);
-      if (s === 4 || s === 12) clap(t, e === 3 ? 1 : 0.85);
-      if (s % 2 === 0) hat(t, s % 4 === 2 ? 1 : 0.55, false, 0.3);
-      if (e === 3 && s % 4 === 2) hat(t, 0.75, true, -0.25);
-      if (e === 3 && s % 2 === 1) hat(t, 0.3, false, 0.45);
+      if ([0, 6, 8, 11, 14].includes(s) && !(phraseEnd && s >= 12)) taiko(t, s === 0 || s === 8 ? 1 : 0.65, s % 8 === 0 ? 85 : 120);
+      if (s === 4 || s === 12) clap(t, e === 3 ? 0.9 : 0.7);
+      if (s % 2 === 0) hat(t, s % 4 === 2 ? 0.8 : 0.45, false, 0.3);
+      if (s === 0) brass(t, notes.slice(1), BEAT * (e === 3 ? 1.5 : 0.9), e === 3 ? 1 : 0.8);
+      if (s % 2 === 1 && e === 2) pluck(t, notes[ARP[(s >> 1) % 8]] + 24, 0.55, s % 4 === 1 ? -0.4 : 0.4);
     }
-    if (e === 3 && s % 2 === 0) {
-      const m = (partB ? song.leadB : song.lead)[bar % 4][s / 2];
-      if (m) { bell(t, m, 1, 0.85, -0.1); bell(t + 0.004, m + 12, 0.35, 0.6, 0.25); }
+    if (e === 3) {
+      if (s % 4 === 0 && !(phraseEnd && s >= 12)) kick(t, 1.1, 0.5);
+      if (s % 4 === 2) hat(t, 0.7, true, -0.25);
+      if (s % 2 === 0) {
+        const m = (partB ? song.leadB : song.lead)[bar % 4][s / 2];
+        if (m) { brass(t, [m], BEAT * 0.45, 1.15); bell(t + 0.004, m + 12, 0.4, 0.6, 0.25); }
+      }
     }
   }
   function stepGame(n, t) {
@@ -6734,7 +6914,9 @@ function createMusic(style, opts = {}) {
     }
   }
   let timer = 0, fileEl = null, fileSrc = null;
-  const list = opts.until ? [] : [].concat(MUSIC_FILE[style] || []).filter(Boolean);
+  // prezentacja: domyślnie nasza muzyka z kodu, utwór z pliku tylko, gdy wybrany w Ustawieniach
+  const useFile = style !== 'promo' || prefs.promoMusic === 'alex';
+  const list = opts.until || !useFile ? [] : [].concat(MUSIC_FILE[style] || []).filter(Boolean);
   if (list.length) {   // utwory z plików zamiast syntezatora; efekty (uderzenia, szum) zostają
     let k = 0, failed = 0;
     fileEl = new Audio();
@@ -6802,6 +6984,74 @@ function gameMusic() {
   else bgm?.volume();
 }
 addEventListener('pointerdown', gameMusic, { once: true });
+// ciche kliknięcie przycisków menu i paneli (bez przycisku rzutu, ten ma własny dźwięk kości)
+document.addEventListener('click', e => { if (e.target.closest('.m-btn, .chip, .g-thumb, .m-tile') && !e.target.closest('#gRoll')) sfx('click'); });
+// Tło dźwiękowe: na makiecie fale, wiatr i czasem mewy, w pokoju tykanie zegara i ptaki za oknem.
+// Głośność z suwaka „Efekty dźwiękowe”; cisza w prezentacji (tam gra jej muzyka).
+let amb = null;
+function ambience() {
+  const a = audio();
+  if (!a) return;
+  const want = (prefs.effects ?? 80) > 0 && !P.on && (curSkin === 'diorama' || curSkin === 'pokoj');
+  if (!want) { if (amb) amb.out.gain.setTargetAtTime(0, a.currentTime, 0.4); return; }
+  if (!amb) amb = createAmbience(a);
+  amb.kind = curSkin;
+  amb.out.gain.setTargetAtTime(((prefs.effects ?? 80) / 100) * 0.22, a.currentTime, 0.8);
+  amb.surf.gain.setTargetAtTime(curSkin === 'diorama' ? 1 : 0, a.currentTime, 0.6);
+}
+function createAmbience(a) {
+  const out = a.createGain(); out.gain.value = 0; out.connect(a.destination);
+  const buf = a.createBuffer(2, a.sampleRate * 4, a.sampleRate);   // 4 s szumu w stereo, w pętli
+  for (let ch = 0; ch < 2; ch++) { const d = buf.getChannelData(ch); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+  const loop = (type, f, q, v) => {
+    const s = a.createBufferSource(); s.buffer = buf; s.loop = true;
+    const fl = a.createBiquadFilter(); fl.type = type; fl.frequency.value = f; fl.Q.value = q;
+    const g = a.createGain(); g.gain.value = v;
+    s.connect(fl).connect(g); s.start(0, Math.random() * 3);
+    return g;
+  };
+  const surf = a.createGain(); surf.connect(out);
+  // fale: szum przypływa i odpływa (wolna zmiana głośności i jasności)
+  const waves = loop('lowpass', 750, 0.4, 0.5), wl = a.createOscillator(), wlg = a.createGain();
+  wl.frequency.value = 0.13; wlg.gain.value = 0.35; wl.connect(wlg).connect(waves.gain); wl.start();
+  waves.connect(surf);
+  // wiatr: pasmo szumu, które powoli się przesuwa
+  const wind = loop('bandpass', 420, 0.5, 0.18), wo = a.createOscillator(), wog = a.createGain();
+  wo.frequency.value = 0.05; wog.gain.value = 0.08; wo.connect(wog).connect(wind.gain); wo.start();
+  wind.connect(surf);
+  const st = { out, surf, kind: 'diorama' };
+  // mewy (makieta), tykanie zegara i ptaki (pokój): krótkie dźwięki co jakiś czas
+  let nextGull = a.currentTime + 4, nextBird = a.currentTime + 3, tick = 0;
+  setInterval(() => {
+    if (out.gain.value < 0.001 || document.hidden) return;
+    const t = a.currentTime;
+    if (st.kind === 'diorama' && t > nextGull) {
+      nextGull = t + 6 + Math.random() * 9;
+      const n = 2 + Math.floor(Math.random() * 3), pan = Math.random() * 1.6 - 0.8;
+      for (let k = 0; k < n; k++) {
+        const at = t + 0.05 + k * (0.22 + Math.random() * 0.08), o = a.createOscillator(), g = a.createGain(), p = a.createStereoPanner(), bp = a.createBiquadFilter();
+        o.type = 'sawtooth'; bp.type = 'bandpass'; bp.frequency.value = 1700; bp.Q.value = 2; p.pan.value = pan;
+        o.frequency.setValueAtTime(1350 + Math.random() * 250, at); o.frequency.exponentialRampToValueAtTime(980, at + 0.18);
+        g.gain.setValueAtTime(0.0001, at); g.gain.linearRampToValueAtTime(0.05, at + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, at + 0.2);
+        o.connect(bp).connect(g).connect(p).connect(out); o.start(at); o.stop(at + 0.22);
+      }
+    }
+    if (st.kind === 'pokoj') {
+      if (t > tick) { tick = Math.ceil(t); click(a, tick, tick % 2 ? 3600 : 3000, 0.03, 0.015); }   // zegar na ścianie
+      if (t > nextBird) {
+        nextBird = t + 5 + Math.random() * 8;
+        for (let k = 0; k < 3 + Math.floor(Math.random() * 4); k++) {
+          const at = t + k * 0.11, o = a.createOscillator(), g = a.createGain();
+          o.frequency.setValueAtTime(3200 + Math.random() * 900, at); o.frequency.exponentialRampToValueAtTime(4300 + Math.random() * 600, at + 0.07);
+          g.gain.setValueAtTime(0.0001, at); g.gain.linearRampToValueAtTime(0.012, at + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, at + 0.09);
+          o.connect(g).connect(out); o.start(at); o.stop(at + 0.1);
+        }
+      }
+    }
+  }, 120);
+  return st;
+}
+addEventListener('pointerdown', () => ambience(), { once: true });
 addEventListener('keydown', gameMusic, { once: true });
 
 // ---------------------------------------------------------------------------
@@ -6911,6 +7161,7 @@ function openPromo(fromLink = false) {
   if (P.on) return;
   P.on = true;
   gameMusic();   // podkład z menu cichnie, prezentacja ma swój utwór
+  if (actx) ambience();
   P.saved = {
     bg: scene.background, minD: controls.minDistance, maxD: controls.maxDistance, polar: controls.maxPolarAngle,
     anim: { flags: flags.length, steams: steams.length, coins: coins.length, parts: liveParts.length },
@@ -6958,6 +7209,7 @@ function beginPromo() {
 function closePromo(goPlay = false) {
   if (!P.on) return;
   P.on = false;
+  if (actx) setTimeout(ambience, 300);
   P.idx = -1;
   P.dip = null;
   cleanupScene();
@@ -6970,7 +7222,7 @@ function closePromo(goPlay = false) {
   promoEl.classList.remove('cinema', 'is-light');
   document.body.classList.remove('promo-open');
   scene.background = P.saved.bg;
-  setWorldMood(false);
+  setWorldMood(timeNow(prefs.time));
   applySkin(P.saved.skin);
   controls.minDistance = P.saved.minD;
   controls.maxDistance = P.saved.maxD;

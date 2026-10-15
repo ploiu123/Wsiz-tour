@@ -107,8 +107,8 @@ Autor uruchomił grę na MacBooku i chce gry klasy AAA: plansza wielkością jak
 | Krok 0 | ostry obraz Retina i 4K, makieta znowu domyślna, ranking tylko autora, plansza jak w Business Tour (kamera, układ ekranu, większe pionki i budynki, większe napisy na polach) | **zrobione 14.10.2026** |
 | Etap 1 | potok Blender, pionki v2, plansza v2, karty v2 (3D, folia holograficzna), budynki v2 | **zrobione 14.10.2026** |
 | Etap 2 | makieta v2, realistyczna woda (widmo fal JONSWAP, piana, odbicia, załamanie i pochłanianie światła) i fizyka wody (symulacja zmarszczek, klin fal za łodziami) | **zrobione 15.10.2026** |
-| Etap 3 | pora dnia, niebo fizyczne, promienie słońca, odbicia SSR, TRAA, korekcja kolorów LUT, SSGI na Ultra | |
-| Etap 4 | muzyka prezentacji w kodzie (`src/audio/`), nowe efekty dźwiękowe, nowe sceny prezentacji, film i strona-wizytówka | |
+| Etap 3 | pora dnia, korekcja kolorów LUT, poświata zależna od pory dnia (promienie słońca, SSR, TRAA, SSGI i niebo fizyczne świadomie pominięte, niżej dlaczego) | **zrobione 15.10.2026** |
+| Etap 4 | muzyka prezentacji w kodzie, nowe efekty dźwiękowe i tło dźwiękowe, nowe sceny prezentacji, nowe zrzuty na stronie-wizytówce i w filmie | **zrobione 15.10.2026** |
 | Etap 5 | wykres majątku po grze, osiągnięcia, emotki online, samouczek, tryb zdjęć, ekonomia z filmu wzorcowego, GitHub Actions, licznik klatek | |
 
 ### Krok 0: co się zmieniło
@@ -133,4 +133,22 @@ Autor uruchomił grę na MacBooku i chce gry klasy AAA: plansza wielkością jak
 - **Fizyka zmarszczek** (`src/scene/ripples.js`, test `tests/unit/ripples.test.ts`): równanie falowe na siatce 200 × 56 ze stałym krokiem 1/60 s, prędkość fali 2,6, tłumienie, lepkość gasząca szum siatki i pas tłumiący przy brzegach. Co klatkę siatka trafia do karty graficznej jako tekstura (16-bitowe liczby) i przesuwa powierzchnię wody oraz jej normalne. Łodzie wypierają wodę przy dziobie i rufie, ryby przy skoku.
 - **Makieta:** `tools/blender/nature.py` (drzewa trzech rodzajów, palma, krzew, samochód) do `assets/models/nature.glb` (364 KB, cienie kontaktowe wypalone). Drzewa i palmy kołyszą się na wietrze, dwa samochody jeżdżą po parkingu, zegar na wieży pokazuje czas komputera. Bez pliku zostają stare modele z kodu.
 - **Nie zrobione w tym etapie:** wypalone oświetlenie całej makiety w Cycles (lightmapy) i wydzielenie makiety z `game.js` do osobnego pliku. Woda z widmem i zmarszczkami działa na WebGPU i WebGL2, więc FFT na shaderach obliczeniowych nie było potrzebne.
+
+### Etap 3: światło i efekty
+
+- **Pora dnia** (`TIMES` w `src/legacy/game.js`, ustawienie `prefs.time`): kolory nieba, kolor, siła i kierunek słońca, światło otoczenia, siła odbić, świecenie okien i latarni (`nightMats`, od 0 do 1), światło rozproszone w wodzie (`waterLight`), lampa nad planszą (`SpotLight`), gwiazdy (tekstura na sferze nieba) i księżyc. `setWorldMood` przyjmuje nazwę pory dnia (prezentacja dalej podaje `true` lub `false`).
+- **Korekcja kolorów** (`src/render/graphics.js`): tablica LUT 32 × 32 × 32 liczona w kodzie (`setGrade`: odcień cieni i świateł, kontrast, nasycenie), nakładana węzłem `lut3D` po mapowaniu tonów, przed wyostrzeniem. Poświata (`setNight`) przyjmuje wartość od 0 do 1.
+- **Świadomie pominięte:**
+  - promienie słońca (`GodraysNode`): liczą się z mapy cieni, która obejmuje tylko planszę, a większa mapa cieni rozmyłaby cienie na planszy,
+  - odbicia SSR: woda jest przezroczysta i nie ma jej w buforach, z których liczy SSR; odbicie nieba i słońca już działa,
+  - TRAA: smugi za ruchomymi łodziami, samochodami i pionkami; zostaje MSAA 4x z wyostrzeniem,
+  - SSGI: za ciężkie przy Retinie i 4K,
+  - niebo fizyczne (`SkyMesh`): makieta ma czyste tło jak zdjęcie modelu w studiu, zostaje gradient w kolorach pory dnia.
+
+### Etap 4: muzyka, dźwięki, prezentacja
+
+- **Muzyka prezentacji** (`createMusic('promo')` w `src/legacy/game.js`): nowy utwór filmowy, nowe instrumenty (`strings`, `pulse`, `taiko`, `brass`, `choir`) i aranżacja `stepPromo` według energii sceny. Utwór z pliku gra tylko, gdy `prefs.promoMusic === 'alex'`. Muzyka nie trafiła do osobnego folderu `src/audio/`: syntezator korzysta z tych samych pomocników co efekty dźwiękowe, a przeniesienie nic by nie dało w działaniu gry.
+- **Efekty i tło dźwiękowe:** `knock` (kości według powierzchni), nowe `coin`, `card`, `build`, `click`, `createAmbience` (fale, wiatr, mewy; zegar i ptaki w pokoju).
+- **Prezentacja:** sceny „Woda” i „Online” (styl `.pr-code` w `src/styles/promo.css`).
+- **Strona-wizytówka i film:** nowe zrzuty z gry (makieta, woda, pionki, budynki, ekran gry) w `prezentacja-strona/img` i `film/assets/img`, film wyrenderowany od nowa.
 

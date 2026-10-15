@@ -5,7 +5,9 @@ const GAME = 'http://localhost:4174/';
 const SLOTS = [{ kind: 'me', pawn: 0, color: 0 }, { kind: 'online', pawn: 1, color: 1 }, { kind: 'bot', level: 'łatwy', pawn: 2, color: 2 }, { kind: 'bot', level: 'trudny', pawn: 3, color: 3 }];
 
 async function player(browser, nick, online) {
-  const context = await browser.newContext({ viewport: { width: 900, height: 640 } });   // mniejsze okna: dwie gry 3D naraz bez karty graficznej
+  // mniejsze okna i krótkie animacje (ograniczony ruch): dwie gry 3D naraz bez karty graficznej odtwarzają zdarzenia
+  // z animacjami klatka po klatce, a ten test sprawdza grę przez sieć, nie animacje
+  const context = await browser.newContext({ viewport: { width: 900, height: 640 }, reducedMotion: 'reduce' });
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));

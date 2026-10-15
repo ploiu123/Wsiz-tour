@@ -201,8 +201,9 @@ Do ustalenia: co z Kuchnią.
 - **Interpunkcja:** kropka tylko na końcu pełnego zdania. Pojedyncze słowa i hasła („Rzuć”, „Dublet”, „Kupuj”, „Buduj”, „Rośnij”, nazwy pionków, napisy „KUPIONE” i „MONOPOL”) są bez kropek i bez wykrzykników.
 - **Studio produktowe:** każdy pionek pokazany osobno jak produkt (jasne tło i matowa podłoga lekko w kolorze gracza, bez widocznej krawędzi, reflektor z góry, plama światła i poświata w kolorze gracza, obrót na talerzu; na telefonie pionek stoi na środku nad napisem) z granatowym podpisem i krótkim opisem dla kogo jest (Sztandar: „Dla tych, którzy prowadzą.”, Drukarka 3D: „Dla tych, którzy budują.”, Koparka: „Dla tych, którzy liczą.”, Ekspres: „Dla tych, którzy nie śpią przed sesją.”).
 - **Żywa plansza:** przez cały zwiastun trwa w tle gra czterech graczy (właściciele sal, budynki, pieniądze na stole, pionki skaczą, czynsz przelatuje między graczami). Wyspa jest w dzień, jak w grze.
-- 19 scen, ok. 2 minut: „Uczelnia, jakiej jeszcze nie znasz”, logo i nazwa, makieta z lotu ptaka („Uniwersytet z jednej strony, wakacje z drugiej”), 4 pionki w studiu, plansza („32 pola”), kostki w zwolnionym tempie („Rzuć”, „Dublet”), przykładowe pytanie z minutnikiem (7 × 8, nigdy z prawdziwej bazy), budowanie od telefonu do serwerowni („Kupuj”, „Buduj”, „Rośnij”), czynsz, monopol, wachlarz kart, manifest („Ucz się”, „Graj”, „Kupuj”, „Buduj”, „Blokuj”, „Wygrywaj”), liczby (2000 zł, 60 s, 32 pola, 7 semestrów), „Wiedza się opłaca.” z deszczem pieniędzy, „Graj, gdzie chcesz i kiedy chcesz.” (laptop, tablet i telefon, na których ekranach widać żywą planszę z uproszczonym interfejsem gry) i finał z fajerwerkami, przyciskami „Zagraj teraz” i „Obejrzyj jeszcze raz”.
-- Muzyka jest generowana w kodzie, bez plików i bez cudzych nagrań (zob. „Muzyka”). W zwiastunie utwór rośnie razem ze scenami: pad i pianino, potem bas i arpeggio, potem bit, a w finale pełny bit z melodią. Głośność bierze z ustawienia „Muzyka”, w zwiastunie jest też przycisk wyciszenia.
+- **Nowe sceny (od 15.10.2026, Etap 4 planu AAA):** „Woda” (kamera nisko nad falami: „Fale, które liczy fizyka”, widać dno przez wodę, klin fal za łodzią i kręgi) po scenie kampusu oraz „Online” („Podaj kod. Grajcie razem.”, kod party w szklanych kafelkach, które wskakują po kolei) przed sceną z urządzeniami. Razem 21 scen.
+- 19 scen (do 14.10.2026), ok. 2 minut: „Uczelnia, jakiej jeszcze nie znasz”, logo i nazwa, makieta z lotu ptaka („Uniwersytet z jednej strony, wakacje z drugiej”), 4 pionki w studiu, plansza („32 pola”), kostki w zwolnionym tempie („Rzuć”, „Dublet”), przykładowe pytanie z minutnikiem (7 × 8, nigdy z prawdziwej bazy), budowanie od telefonu do serwerowni („Kupuj”, „Buduj”, „Rośnij”), czynsz, monopol, wachlarz kart, manifest („Ucz się”, „Graj”, „Kupuj”, „Buduj”, „Blokuj”, „Wygrywaj”), liczby (2000 zł, 60 s, 32 pola, 7 semestrów), „Wiedza się opłaca.” z deszczem pieniędzy, „Graj, gdzie chcesz i kiedy chcesz.” (laptop, tablet i telefon, na których ekranach widać żywą planszę z uproszczonym interfejsem gry) i finał z fajerwerkami, przyciskami „Zagraj teraz” i „Obejrzyj jeszcze raz”.
+- Muzyka: domyślnie nowy utwór filmowy skomponowany w kodzie (od 15.10.2026, zob. „Muzyka”), do wyboru w Ustawieniach „Epic Cinematic Trailer | ELITE” (Alex-Productions). Utwór z kodu rośnie razem ze scenami: smyczki i fortepian, potem niskie smyczki i taiko, potem pełne bębny i dęte blachy, a w kulminacji stopa, melodia blach i chór. Głośność bierze z ustawienia „Muzyka”, w zwiastunie jest też przycisk wyciszenia.
 - Sterowanie: pauza, poprzednia i następna scena, pasek scen (klik = skok do sceny), wyciszenie, zamknięcie. Klawisze: strzałki, spacja, Esc. Przyciski chowają się, gdy nie ruszasz myszką.
 - Kod jest w `index.html`: style z prefiksem `.pr-`, znaczniki w `<section class="promo">`, logika w bloku „Prezentacja” (studio `setStudio`, lista `SCENES`: czas sceny, ujęcie kamery, napisy i zdarzenia).
 
@@ -357,6 +358,17 @@ W Ustawieniach → „Wygląd planszy” są trzy wersje (zapamiętuje się wyb�
 
 Prezentacja zawsze pokazuje dioramę, a po jej zamknięciu wraca wybrany wygląd.
 
+## Pora dnia (od 15.10.2026, Etap 3 planu AAA)
+
+W Ustawieniach → „Pora dnia” są cztery wersje (zapamiętuje się wybór, domyślnie Dzień):
+
+- **Dzień:** jasne niebo, słońce wysoko, plansza najczytelniejsza.
+- **Zachód słońca:** słońce nisko i ciepłe (długie cienie), niebo brzoskwiniowe, woda odbija ciepłe niebo, zapalają się pierwsze okna i latarnie, nad planszą lekka ciepła lampa.
+- **Noc:** granatowe niebo z gwiazdami i księżycem, świecą wszystkie okna i latarnie, woda ciemna z błyskami, nad planszą ciepła lampa, więc pola są czytelne.
+- **Jak teraz:** pora według zegara komputera (dzień 7:00–17:30, zachód 17:30–20:30 i 5:30–7:00, poza tym noc); gra sprawdza to co minutę.
+
+Do każdej pory dnia jest delikatna korekcja kolorów (tablica LUT liczona w kodzie): chłodniejsze cienie i cieplejsze światła, odrobinę więcej kontrastu. Pokój ze stołem ma własne światło lampy. Prezentacja dalej jest w dzień, a w finale nocą.
+
 ## Pieniądze i karty graczy obok planszy (od 13.10.2026)
 
 - Rogi „KARTY GRACZA” zniknęły ze środka planszy.
@@ -381,10 +393,20 @@ Prezentacja zawsze pokazuje dioramę, a po jej zamknięciu wraca wybrany wygląd
 
 - Cała muzyka jest syntezowana w przeglądarce (Web Audio), bez plików i bez cudzych nagrań.
 - **Menu i gra:** spokojny, ciepły podkład (elektryczne pianino z akordami jazzowymi Dm9, G13, Cmaj9, Am9, Fmaj9, Em7, miękki bas, delikatna perkusja z lekkim bujaniem, cichy szum płyty winylowej, co 16 taktów krótka przerwa bez perkusji). Startuje po pierwszym kliknięciu (przeglądarki nie pozwalają grać wcześniej), cichnie na czas prezentacji i znika, gdy suwak „Muzyka” jest na zero.
-- **Prezentacja:** osobny utwór (112 uderzeń na minutę), który rośnie z energią sceny, z pogłosem, echem raz w lewo, raz w prawo, „pompowaniem” w rytm stopy, uderzeniami i szumem przy cięciach.
+- **Prezentacja (od 15.10.2026, Etap 4 planu AAA):** nowy utwór filmowy w d-moll, 100 uderzeń na minutę, napisany pod sceny zwiastuna. Część A: Dm, B, F, C; część B: Gm, B, Dm, A (A-dur na końcu frazy buduje napięcie), co 8 taktów na zmianę. Instrumenty z syntezatora: smyczki (trzy rozstrojone piły z wibrato), ostinato fortepianu ósemkami, niskie smyczki staccato, bębny taiko, dęte blachy z otwierającym się filtrem, chór „aa” z filtrów formantowych, dzwonek nad melodią. Energia sceny dokłada warstwy: 0 smyczki, fortepian i niski bordun; 1 niskie smyczki i miękkie taiko; 2 pełne taiko, klaśnięcia, talerzyki i akordy blach; 3 stopa z „pompowaniem”, melodia blach i chór. Nagranie offline: bez przesterowań, głośność rośnie z energią (−19,8 do −16,9 dB, szczyty 0,33 do 0,74). W Ustawieniach „Muzyka prezentacji”: „Nasza, z kodu gry” (domyślnie) albo „Epic Cinematic Trailer”.
+- **Prezentacja (do 14.10.2026):** osobny utwór (112 uderzeń na minutę), który rośnie z energią sceny, z pogłosem, echem raz w lewo, raz w prawo, „pompowaniem” w rytm stopy, uderzeniami i szumem przy cięciach.
 - Mikser ma kompresor i limiter, więc nic nie przesterowuje (sprawdzone nagraniem offline: brak przesterowań, poziomy i proporcje basu, środka i góry zmierzone).
 - **Prezentacja:** utwór ma dwie części (A i B, co 8 taktów na zmianę, z inną melodią), przejścia perkusji na końcu frazy, narastający szum przed nową frazą i talerz na jej początku.
 - **Muzyka z plików (od 13.10.2026):** prezentacja: „Epic Cinematic Trailer | ELITE” (Alex-Productions, CC BY 3.0, plik w repozytorium, podpis w Ustawieniach i na ostatniej planszy prezentacji). Menu i gra: „Tropical Sun” (All Good Folks) i „New Life” (Moire) z Uppbeat, na zmianę, tylko lokalnie (w `.gitignore`, bo licencja Uppbeat nie pozwala udostępniać plików). Gdy pliku nie ma, gra wraca do syntezatora. Lista plików: stała `MUSIC_FILE`; autorzy i licencje: `assets/muzyka/AUTORZY.md`. Przy utworze z pliku prezentacja nie dokłada własnej stopy (inne tempo), zostają uderzenia i szumy przy cięciach.
+
+## Dźwięki i tło dźwiękowe (od 15.10.2026, Etap 4 planu AAA)
+
+- **Kości:** każde uderzenie kości z symulacji fizyki ma swój stuk: na stole w pokoju niższy, drewniany, na makiecie wyższy, jak o tekturę planszy.
+- **Monety:** kilka monet naraz, każda trochę inna, z metalicznym dzwonieniem.
+- **Karty:** szelest wysuwania i trzask papieru.
+- **Budowa:** stuknięcia metalu o rusztowanie i głuche lądowanie budynku.
+- **Menu:** ciche „tyk” przy przyciskach.
+- **Tło dźwiękowe:** na makiecie szum fal, który przypływa i odpływa, wiatr i czasem mewy; w pokoju tykanie zegara i ptaki za oknem. Głośność z suwaka „Efekty dźwiękowe”, w prezentacji cisza (gra jej muzyka).
 
 ## Efekty w grze (od 13.10.2026)
 
