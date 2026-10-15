@@ -33,6 +33,7 @@ export const PRESETS = {
 };
 const MAX_PIXELS = { low: 2.1e6, medium: 7.5e6, high: 9e6, ultra: 17e6 };   // limit pikseli obrazu (Ultra: 5K)
 const LUT_N = 32;   // rozmiar tablicy korekcji kolorów
+const NEUTRAL_GRADE = { shadow: [0, 0, 0], high: [0, 0, 0], contrast: 0, sat: 1 };
 
 export class Graphics {
   /**
@@ -56,6 +57,7 @@ export class Graphics {
     this.bloomPass = null;
     this.night = 0;
     this.gradeAmount = uniform(1);
+    this.gradeSpec = NEUTRAL_GRADE;   // bez korekcji, dopóki gra nie poda pory dnia (pusta tablica dałaby czarny obraz)
     this.ratio = 1;
     this.slow = { acc: 0, n: 0, wait: 0, good: 0, noUpUntil: 0 };
     // głębia ostrości: odległość ostrzenia i zakres ostrości (jednostki sceny); ustawia gra co klatkę
@@ -183,7 +185,7 @@ export class Graphics {
   // Korekcja kolorów: chłodniejsze albo cieplejsze cienie i światła (shadow, high: dodatki RGB), lekki kontrast
   // i nasycenie. Liczona raz przy zmianie pory dnia, potem karta graficzna tylko czyta tablicę.
   setGrade(spec) {
-    this.gradeSpec = spec || this.gradeSpec;
+    this.gradeSpec = spec || this.gradeSpec || NEUTRAL_GRADE;
     const t = this.lutTex, g = this.gradeSpec;
     if (!t || !g) return;
     const d = t.image.data, N = LUT_N;

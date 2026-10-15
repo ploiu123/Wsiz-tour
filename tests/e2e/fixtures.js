@@ -23,3 +23,21 @@ export async function startGame(page) {
   await page.locator('#btnStart').click();
   await expect(page.locator('#gRoll')).toBeVisible();
 }
+
+// Średnia jasność (0–255) fragmentu ekranu: wykrywa czarny obraz 3D, którego inne testy nie widzą
+export async function brightness(page, clip) {
+  const png = (await page.screenshot({ clip })).toString('base64');
+  return page.evaluate(async src => {
+    const img = new Image();
+    img.src = `data:image/png;base64,${src}`;
+    await img.decode();
+    const c = document.createElement('canvas');
+    c.width = img.width; c.height = img.height;
+    const g = c.getContext('2d');
+    g.drawImage(img, 0, 0);
+    const d = g.getImageData(0, 0, c.width, c.height).data;
+    let sum = 0;
+    for (let k = 0; k < d.length; k += 4) sum += 0.2126 * d[k] + 0.7152 * d[k + 1] + 0.0722 * d[k + 2];
+    return sum / (d.length / 4);
+  }, png);
+}

@@ -7378,7 +7378,9 @@ timer.connect(document);   // karta w tle nie daje potem jednego wielkiego skoku
 // dopasowuje się do płynności (gdy klatki są wolne, najpierw spada rozdzielczość, potem efekty)
 gfx = new Graphics(renderer, scene, camera, { sun, mobile: lowEnd, onResize: () => resize() });
 gfx.set(GFX_LEVELS.some(([v]) => v === prefs.gfx) ? prefs.gfx : 'auto');
-gfx.setNight(worldNight);
+// pora dnia ustawiona przy starcie (zanim powstał gfx): poświata i korekcja kolorów
+gfx.setNight(TIMES[worldTime].lights);
+gfx.setGrade(TIMES[worldTime].grade);
 function frame() {
   timer.update();
   const raw = timer.getDelta(), dt = Math.min(raw, 0.05);

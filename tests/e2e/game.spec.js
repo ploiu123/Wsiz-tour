@@ -1,4 +1,4 @@
-import { test, expect, startGame } from './fixtures.js';
+import { test, expect, startGame, brightness } from './fixtures.js';
 
 test('menu: logo, nazwa gry i przycisk Graj', async ({ page, errors }) => {
   await page.goto('./');
@@ -13,6 +13,8 @@ test('gra: 4 graczy po 2000 zł, rzut kostkami', async ({ page, errors }) => {
   const players = page.locator('.g-player');
   await expect(players).toHaveCount(4);
   for (const p of await players.all()) await expect(p).toContainText('2000 zł');
+  // plansza i makieta są widoczne (fragment między kartami graczy, z boku przycisku rzutu), a nie czarne
+  expect(await brightness(page, { x: 340, y: 420, width: 260, height: 200 })).toBeGreaterThan(60);
   await page.locator('#gRoll').click({ force: true });   // przycisk pulsuje, więc klikamy bez czekania na „stabilny” element
   await expect(page.locator('#gStatus, .g-status').first()).toHaveText(/\d \+ \d = \d+/);
   expect(errors).toEqual([]);
