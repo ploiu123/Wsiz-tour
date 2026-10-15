@@ -110,7 +110,7 @@ Autor uruchomił grę na MacBooku i chce gry klasy AAA: plansza wielkością jak
 | Etap 3 | pora dnia, korekcja kolorów LUT, poświata zależna od pory dnia (promienie słońca, SSR, TRAA, SSGI i niebo fizyczne świadomie pominięte, niżej dlaczego) | **zrobione 15.10.2026** |
 | Etap 4 | muzyka prezentacji w kodzie, nowe efekty dźwiękowe i tło dźwiękowe, nowe sceny prezentacji, nowe zrzuty na stronie-wizytówce i w filmie | **zrobione 15.10.2026** |
 | Etap 5 | wykres majątku po grze, osiągnięcia, emotki online, samouczek, tryb zdjęć, GitHub Actions, licznik klatek (ekonomia z filmu wzorcowego czeka na film) | **zrobione 15.10.2026, bez ekonomii** |
-| Etap 6 | menu w każdej chwili, najlepsze momenty po grze, widzowie online, ekran zerwanego połączenia, rozmycie ruchu karty, nowe sceny prezentacji, porządek w kodzie | w trakcie |
+| Etap 6 | menu w każdej chwili, najlepsze momenty po grze, widzowie online, ekran zerwanego połączenia, rozmycie ruchu karty, nowe sceny prezentacji, porządek w kodzie | **zrobione 15.10.2026** |
 
 ### Krok 0: co się zmieniło
 
@@ -148,7 +148,7 @@ Autor uruchomił grę na MacBooku i chce gry klasy AAA: plansza wielkością jak
 
 ### Etap 4: muzyka, dźwięki, prezentacja
 
-- **Muzyka prezentacji** (`createMusic('promo')` w `src/legacy/game.js`): nowy utwór filmowy, nowe instrumenty (`strings`, `pulse`, `taiko`, `brass`, `choir`) i aranżacja `stepPromo` według energii sceny. Utwór z pliku gra tylko, gdy `prefs.promoMusic === 'alex'`. Muzyka nie trafiła do osobnego folderu `src/audio/`: syntezator korzysta z tych samych pomocników co efekty dźwiękowe, a przeniesienie nic by nie dało w działaniu gry.
+- **Muzyka prezentacji** (`createMusic('promo')`, od Etapu 6 w `src/audio/music.js`): nowy utwór filmowy, nowe instrumenty (`strings`, `pulse`, `taiko`, `brass`, `choir`) i aranżacja `stepPromo` według energii sceny. Utwór z pliku gra tylko, gdy `prefs.promoMusic === 'alex'` (gra podaje `useFile`).
 - **Efekty i tło dźwiękowe:** `knock` (kości według powierzchni), nowe `coin`, `card`, `build`, `click`, `createAmbience` (fale, wiatr, mewy; zegar i ptaki w pokoju).
 - **Prezentacja:** sceny „Woda” i „Online” (styl `.pr-code` w `src/styles/promo.css`).
 - **Strona-wizytówka i film:** nowe zrzuty z gry (makieta, woda, pionki, budynki, ekran gry) w `prezentacja-strona/img` i `film/assets/img`, film wyrenderowany od nowa.
@@ -170,5 +170,7 @@ Autor uruchomił grę na MacBooku i chce gry klasy AAA: plansza wielkością jak
 - **Najlepsze momenty po grze:** `collectMoment` w `src/legacy/game.js` zbiera w trakcie gry: monopol, serwerownię, bankructwo, przelew między graczami od 40 zł, pulę od 50 zł, dziekanat. `pickMoments` (`src/ui/moments.js`, test `tests/unit/moments.test.ts`) wybiera najwyżej 5 o najwyższej wadze, jeden na pole, w kolejności gry. Przycisk „Najlepsze momenty” na ekranie końca gry: kamera przelatuje nad polami (`flyTo`, `cellTarget`), przy każdym podpis (`banner`), „Pomiń” kończy powtórkę.
 - **Widzowie online:** `Room.watch` w `server/room.ts` (najwyżej 8 widzów na pokój), zdarzenie `watch` w `server/index.ts`, `OnlineClient.watch` w `src/net/online.ts`. Widz ma miejsce -1: dostaje stan i zdarzenia jak gracz, karty wszystkich graczy są u niego ukryte, nie decyduje i nie wysyła emotek. W menu Online trzecia opcja „Oglądaj grę”, w poczekalni i w grze liczba widzów (`#gWatch`). Testy: serwer (`tests/unit/server.test.ts`) i przeglądarka (`tests/e2e/online.spec.js`).
 - **Zerwane połączenie:** nakładka `#gLost` (`lostScreen`): „Łączę ponownie z serwerem gry…”, po 20 s „Spróbuj jeszcze raz” i „Wyjdź do menu”; gdy nie da się wrócić na miejsce, tylko wyjście. Po powrocie znika sama. Test w przeglądarce zrywa połączenie gospodarza (`__t.dropNet`, tylko w paczce testowej).
+- **Nowe sceny prezentacji:** „Po grze” (`PROMO_HIST`: przykładowy wykres z wymyślonej gry, `wealthChartSvg`, `achHtml`) i „Zdjęcie 4K” (`shutterFlash`, ramka `.pr-viewfinder` w `src/styles/promo.css`). Razem 23 sceny.
+- **Porządek w kodzie:** dźwięk wydzielony z `game.js` do `src/audio/`: `synth.js` (kontekst audio i proste brzmienia), `sfx.js` (efekty, głośność podaje gra), `music.js` (podkład i utwór prezentacji; wybór utworu z pliku przez `opts.useFile`), `ambience.js` (tło dźwiękowe). Samouczek w `src/ui/tips.js` (`createTips`). Tryb zdjęć zostaje w `game.js`, bo korzysta z kamery, sterowania kamerą, kadrowania planszy i stanu gry; wydzielenie wymagałoby przekazywania kilkunastu zależności bez zysku. Makieta też zostaje w `game.js` z tego samego powodu. `game.js` ma teraz ok. 7300 linii.
 - **Rozmycie ruchu karty:** `liftCard` dodaje trzy półprzezroczyste kopie karty o 35, 70 i 105 tysięcznych lotu z tyłu; ich przezroczystość zależy od prędkości obrotu (pochodna `easeOut3`), po locie znikają.
 

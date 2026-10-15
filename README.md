@@ -69,7 +69,8 @@ Paczkę można sprawdzić przed wysłaniem: `npm run preview` (adres http://loca
 | `src/render/` | Jakość grafiki: poziomy od Niskiej do Ultra 4K, cienie kontaktowe, poświata, wygładzanie krawędzi; fizyka kości; wczytywanie modeli z Blendera (`assets.js`) |
 | `src/scene/` | Pokój ze stołem: drugi wygląd do wyboru w Ustawieniach (stół, pokój, światło, odbicia), rysowany w kodzie; główny wygląd to makieta nad wodą |
 | `src/net/` | Połączenie z serwerem gry w trybie online (Socket.IO) |
-| `src/ui/` | Osiągnięcia i wykres majątku na ekranie po grze |
+| `src/ui/` | Ekran po grze (osiągnięcia, wykres majątku, najlepsze momenty) i samouczek |
+| `src/audio/` | Dźwięk z kodu (Web Audio): efekty, muzyka menu, gry i prezentacji, tło dźwiękowe |
 | `server/` | Serwer gry (Node.js, TypeScript): pokoje online, silnik gry po stronie serwera, pliki gry |
 | `src/styles/` | Wygląd: podstawy, menu, rozgrywka, prezentacja |
 | `tests/` | Testy jednostkowe (`unit`) i w przeglądarce (`e2e`) |

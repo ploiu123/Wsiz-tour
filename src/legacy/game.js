@@ -11,6 +11,11 @@ import { RippleSim } from '../scene/ripples.js';
 import { ACHIEVEMENTS, unlock } from '../ui/achievements.js';
 import { wealthChartSvg } from '../ui/wealthChart.js';
 import { pickMoments, rentScore, poolScore } from '../ui/moments.js';
+import { TIPS, createTips } from '../ui/tips.js';
+import { audio, audioStarted, click, knock } from '../audio/synth.js';
+import { playSfx } from '../audio/sfx.js';
+import { createMusic } from '../audio/music.js';
+import { createAmbience } from '../audio/ambience.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
@@ -3776,7 +3781,7 @@ $('settingsBox').addEventListener('click', e => {
   const d = b.dataset;
   if (d.themeSet) { prefs.theme = d.themeSet; applyTheme(); }
   else if (d.scale) { prefs.scale = +d.scale; applyScale(); }
-  else if (d.skin) { prefs.skin = d.skin; applySkin(prefs.skin); if (actx) ambience(); }
+  else if (d.skin) { prefs.skin = d.skin; applySkin(prefs.skin); if (audioStarted()) ambience(); }
   else if (d.time) { prefs.time = d.time; setWorldMood(timeNow(prefs.time)); }
   else if (d.promoMusic) prefs.promoMusic = d.promoMusic;
   else if (d.gfx) { prefs.gfx = d.gfx; gfx.set(d.gfx); }
@@ -4830,88 +4835,9 @@ function applySnap(snap) {
 }
 
 // ---------------------------------------------------------------------------
-// Dźwięki: syntezowane w przeglądarce (Web Audio), bez plików
+// Dźwięki: syntezowane w przeglądarce (Web Audio), bez plików (src/audio/)
 // ---------------------------------------------------------------------------
-let actx = null;
-function audio() {
-  if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
-  if (actx.state === 'suspended') actx.resume();
-  return actx;
-}
-let noiseBuf = null;
-function noise(a) {
-  if (!noiseBuf) {
-    noiseBuf = a.createBuffer(1, a.sampleRate * 0.5, a.sampleRate);
-    const d = noiseBuf.getChannelData(0);
-    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-  }
-  return noiseBuf;
-}
-function click(a, t, freq, gain, dur) {   // krótkie stuknięcie: filtrowany szum
-  const src = a.createBufferSource(); src.buffer = noise(a);
-  const f = a.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = 3.5;
-  const g = a.createGain();
-  g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-  src.connect(f).connect(g).connect(a.destination);
-  src.start(t, Math.random() * 0.3); src.stop(t + dur + 0.02);
-}
-function tone(a, t, freq, dur, gain, type = 'sine', to = null) {
-  const o = a.createOscillator(); o.type = type;
-  o.frequency.setValueAtTime(freq, t);
-  if (to) o.frequency.exponentialRampToValueAtTime(to, t + dur);
-  const g = a.createGain();
-  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + 0.01);
-  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  o.connect(g).connect(a.destination);
-  o.start(t); o.stop(t + dur + 0.02);
-}
-// Uderzenie kości o powierzchnię: suchy trzask plus krótki ton „pudła” (drewno stołu niżej i dłużej, tektura planszy wyżej)
-function knock(a, t, vel, wood) {
-  click(a, t, wood ? 1300 + Math.random() * 900 : 2000 + Math.random() * 1800, vel, wood ? 0.07 : 0.045);
-  tone(a, t, wood ? 190 + Math.random() * 60 : 320 + Math.random() * 80, wood ? 0.12 : 0.06, 0.22 * vel, 'sine', wood ? 150 : 260);
-}
-let diceAudio = null;
-function sfx(name) {
-  const vol = (prefs.effects ?? 80) / 100;
-  if (!vol) return;
-  if (name === 'dice' && DICE_SOUND_FILE) {
-    diceAudio ||= new Audio(DICE_SOUND_FILE);
-    diceAudio.volume = vol; diceAudio.currentTime = 0; diceAudio.play().catch(() => {});
-    return;
-  }
-  const a = audio();
-  if (!a) return;
-  const t = a.currentTime + 0.01;
-  const v = 0.9 * vol;
-  if (name === 'dice') {   // kostki: potrząśnięcie w dłoni, a potem stukot o planszę
-    for (let k = 0; k < 6; k++) click(a, t + k * 0.045, 2600 + Math.random() * 1200, 0.18 * v, 0.03);
-    const hits = [0.42, 0.5, 0.78, 0.86, 1.0, 1.08, 1.17, 1.25, 1.32];
-    hits.forEach((h, k) => click(a, t + h, 1500 + Math.random() * 2400, (0.75 - k * 0.06) * v, 0.05 + Math.random() * 0.03));
-    tone(a, t + 0.42, 140, 0.12, 0.25 * v, 'sine', 70);
-  } else if (name === 'hop') tone(a, t, 520, 0.08, 0.12 * v, 'triangle', 760);
-  else if (name === 'good') [523, 659, 784].forEach((f, k) => tone(a, t + k * 0.09, f, 0.32, 0.22 * v, 'triangle'));
-  else if (name === 'bad') { tone(a, t, 330, 0.28, 0.2 * v, 'sawtooth', 220); tone(a, t + 0.18, 220, 0.4, 0.18 * v, 'sawtooth', 150); }
-  else if (name === 'coin') {   // kilka monet: każda trochę inna, z metalicznym dzwonieniem
-    for (let k = 0; k < 3; k++) {
-      const f = 1250 + Math.random() * 600, at = t + k * 0.06 + Math.random() * 0.02;
-      tone(a, at, f, 0.18, 0.12 * v); tone(a, at, f * 2.76, 0.12, 0.05 * v); click(a, at, 6000, 0.05 * v, 0.02);
-    }
-  } else if (name === 'card') {   // karta: szelest wysuwania i trzask papieru
-    const n = a.createBufferSource(); n.buffer = noise(a);
-    const f = a.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 1.2;
-    f.frequency.setValueAtTime(900, t); f.frequency.exponentialRampToValueAtTime(4200, t + 0.22);
-    const g = a.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.18 * v, t + 0.1); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.28);
-    n.connect(f).connect(g).connect(a.destination); n.start(t); n.stop(t + 0.3);
-    click(a, t + 0.27, 3200, 0.2 * v, 0.03);
-  } else if (name === 'shutter') {   // migawka aparatu: dwa krótkie trzaski
-    click(a, t, 4200, 0.22 * v, 0.02); click(a, t + 0.07, 2600, 0.18 * v, 0.03);
-  } else if (name === 'build') {   // budowa: stuknięcia metalu o rusztowanie i głuche lądowanie
-    [0, 0.09, 0.2].forEach((d, k) => { click(a, t + d, 2800 + k * 600, 0.16 * v, 0.06); tone(a, t + d, 880 + k * 220, 0.18, 0.05 * v, 'triangle'); });
-    tone(a, t + 0.32, 170, 0.32, 0.38 * v, 'sine', 55);
-    click(a, t + 0.32, 600, 0.28 * v, 0.12);
-  } else if (name === 'click') tone(a, t, 1900, 0.035, 0.05 * v, 'sine', 1500);   // przycisk w menu: ciche „tyk”
-  else if (name === 'fanfare') [523, 659, 784, 1046].forEach((f, k) => tone(a, t + k * 0.13, f, 0.5, 0.2 * v, 'triangle'));
-}
+function sfx(name) { playSfx(name, (prefs.effects ?? 80) / 100, DICE_SOUND_FILE); }
 
 // ---------------------------------------------------------------------------
 // Kostki 3D
@@ -5573,37 +5499,9 @@ function showDecision(d) {
 }
 
 // ---------------------------------------------------------------------------
-// Samouczek: w pierwszych grach krótkie podpowiedzi w chwili, gdy są potrzebne. Każda pokazuje się raz;
-// w Ustawieniach można je wyłączyć albo pokazać od nowa. Przy rzucie i po kupnie pola podpowiedź stoi
-// pod przyciskiem rzutu, a przy pytaniu, kupnie i karcie jest w środku okna decyzji (nic nie zasłania).
-// ---------------------------------------------------------------------------
-const TIPS = {
-  roll: ['Rzut kostkami', 'Kliknij przycisk albo naciśnij spację. Pionek przejdzie tyle pól, ile wypadnie na kostkach.'],
-  menu: ['Menu gry', 'Przycisk Menu w prawym górnym rogu zatrzymuje grę. Tam włączysz też tryb zdjęć albo zakończysz grę i policzysz wynik.'],
-  buy: ['Wolne pole', 'Żeby kupić pole, trzeba dobrze odpowiedzieć na pytanie o studia. Gdy inni gracze staną na Twoim polu, zapłacą Ci czynsz.'],
-  answer: ['Pytanie', 'Wybierz jedną z czterech odpowiedzi, zanim skończy się czas na zegarze.'],
-  bought: ['Twoje pierwsze pole', 'Zbierz wszystkie sale jednego koloru, a czynsz wzrośnie. Na swoich salach postawisz potem budynki, od telefonu aż do serwerowni.'],
-  card: ['Karta', 'Karty do użycia trafiają do panelu „Twoje karty”. Kliknij w nim „Pokaż”, żeby je obejrzeć.'],
-};
-const tipWanted = id => prefs.tips && !prefs.tipsSeen.includes(id);
-const tipSeen = id => { prefs.tipsSeen.push(id); savePrefs(); };
-function tip(id) {
-  if (!tipWanted(id)) return;
-  tipSeen(id);
-  $('gTipTitle').textContent = TIPS[id][0];
-  $('gTipText').textContent = TIPS[id][1];
-  $('gTip').hidden = false;
-}
-function tipIn(bd, id) {
-  if (!tipWanted(id) || !bd) return;
-  tipSeen(id);
-  $('gTip').hidden = true;
-  bd.querySelector('.g-modal')?.insertAdjacentHTML('beforeend', `<aside class="g-tipbox"><p><b>Podpowiedź</b> ${TIPS[id][1]}</p><button type="button" data-tips-off>Wyłącz podpowiedzi</button></aside>`);
-}
-function tipsOff() { prefs.tips = false; savePrefs(); $('gTip').hidden = true; layer.querySelectorAll('.g-tipbox').forEach(el => el.remove()); }
-$('gTipOk').addEventListener('click', () => { $('gTip').hidden = true; });
-$('gTipOff').addEventListener('click', tipsOff);
-layer.addEventListener('click', e => { if (e.target.closest('[data-tips-off]')) { e.stopPropagation(); tipsOff(); } }, true);
+// Samouczek: src/ui/tips.js (podpowiedzi przy pierwszych grach)
+const tips = createTips({ prefs, save: savePrefs, layer, el: { box: $('gTip'), title: $('gTipTitle'), text: $('gTipText'), ok: $('gTipOk'), off: $('gTipOff') } });
+const tip = id => tips.show(id), tipIn = (bd, id) => tips.inside(bd, id);
 
 // ---------------------------------------------------------------------------
 // Tryb zdjęć: panele znikają, kamerę można swobodnie obracać, przybliżać i przesuwać, a zdjęcie zapisuje się
@@ -6497,6 +6395,16 @@ function slam(text, gold = false) {
   fl.classList.remove('go'); void fl.offsetWidth; fl.classList.add('go');
 }
 const MANIFEST = ['Ucz się', 'Graj', 'Kupuj', 'Buduj', 'Blokuj', 'Wygrywaj'];
+// Scena „Po grze”: przykładowy wykres majątku (wymyślona gra, tylko do pokazania wykresu) i trzy osiągnięcia
+const PROMO_HIST = Array.from({ length: 16 }, (_, t) => [
+  2000 + t * 190 + 120 * Math.sin(t * 0.9), 2000 + t * 70 - (t > 9 ? (t - 9) * 160 : 0),
+  2000 + 160 * Math.sin(t * 0.6) + t * 30, 2000 - t * 70,
+].map(v => Math.max(0, Math.round(v))));
+function shutterFlash() {
+  const fl = $('prFlash');
+  fl.classList.remove('go'); void fl.offsetWidth; fl.classList.add('go');
+  sfx('shutter');
+}
 
 // ---------------------------------------------------------------------------
 // Sceny zwiastuna
@@ -6671,6 +6579,21 @@ const SCENES = [
       <h2 class="pr-h xl">${bline('Wiedza', 0.3)}${bline('<span class="pr-gold">się opłaca.</span>', 0.7)}</h2></div>`,
   },
   {
+    name: 'Po grze', dur: 7000, energy: 2, blur: true,
+    cam: orbit(V3(0, 0, 0), 17, 16, 12, 11, Q - 0.2, Q + 0.35),
+    events: [[2600, () => P.music?.chime()]],
+    html: () => `<div class="pr-scene split">
+      <div>
+        ${fadeP('pr-eyebrow', 'Po grze', 0.3)}
+        <h2 class="pr-h">${bline('Zobacz, jak', 0.4)}${bline('<span class="pr-silver">rosła fortuna</span>', 0.7)}</h2>
+        ${fadeP('pr-sub', 'Wykres majątku pokazuje całą grę. Najlepsze momenty kamera powtórzy jeszcze raz, a w profilu zbierasz osiągnięcia.', 1.3)}
+      </div>
+      <div class="pr-after pr-fade" style="--d:1s">
+        ${wealthChartSvg(PROMO_HIST, PAWN_COLORS.slice(0, 4).map((c, k) => ({ name: `Gracz ${k + 1}`, color: c.hex })))}
+        <div class="m-achv">${['monopoly', 'hotel', 'scholar'].map((id, k) => `<div class="pr-ach" style="--k:${k}">${achHtml(ACHIEVEMENTS.find(a => a.id === id), true)}</div>`).join('')}</div>
+      </div></div>`,
+  },
+  {
     name: 'Online', dur: 6800, energy: 2, blur: true,
     cam: u => { const a = Q + 0.9 - u * 0.5; return [V3(15 * Math.cos(a), 11.5, 15 * Math.sin(a)), V3(0, -0.4, 0)]; },
     events: [[700, () => P.music?.chime()]],
@@ -6696,6 +6619,16 @@ const SCENES = [
           <i class="pr-ui-row"><b></b><b></b><b></b><b></b></i><i class="pr-ui-roll sm">Rzuć</i><i class="pr-ui-bottom"></i></div></div>
       </div>
       ${fadeP('pr-sub', 'Gra działa w przeglądarce i nie trzeba jej instalować. Na komputerze, tablecie i telefonie to ta sama rozgrywka.', 1.5)}</div>`,
+  },
+  {
+    name: 'Zdjęcie 4K', dur: 6400, cut: 'soft', energy: 2,
+    cam: shot(V3(8.6, 1.5, 9.8), V3(4.4, 0.25, 5.2), V3(6.6, 1.15, 10.6), V3(3.3, 0.2, 5.6), linear),
+    events: [[2700, shutterFlash]],
+    html: () => `<div class="pr-scene at-top-left">
+      <div class="pr-viewfinder pr-fade" style="--d:.2s" aria-hidden="true"><i></i><i></i><i></i><i></i><span>4K</span></div>
+      ${fadeP('pr-eyebrow', 'Tryb zdjęć', 0.4)}
+      <h2 class="pr-h md">${bline('Zatrzymaj grę.', 0.6)}${bline('<span class="pr-silver">Zrób zdjęcie w 4K.</span>', 1.0)}</h2>
+      ${fadeP('pr-sub', 'Panele znikają, kamera lata swobodnie, a zdjęcie zapisuje się w szerokości 3840 pikseli.', 1.6)}</div>`,
   },
   {
     name: 'Zagraj', dur: 7000, energy: 1, hold: true, blur: true, night: true,
@@ -6879,404 +6812,7 @@ function moneyRain(n = 18) {
     fxTransfer(V3(r * Math.cos(a) * 1.5, 14, r * Math.sin(a) * 1.5), V3(r * Math.cos(a), 0.3, r * Math.sin(a)), NOTE);
   });
 }
-// ---------------------------------------------------------------------------
-// Muzyka: wszystko syntezowane w przeglądarce (Web Audio), bez plików.
-//  - „game”: spokojny, ciepły podkład do menu i gry (elektryczne pianino, miękki bas,
-//    delikatna perkusja z lekkim „bujaniem” i cichy szum płyty winylowej),
-//  - „promo”: utwór do prezentacji, który rośnie razem z energią sceny:
-//    0 pad i pianino, 1 bas i arpeggio, 2 bit, 3 pełny bit z melodią i „pompowaniem” w rytm stopy.
-// Wspólny mikser: pogłos, echo raz w lewo, raz w prawo, kompresor i limiter, żeby nic nie przesterowało.
-// ---------------------------------------------------------------------------
-const midiHz = m => 440 * Math.pow(2, (m - 69) / 12);
-let irBuf = null;
-function reverbIR(a) {   // pogłos sali: szum, który cichnie przez ~2,8 s
-  if (irBuf && irBuf.sampleRate === a.sampleRate) return irBuf;
-  const n = Math.floor(a.sampleRate * 2.8), b = a.createBuffer(2, n, a.sampleRate);
-  for (let ch = 0; ch < 2; ch++) {
-    const d = b.getChannelData(ch);
-    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3.4) * Math.min(1, i / 240);
-  }
-  return (irBuf = b);
-}
-// Akordy: [bas, dźwięki pianina lub padu] w zapisie MIDI (60 = środkowe C)
-const SONGS = {
-  game: {   // C-dur, 84 BPM: Dm9 G13 Cmaj9 Am9 | Fmaj9 Em7 Dm9 G11
-    bpm: 84, swing: 0.17,
-    chords: [[38, [53, 57, 60, 64]], [43, [53, 57, 59, 64]], [36, [52, 55, 59, 62]], [45, [55, 59, 60, 64]],
-      [41, [52, 55, 57, 60]], [40, [50, 55, 59, 64]], [38, [53, 57, 60, 64]], [43, [53, 57, 60, 65]]],
-    hook: [[0, 76], [6, 74], [8, 72], [14, 69]],   // krótka melodia co drugi takt: [krok, nuta]
-  },
-  // Prezentacja: utwór filmowy w d-moll, 100 BPM, napisany pod sceny (energia sceny 0–3 dokłada instrumenty).
-  // Część A: Dm Bb F C (i–VI–III–VII), część B: Gm Bb Dm A (A-dur na końcu frazy buduje napięcie), co 8 taktów.
-  promo: {
-    bpm: 100, swing: 0,
-    chords: [[38, [50, 57, 62, 65]], [34, [50, 58, 62, 65]], [41, [53, 57, 60, 65]], [36, [52, 55, 60, 64]]],
-    chordsB: [[43, [50, 55, 58, 62]], [34, [53, 58, 62, 65]], [38, [53, 57, 62, 65]], [33, [52, 57, 61, 64]]],
-    lead: [[74, 0, 72, 74, 77, 0, 76, 74], [74, 0, 0, 72, 70, 0, 69, 0], [72, 0, 74, 0, 77, 76, 74, 72], [76, 0, 0, 0, 72, 0, 0, 0]],
-    leadB: [[74, 0, 79, 0, 77, 0, 74, 0], [77, 0, 74, 0, 70, 0, 74, 0], [77, 0, 76, 0, 74, 0, 72, 74], [73, 0, 0, 0, 76, 0, 0, 0]],
-  },
-};
-const ARP = [0, 1, 2, 3, 2, 1, 3, 2];
-// Muzyka z plików (licencje i autorzy: assets/muzyka/AUTORZY.md). Lista = utwory grają po kolei.
-// Brak pliku albo błąd = następny z listy, a gdy żadnego nie ma, muzyka z syntezatora (napisana w kodzie, w całości nasza).
-//  - prezentacja: „Epic Cinematic Trailer | ELITE”, Alex-Productions, CC BY 3.0 (plik jest w repozytorium),
-//  - menu i gra: „Tropical Sun” (All Good Folks) i „New Life” (Moire) z Uppbeat, tylko lokalnie (pliki w .gitignore).
-const MUSIC_FILE = { game: ['assets/muzyka/gra.mp3', 'assets/muzyka/gra-2.mp3'], promo: ['assets/muzyka/prezentacja.mp3'] };
-function createMusic(style, opts = {}) {
-  const a = opts.ctx || audio();
-  if (!a) return null;
-  const song = SONGS[style], promo = style === 'promo';
-  const BEAT = 60 / song.bpm, STEP = BEAT / 4;
-  const level = opts.level || (() => 0.5);
-  const hold = opts.hold || (() => false);
-  const nodes = [];
-  const gain = (v = 1) => { const g = a.createGain(); g.gain.value = v; return g; };
-  const filter = (type, f, q = 0.7) => { const b = a.createBiquadFilter(); b.type = type; b.frequency.value = f; b.Q.value = q; return b; };
-  const panner = p => { const s = a.createStereoPanner(); s.pan.value = p; return s; };
-  const osc = (type, f) => { const o = a.createOscillator(); o.type = type; o.frequency.value = f; return o; };
-  const play = (src, t, end) => { src.start(t); src.stop(end); };
-  const hiss = (t, end) => { const s = a.createBufferSource(); s.buffer = noise(a); s.loop = true; s.start(t, Math.random() * 0.4); s.stop(end); return s; };
-
-  // mikser: suma → „powietrze” → kompresor → limiter → głośność
-  const out = gain(opts.until ? level() : 0);
-  const mix = gain(1);
-  const air = filter('highshelf', 6500); air.gain.value = 2;
-  const glue = a.createDynamicsCompressor();
-  glue.threshold.value = -20; glue.knee.value = 8; glue.ratio.value = 3.5; glue.attack.value = 0.008; glue.release.value = 0.22;
-  const limit = a.createDynamicsCompressor();
-  limit.threshold.value = -3; limit.knee.value = 0; limit.ratio.value = 20; limit.attack.value = 0.002; limit.release.value = 0.12;
-  mix.connect(air).connect(glue).connect(limit).connect(out).connect(a.destination);
-  // pogłos i echo jako wysyłki
-  const verbIn = gain(1), verb = a.createConvolver();
-  verb.buffer = reverbIR(a);
-  verbIn.connect(filter('highpass', 240)).connect(verb).connect(gain(promo ? 0.34 : 0.4)).connect(mix);
-  const echoIn = gain(1), dl = a.createDelay(2), dr = a.createDelay(2), tone = filter('lowpass', 3000), echoOut = gain(0.5);
-  dl.delayTime.value = dr.delayTime.value = BEAT * 0.75;   // echo co kropkowaną ósemkę: raz w lewo, raz w prawo
-  echoIn.connect(dl); dl.connect(tone); tone.connect(panner(-0.7)).connect(echoOut);
-  tone.connect(dr); dr.connect(panner(0.7)).connect(echoOut); dr.connect(gain(0.36)).connect(dl);
-  echoOut.connect(mix);
-  // „duck”: szyna ściszana na chwilę przy każdej stopie (pad, bas, pianino, arpeggio)
-  const duck = gain(1);
-  duck.connect(mix);
-  const bus = (to, v, verbAmt = 0, echoAmt = 0) => {
-    const b = gain(v); b.connect(to);
-    if (verbAmt) b.connect(gain(verbAmt)).connect(verbIn);
-    if (echoAmt) b.connect(gain(echoAmt)).connect(echoIn);
-    return b;
-  };
-  const B = {
-    keys: bus(duck, promo ? 2.2 : 3, 0.5, promo ? 0.1 : 0.16),
-    pad: bus(duck, promo ? 2 : 1, 0.55),
-    bass: bus(duck, promo ? 0.5 : 0.42),
-    arp: bus(duck, 2.3, 0.25, 0.45),
-    lead: bus(mix, 1.8, 0.35, 0.3),
-    drums: bus(mix, promo ? 0.65 : 0.5, 0.06),
-    hats: bus(mix, promo ? 3 : 3.2, 0.05),
-    snare: bus(mix, promo ? 1.2 : 1.1, 0.28),
-    fx: bus(mix, 1, 0.45),
-    strings: bus(duck, 1.6, 0.6),
-    choir: bus(duck, 0.9, 0.8),
-  };
-  const strF = filter('lowpass', 900, 0.5);   // jasność smyczków rośnie z energią sceny
-  strF.connect(B.strings);
-  // pad: trzy lekko rozstrojone piły na dźwięk, filtr powoli „oddycha”
-  const padF = filter('lowpass', 700, 0.6);
-  padF.connect(B.pad);
-  const lfo = osc('sine', 0.07), lfoG = gain(220);
-  lfo.connect(lfoG).connect(padF.frequency);
-  lfo.start();
-  nodes.push(lfo);
-
-  // ----- instrumenty -----
-  function keys(t, m, vel, len, p = 0) {   // elektryczne pianino (FM): ciepły ton i krótki „dzwonek” przy uderzeniu
-    const f = midiHz(m), end = t + len + 0.8;
-    const car = osc('sine', f), mod = osc('sine', f), idx = gain(0), bell = osc('sine', f * 14), bg = gain(0);
-    idx.gain.setValueAtTime(f * 2.6 * vel, t); idx.gain.exponentialRampToValueAtTime(f * 0.3 + 1, t + 1.0);
-    bg.gain.setValueAtTime(f * 1.2 * vel, t); bg.gain.exponentialRampToValueAtTime(1, t + 0.09);
-    mod.connect(idx).connect(car.frequency);
-    bell.connect(bg).connect(car.frequency);
-    const g = gain(0);
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.linearRampToValueAtTime(0.1 * vel, t + 0.006);
-    g.gain.setTargetAtTime(0.0001, t + 0.006, 0.9);
-    g.gain.setTargetAtTime(0.0001, t + len, 0.14);
-    car.connect(g).connect(panner(p)).connect(B.keys);
-    for (const o of [car, mod, bell]) play(o, t, end);
-  }
-  function pad(t, notes, len) {
-    notes.forEach((m, k) => [-13, 0, 13].forEach((det, j) => {
-      const o = osc('sawtooth', midiHz(m));
-      o.detune.value = det + (Math.random() - 0.5) * 4;
-      const g = gain(0);
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.linearRampToValueAtTime(0.016, t + 0.9);
-      g.gain.setValueAtTime(0.016, t + len - 0.25);
-      g.gain.linearRampToValueAtTime(0.0001, t + len + 1.1);
-      o.connect(g).connect(panner([-0.55, 0, 0.55][j] * (k % 2 ? 1 : -1))).connect(padF);
-      play(o, t, t + len + 1.2);
-    }));
-  }
-  function bass(t, m, len, vel = 1) {   // sinus na dole i trochę trójkąta oktawę wyżej, żeby bas był słychać w małych głośnikach
-    const f = midiHz(m), o = osc('sine', f), o2 = osc('triangle', f * 2), lp = filter('lowpass', 900), g2 = gain(0.45), g = gain(0);
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.linearRampToValueAtTime(0.34 * vel, t + 0.012);
-    g.gain.setTargetAtTime(0.24 * vel, t + 0.012, 0.18);
-    g.gain.setTargetAtTime(0.0001, t + len, 0.05);
-    o.connect(g); o2.connect(g2).connect(lp).connect(g);
-    g.connect(B.bass);
-    play(o, t, t + len + 0.35); play(o2, t, t + len + 0.35);
-  }
-  function pluck(t, m, vel, p) {   // arpeggio: piła z szybko zamykanym filtrem
-    const f = midiHz(m), o = osc('sawtooth', f), lp = filter('lowpass', f * 8 + 1400, 3.5), g = gain(0);
-    lp.frequency.setValueAtTime(f * 8 + 1400, t); lp.frequency.exponentialRampToValueAtTime(f * 1.4, t + 0.2);
-    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.06 * vel, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
-    o.connect(lp).connect(g).connect(panner(p)).connect(B.arp);
-    play(o, t, t + 0.32);
-  }
-  function bell(t, m, vel, len = 0.9, p = 0) {   // melodia: szklisty dzwonek (FM 1:2)
-    const f = midiHz(m), car = osc('sine', f), mod = osc('sine', f * 2), idx = gain(0), g = gain(0);
-    idx.gain.setValueAtTime(f * 2.6 * vel, t); idx.gain.exponentialRampToValueAtTime(f * 0.15 + 1, t + 0.5);
-    mod.connect(idx).connect(car.frequency);
-    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.09 * vel, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
-    car.connect(g).connect(panner(p)).connect(B.lead);
-    play(car, t, t + len + 0.05); play(mod, t, t + len + 0.05);
-  }
-  function kick(t, vel = 1, duckAmt = 0) {
-    const o = osc('sine', 165), g = gain(0);
-    o.frequency.setValueAtTime(165, t); o.frequency.exponentialRampToValueAtTime(50, t + 0.1); o.frequency.exponentialRampToValueAtTime(42, t + 0.4);
-    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.95 * vel, t + 0.003); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.42);
-    o.connect(g).connect(B.drums);
-    play(o, t, t + 0.45);
-    const n = hiss(t, t + 0.03), ng = gain(0);   // „klik” na początku, żeby stopa przebijała się w małych głośnikach
-    ng.gain.setValueAtTime(0.22 * vel, t); ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.02);
-    n.connect(filter('highpass', 2500)).connect(ng).connect(B.drums);
-    if (duckAmt) { duck.gain.setTargetAtTime(1 - duckAmt, t, 0.004); duck.gain.setTargetAtTime(1, t + 0.06, BEAT * 0.2); }
-  }
-  function clap(t, vel = 1) {
-    const n = hiss(t, t + 0.3), g = gain(0);
-    for (let k = 0; k < 3; k++) { g.gain.setValueAtTime(0.42 * vel, t + k * 0.011); g.gain.exponentialRampToValueAtTime(0.04, t + k * 0.011 + 0.009); }
-    g.gain.setValueAtTime(0.38 * vel, t + 0.033); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.24);
-    n.connect(filter('bandpass', 1250, 1.1)).connect(g).connect(B.snare);
-  }
-  function snare(t, vel = 1) {   // miękki werbel: szum i krótki ton
-    const n = hiss(t, t + 0.25), g = gain(0);
-    g.gain.setValueAtTime(0.3 * vel, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
-    n.connect(filter('bandpass', 2000, 0.8)).connect(g).connect(B.snare);
-    const o = osc('triangle', 190), g2 = gain(0);
-    o.frequency.setValueAtTime(190, t); o.frequency.exponentialRampToValueAtTime(150, t + 0.08);
-    g2.gain.setValueAtTime(0.22 * vel, t); g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.1);
-    o.connect(g2).connect(B.snare);
-    play(o, t, t + 0.12);
-  }
-  function hat(t, vel = 1, open = false, p = 0.25) {
-    const len = open ? 0.26 : 0.045, n = hiss(t, t + len + 0.02), g = gain(0);
-    g.gain.setValueAtTime(0.1 * vel, t); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
-    n.connect(filter('highpass', 7200)).connect(filter('peaking', 10500, 1.2)).connect(g).connect(panner(p)).connect(B.hats);
-  }
-  function shaker(t, vel = 1) {
-    const n = hiss(t, t + 0.1), g = gain(0);
-    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.05 * vel, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
-    n.connect(filter('bandpass', 5800, 1.4)).connect(g).connect(panner(-0.3)).connect(B.hats);
-  }
-  function crash(t, vel = 1) {   // talerz na początku nowej frazy
-    const n = hiss(t, t + 1.9), g = gain(0);
-    g.gain.setValueAtTime(0.13 * vel, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.8);
-    n.connect(filter('highpass', 5200)).connect(filter('peaking', 8000, 0.8)).connect(g).connect(B.fx);
-  }
-  function riser(t, len) {   // narastający szum przed wejściem nowej frazy
-    const n = hiss(t, t + len + 0.05), f = filter('bandpass', 400, 1.6), g = gain(0);
-    f.frequency.setValueAtTime(400, t); f.frequency.exponentialRampToValueAtTime(6500, t + len);
-    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.16, t + len * 0.95); g.gain.linearRampToValueAtTime(0.0001, t + len + 0.04);
-    n.connect(f).connect(g).connect(B.fx);
-  }
-  // ----- instrumenty filmowe (prezentacja) -----
-  function strings(t, notes, len, vel = 1) {   // smyczki: trzy rozstrojone piły na dźwięk, miękkie wejście i wybrzmienie
-    notes.forEach((m, k) => [-9, 0, 9].forEach((det, j) => {
-      const o = osc('sawtooth', midiHz(m));
-      o.detune.value = det + (Math.random() - 0.5) * 6;
-      const vib = osc('sine', 5 + Math.random()), vg = gain(3);
-      vib.connect(vg).connect(o.detune);
-      const g = gain(0);
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.linearRampToValueAtTime(0.012 * vel, t + 0.45);
-      g.gain.setValueAtTime(0.012 * vel, t + len - 0.2);
-      g.gain.linearRampToValueAtTime(0.0001, t + len + 0.9);
-      o.connect(g).connect(panner([-0.6, 0, 0.6][j] * (k % 2 ? 1 : -1))).connect(strF);
-      play(o, t, t + len + 1); play(vib, t, t + len + 1);
-    }));
-  }
-  function pulse(t, m, len, vel = 1) {   // niskie smyczki staccato (spiccato): piła z krótką obwiednią filtra
-    const f = midiHz(m), o = osc('sawtooth', f), lp = filter('lowpass', 1800, 1.2), g = gain(0);
-    lp.frequency.setValueAtTime(2200, t); lp.frequency.exponentialRampToValueAtTime(320, t + len);
-    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.09 * vel, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
-    o.connect(lp).connect(g).connect(B.bass);
-    play(o, t, t + len + 0.02);
-  }
-  function taiko(t, vel = 1, f0 = 90) {   // bęben taiko: niski ton z opadającą wysokością i uderzenie w skórę
-    const o = osc('sine', f0), g = gain(0);
-    o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f0 * 0.48, t + 0.35);
-    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.75 * vel, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
-    o.connect(g).connect(B.drums);
-    play(o, t, t + 0.75);
-    const n = hiss(t, t + 0.12), ng = gain(0);
-    ng.gain.setValueAtTime(0.35 * vel, t); ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.1);
-    n.connect(filter('lowpass', 420)).connect(ng).connect(B.drums);
-  }
-  function brass(t, notes, len, vel = 1) {   // dęte blachy: piły z filtrem, który otwiera się przy ataku
-    notes.forEach((m, k) => {
-      const f = midiHz(m), o = osc('sawtooth', f), o2 = osc('sawtooth', f * 1.003), lp = filter('lowpass', 400, 1.4), g = gain(0);
-      lp.frequency.setValueAtTime(400, t); lp.frequency.exponentialRampToValueAtTime(2600 + 300 * vel, t + 0.07);
-      lp.frequency.exponentialRampToValueAtTime(900, t + Math.min(len, 0.6));
-      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.05 * vel, t + 0.03);
-      g.gain.setTargetAtTime(0.03 * vel, t + 0.05, 0.15); g.gain.setTargetAtTime(0.0001, t + len, 0.12);
-      o.connect(lp); o2.connect(lp); lp.connect(g).connect(panner((k - 1.5) * 0.25)).connect(B.lead);
-      play(o, t, t + len + 0.6); play(o2, t, t + len + 0.6);
-    });
-  }
-  function choir(t, notes, len, vel = 1) {   // chór „aa”: piły przez dwa filtry formantowe
-    notes.forEach((m, k) => {
-      const o = osc('sawtooth', midiHz(m)), f1 = filter('bandpass', 750, 6), f2 = filter('bandpass', 1150, 7), g = gain(0);
-      o.detune.value = (k - 1.5) * 7;
-      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.06 * vel, t + 0.8);
-      g.gain.setValueAtTime(0.06 * vel, t + len - 0.3); g.gain.linearRampToValueAtTime(0.0001, t + len + 1.2);
-      o.connect(f1).connect(g); o.connect(f2).connect(g);
-      g.connect(panner((k - 1.5) * 0.4)).connect(B.choir);
-      play(o, t, t + len + 1.3);
-    });
-  }
-  function crackle(t) {   // trzask płyty winylowej, bardzo cicho
-    const n = hiss(t, t + 0.01), g = gain(0);
-    g.gain.setValueAtTime(0.012 + Math.random() * 0.03, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.004);
-    n.connect(filter('highpass', 1800)).connect(g).connect(panner(Math.random() * 1.6 - 0.8)).connect(mix);
-  }
-
-  // ----- aranżacja -----
-  let energy = opts.energy ?? 0, step = 0;
-  function stepPromo(n, t) {
-    const bar = Math.floor(n / 16), s = n % 16, e = energy, partB = Math.floor(bar / 8) % 2 === 1;
-    const [root, notes] = (partB ? song.chordsB : song.chords)[bar % 4];
-    const phraseEnd = bar % 8 === 7;
-    if (e >= 2 && bar > 0 && bar % 8 === 0 && s === 0) crash(t, e === 3 ? 1 : 0.7);
-    if (e >= 2 && phraseEnd && s === 0) riser(t, BEAT * 4);
-    if (e >= 2 && phraseEnd && s >= 12) taiko(t, 0.45 + (s - 12) * 0.14, 110);   // przejście: werble na taiko
-    if (s === 0) {
-      strF.frequency.setTargetAtTime([900, 1500, 2300, 3400][e], t, 0.8);
-      strings(t, notes.map(m => m + 12), BEAT * 4, [0.42, 0.7, 0.95, 1.2][e]);
-      if (e === 0) bass(t, root, BEAT * 3.8, 0.3);   // niski bordun
-      if (e >= 3) choir(t, notes.slice(1).map(m => m + 12), BEAT * 4, 0.9);
-    }
-    // fortepian: ostinato ósemkami na dźwiękach akordu (cichnie, gdy wchodzą bębny)
-    if (e <= 2 && s % 2 === 0) {
-      const pat = [1, 2, 3, 2, 1, 2, 3, 2][s / 2];
-      keys(t, notes[pat] + 12, [0.3, 0.38, 0.26][e], BEAT * 0.9, (pat - 2) * 0.3);
-    }
-    if (e >= 1) {
-      if (s % 2 === 0) pulse(t, root + (s % 4 === 2 ? 12 : 0), STEP * 1.6, s % 8 === 0 ? 1 : 0.75);
-      if (e === 1 && (s === 0 || s === 8)) taiko(t, 0.55, 80);
-    }
-    if (e >= 2) {
-      if ([0, 6, 8, 11, 14].includes(s) && !(phraseEnd && s >= 12)) taiko(t, s === 0 || s === 8 ? 1 : 0.65, s % 8 === 0 ? 85 : 120);
-      if (s === 4 || s === 12) clap(t, e === 3 ? 0.9 : 0.7);
-      if (s % 2 === 0) hat(t, s % 4 === 2 ? 0.8 : 0.45, false, 0.3);
-      if (s === 0) brass(t, notes.slice(1), BEAT * (e === 3 ? 1.5 : 0.9), e === 3 ? 1 : 0.8);
-      if (s % 2 === 1 && e === 2) pluck(t, notes[ARP[(s >> 1) % 8]] + 24, 0.55, s % 4 === 1 ? -0.4 : 0.4);
-    }
-    if (e === 3) {
-      if (s % 4 === 0 && !(phraseEnd && s >= 12)) kick(t, 1.1, 0.5);
-      if (s % 4 === 2) hat(t, 0.7, true, -0.25);
-      if (s % 2 === 0) {
-        const m = (partB ? song.leadB : song.lead)[bar % 4][s / 2];
-        if (m) { brass(t, [m], BEAT * 0.45, 1.15); bell(t + 0.004, m + 12, 0.4, 0.6, 0.25); }
-      }
-    }
-  }
-  function stepGame(n, t) {
-    const bar = Math.floor(n / 16), s = n % 16, [root, notes] = song.chords[bar % 8];
-    const drums = bar >= 2 && bar % 16 < 14;   // dwa takty wstępu, a co 16 taktów krótka przerwa bez perkusji
-    if (s === 0) { padF.frequency.setTargetAtTime(900, t, 1); pad(t, notes, BEAT * 4); notes.forEach((m, k) => keys(t + k * 0.02, m, 0.62 - k * 0.04, BEAT * 2.5, (k - 1.5) * 0.28)); }
-    if (s === 10) notes.slice(1).forEach((m, k) => keys(t + k * 0.016, m, 0.36, BEAT * 1.3, (k - 1) * 0.3));
-    if (bar % 2 === 1) for (const [st, m] of song.hook) if (s === st) keys(t, m - (bar % 4 === 3 ? 2 : 0), 0.34, BEAT * 1.1, 0.35);
-    if (s === 0) bass(t, root, BEAT * 1.7, 0.95);
-    if (s === 10) bass(t, root, BEAT * 0.6, 0.7);
-    if (s === 14) bass(t, root + 7, BEAT * 0.4, 0.55);
-    if (drums) {
-      if (s === 0 || s === 10) kick(t, 0.6, 0.18);
-      if (s === 4 || s === 12) snare(t, 0.55);
-      if (s % 2 === 0) hat(t, s % 4 === 0 ? 0.38 : 0.24, false, 0.2);
-      if (s % 4 === 3 && Math.random() < 0.35) hat(t, 0.12, false, 0.35);
-      if (s % 2 === 1) shaker(t, 0.45);
-    }
-    if (Math.random() < 0.28) crackle(t + Math.random() * STEP);
-  }
-  const stepFn = promo ? stepPromo : stepGame;
-  let next = a.currentTime + 0.12;
-  function run(until) {
-    while (next < until) {
-      stepFn(step, next + (step % 2 ? STEP * song.swing : 0));
-      step++; next += STEP;
-    }
-  }
-  let timer = 0, fileEl = null, fileSrc = null;
-  // prezentacja: domyślnie nasza muzyka z kodu, utwór z pliku tylko, gdy wybrany w Ustawieniach
-  const useFile = style !== 'promo' || prefs.promoMusic === 'alex';
-  const list = opts.until || !useFile ? [] : [].concat(MUSIC_FILE[style] || []).filter(Boolean);
-  if (list.length) {   // utwory z plików zamiast syntezatora; efekty (uderzenia, szum) zostają
-    let k = 0, failed = 0;
-    fileEl = new Audio();
-    fileEl.preload = 'auto';
-    fileEl.loop = list.length === 1;
-    fileSrc = a.createMediaElementSource(fileEl);
-    fileSrc.connect(out);
-    const playK = () => { fileEl.src = list[k % list.length]; fileEl.play().catch(() => {}); };
-    fileEl.addEventListener('playing', () => { failed = 0; });
-    fileEl.addEventListener('ended', () => { k++; playK(); });
-    fileEl.addEventListener('error', () => {
-      if (++failed >= list.length) { fileSrc.disconnect(); fileEl = null; next = a.currentTime + 0.1; return; }   // żadnego pliku: syntezator
-      k++; playK();
-    });
-    playK();
-  }
-  if (opts.until) run(opts.until);   // tryb nagrania (OfflineAudioContext): wszystko planowane od razu
-  else {
-    out.gain.setTargetAtTime(level(), a.currentTime, promo ? 0.8 : 1.6);
-    timer = setInterval(() => {
-      const wait = hold() || document.hidden;
-      if (fileEl) { if (wait) fileEl.pause(); else if (fileEl.paused) fileEl.play().catch(() => {}); return; }
-      if (wait) { next = Math.max(next, a.currentTime + 0.1); return; }
-      run(a.currentTime + 0.3);
-    }, 50);
-    if (!fileEl) run(a.currentTime + 0.3);
-  }
-  return {
-    setEnergy(e) { energy = e; },
-    volume() { out.gain.setTargetAtTime(level(), a.currentTime, 0.15); },
-    whoosh() {   // przejście między scenami: szum, który rośnie w górę
-      const t = a.currentTime, s = hiss(t, t + 0.8), f = filter('bandpass', 300, 1.4), g = gain(0);
-      f.frequency.setValueAtTime(300, t); f.frequency.exponentialRampToValueAtTime(4200, t + 0.55);
-      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.2, t + 0.3); g.gain.linearRampToValueAtTime(0.0001, t + 0.75);
-      s.connect(f).connect(g).connect(B.fx);
-    },
-    impact() {   // uderzenie: niski „boom”, talerz i chwilowe ściszenie reszty
-      const t = a.currentTime + 0.01;
-      const o = osc('sine', 90), g = gain(0);
-      o.frequency.setValueAtTime(95, t); o.frequency.exponentialRampToValueAtTime(30, t + 1.3);
-      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.85, t + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.6);
-      o.connect(g).connect(B.drums);
-      play(o, t, t + 1.7);
-      const n = hiss(t, t + 2.3), ng = gain(0);
-      ng.gain.setValueAtTime(0.16, t); ng.gain.exponentialRampToValueAtTime(0.0001, t + 2.2);
-      n.connect(filter('highpass', 4200)).connect(ng).connect(B.fx);
-      duck.gain.setTargetAtTime(0.25, t, 0.005); duck.gain.setTargetAtTime(1, t + 0.15, 0.35);
-    },
-    chime() { [84, 88, 91, 96].forEach((m, k) => bell(a.currentTime + 0.01 + k * 0.07, m, 0.8, 1.1, (k - 1.5) * 0.4)); },
-    thump() { if (!fileEl) kick(a.currentTime + 0.01, 0.85, 0.3); },   // przy utworze z pliku bez dodatkowej stopy (inne tempo)
-    stop() {
-      clearInterval(timer);
-      out.gain.setTargetAtTime(0, a.currentTime, 0.25);
-      setTimeout(() => { for (const o of nodes) { try { o.stop(); } catch (e) { /* już zatrzymany */ } } fileEl?.pause(); fileSrc?.disconnect(); out.disconnect(); }, 1800);
-    },
-  };
-}
+// Muzyka: src/audio/music.js (podkład „game” do menu i gry, utwór „promo” do prezentacji)
 // Podkład w menu i w grze. Startuje po pierwszym kliknięciu albo klawiszu (wcześniej przeglądarka nie pozwala grać),
 // cichnie na czas prezentacji (tam gra jej własny utwór) i znika, gdy suwak „Muzyka” jest na zero.
 let bgm = null;
@@ -7302,58 +6838,7 @@ function ambience() {
   amb.out.gain.setTargetAtTime(((prefs.effects ?? 80) / 100) * 0.22, a.currentTime, 0.8);
   amb.surf.gain.setTargetAtTime(curSkin === 'diorama' ? 1 : 0, a.currentTime, 0.6);
 }
-function createAmbience(a) {
-  const out = a.createGain(); out.gain.value = 0; out.connect(a.destination);
-  const buf = a.createBuffer(2, a.sampleRate * 4, a.sampleRate);   // 4 s szumu w stereo, w pętli
-  for (let ch = 0; ch < 2; ch++) { const d = buf.getChannelData(ch); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
-  const loop = (type, f, q, v) => {
-    const s = a.createBufferSource(); s.buffer = buf; s.loop = true;
-    const fl = a.createBiquadFilter(); fl.type = type; fl.frequency.value = f; fl.Q.value = q;
-    const g = a.createGain(); g.gain.value = v;
-    s.connect(fl).connect(g); s.start(0, Math.random() * 3);
-    return g;
-  };
-  const surf = a.createGain(); surf.connect(out);
-  // fale: szum przypływa i odpływa (wolna zmiana głośności i jasności)
-  const waves = loop('lowpass', 750, 0.4, 0.5), wl = a.createOscillator(), wlg = a.createGain();
-  wl.frequency.value = 0.13; wlg.gain.value = 0.35; wl.connect(wlg).connect(waves.gain); wl.start();
-  waves.connect(surf);
-  // wiatr: pasmo szumu, które powoli się przesuwa
-  const wind = loop('bandpass', 420, 0.5, 0.18), wo = a.createOscillator(), wog = a.createGain();
-  wo.frequency.value = 0.05; wog.gain.value = 0.08; wo.connect(wog).connect(wind.gain); wo.start();
-  wind.connect(surf);
-  const st = { out, surf, kind: 'diorama' };
-  // mewy (makieta), tykanie zegara i ptaki (pokój): krótkie dźwięki co jakiś czas
-  let nextGull = a.currentTime + 4, nextBird = a.currentTime + 3, tick = 0;
-  setInterval(() => {
-    if (out.gain.value < 0.001 || document.hidden) return;
-    const t = a.currentTime;
-    if (st.kind === 'diorama' && t > nextGull) {
-      nextGull = t + 6 + Math.random() * 9;
-      const n = 2 + Math.floor(Math.random() * 3), pan = Math.random() * 1.6 - 0.8;
-      for (let k = 0; k < n; k++) {
-        const at = t + 0.05 + k * (0.22 + Math.random() * 0.08), o = a.createOscillator(), g = a.createGain(), p = a.createStereoPanner(), bp = a.createBiquadFilter();
-        o.type = 'sawtooth'; bp.type = 'bandpass'; bp.frequency.value = 1700; bp.Q.value = 2; p.pan.value = pan;
-        o.frequency.setValueAtTime(1350 + Math.random() * 250, at); o.frequency.exponentialRampToValueAtTime(980, at + 0.18);
-        g.gain.setValueAtTime(0.0001, at); g.gain.linearRampToValueAtTime(0.05, at + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, at + 0.2);
-        o.connect(bp).connect(g).connect(p).connect(out); o.start(at); o.stop(at + 0.22);
-      }
-    }
-    if (st.kind === 'pokoj') {
-      if (t > tick) { tick = Math.ceil(t); click(a, tick, tick % 2 ? 3600 : 3000, 0.03, 0.015); }   // zegar na ścianie
-      if (t > nextBird) {
-        nextBird = t + 5 + Math.random() * 8;
-        for (let k = 0; k < 3 + Math.floor(Math.random() * 4); k++) {
-          const at = t + k * 0.11, o = a.createOscillator(), g = a.createGain();
-          o.frequency.setValueAtTime(3200 + Math.random() * 900, at); o.frequency.exponentialRampToValueAtTime(4300 + Math.random() * 600, at + 0.07);
-          g.gain.setValueAtTime(0.0001, at); g.gain.linearRampToValueAtTime(0.012, at + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, at + 0.09);
-          o.connect(g).connect(out); o.start(at); o.stop(at + 0.1);
-        }
-      }
-    }
-  }, 120);
-  return st;
-}
+// createAmbience: src/audio/ambience.js
 addEventListener('pointerdown', () => ambience(), { once: true });
 addEventListener('keydown', gameMusic, { once: true });
 
@@ -7464,7 +6949,7 @@ function openPromo(fromLink = false) {
   if (P.on) return;
   P.on = true;
   gameMusic();   // podkład z menu cichnie, prezentacja ma swój utwór
-  if (actx) ambience();
+  if (audioStarted()) ambience();
   P.saved = {
     bg: scene.background, minD: controls.minDistance, maxD: controls.maxDistance, polar: controls.maxPolarAngle,
     anim: { flags: flags.length, steams: steams.length, coins: coins.length, parts: liveParts.length },
@@ -7505,14 +6990,14 @@ function beginPromo() {
   promoEl.classList.add('cinema');
   P.last = performance.now();
   P.music?.stop();
-  P.music = createMusic('promo', { level: () => (P.muted || P.paused ? 0 : ((prefs.music ?? 60) / 100) * 0.8), hold: () => P.paused });
+  P.music = createMusic('promo', { level: () => (P.muted || P.paused ? 0 : ((prefs.music ?? 60) / 100) * 0.8), hold: () => P.paused, useFile: prefs.promoMusic === 'alex' });
   enterScene(0);
   idlePing();
 }
 function closePromo(goPlay = false) {
   if (!P.on) return;
   P.on = false;
-  if (actx) setTimeout(ambience, 300);
+  if (audioStarted()) setTimeout(ambience, 300);
   P.idx = -1;
   P.dip = null;
   cleanupScene();

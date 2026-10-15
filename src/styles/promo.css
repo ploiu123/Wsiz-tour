@@ -279,3 +279,19 @@ body.promo-open .menu, body.promo-open .g-hud, body.promo-open .g-layer { displa
 @keyframes pr-code-in { from { opacity: 0; transform: translateY(18px) scale(.8); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .pr-code b { animation: none; } }
 
+/* Scena „Po grze”: biała karta z wykresem majątku i osiągnięciami, które wskakują po kolei */
+.pr-after { width: min(560px, 100%); padding: 20px 22px; border-radius: 22px; background: rgba(255, 255, 255, .94); color: #0B1F4D; box-shadow: 0 30px 70px rgba(0, 6, 24, .35), inset 0 1px 0 rgba(255, 255, 255, .8); display: grid; gap: 14px; }
+.pr-after .m-achv { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.pr-after .m-ach { padding: 8px 10px; }
+.pr-after .m-ach-txt small { display: none; }
+.pr-ach { animation: pr-code-in .6s cubic-bezier(.2, 1.4, .4, 1) both; animation-delay: calc(2.2s + var(--k) * 160ms); }
+@media (max-width: 700px) { .pr-after .m-achv { grid-template-columns: 1fr; } }
+/* Scena „Zdjęcie 4K”: ramka wizjera aparatu na całym ekranie */
+.pr-viewfinder { position: absolute; inset: clamp(18px, 4vw, 54px); pointer-events: none; }
+.pr-viewfinder i { position: absolute; width: clamp(28px, 4vw, 56px); height: clamp(28px, 4vw, 56px); border: 3px solid rgba(255, 255, 255, .92); filter: drop-shadow(0 2px 6px rgba(0, 6, 24, .4)); }
+.pr-viewfinder i:nth-child(1) { left: 0; top: 0; border-right: 0; border-bottom: 0; border-top-left-radius: 10px; }
+.pr-viewfinder i:nth-child(2) { right: 0; top: 0; border-left: 0; border-bottom: 0; border-top-right-radius: 10px; }
+.pr-viewfinder i:nth-child(3) { left: 0; bottom: 0; border-right: 0; border-top: 0; border-bottom-left-radius: 10px; }
+.pr-viewfinder i:nth-child(4) { right: 0; bottom: 0; border-left: 0; border-top: 0; border-bottom-right-radius: 10px; }
+.pr-viewfinder span { position: absolute; right: clamp(40px, 5vw, 76px); top: clamp(2px, .6vw, 8px); font: 800 clamp(14px, 1.4vw, 20px)/1 var(--body); color: #fff; letter-spacing: .08em; text-shadow: 0 2px 8px rgba(0, 6, 24, .5); }
+.pr-after { --ink: #0B1F4D; --ink-soft: #5B6B8C; --chip: #EEF2F8; --panel: #FFFFFF; --panel-line: #DCE3EE; }
