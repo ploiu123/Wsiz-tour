@@ -28,3 +28,6 @@ __pycache__/
 # Muzyka z Uppbeat: tylko lokalnie (licencja nie pozwala udostępniać plików publicznie)
 assets/muzyka/gra.mp3
 assets/muzyka/gra-2.mp3
+
+# Blender jako biblioteka Pythona (npm run assets): tylko lokalnie
+tools/blender/.venv/

@@ -6,6 +6,8 @@ import * as TSL from 'three/tsl';
 import { Graphics, LEVELS as GFX_LEVELS } from '../render/graphics.js';
 import { buildRoom } from '../scene/room.js';
 import { loadDicePhysics, diceReady, simulateThrow, FACE_AXES } from '../render/dice.js';
+import { loadModels, cloneModel } from '../render/assets.js';
+import { RippleSim } from '../scene/ripples.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
@@ -45,10 +47,10 @@ const CENTER_Y = 0.016;
 
 
 const PLAYERS = [
-  { name: 'Gracz 1', pawn: 'Sztandar', color: '#E5484D', make: c => makeBanner(c) },
-  { name: 'Gracz 2', pawn: 'Drukarka 3D', color: '#2F7FF0', make: c => makePrinter(c) },
-  { name: 'Gracz 3', pawn: 'Koparka kryptowalut', color: '#1FA463', make: c => makeMiner(c) },
-  { name: 'Gracz 4', pawn: 'Ekspres do kawy', color: '#F2B72E', make: c => makeEspresso(c) },
+  { name: 'Gracz 1', pawn: 'Sztandar', color: '#E5484D', make: c => glbPawn('banner', c) || makeBanner(c) },
+  { name: 'Gracz 2', pawn: 'Drukarka 3D', color: '#2F7FF0', make: c => glbPawn('printer', c) || makePrinter(c) },
+  { name: 'Gracz 3', pawn: 'Koparka kryptowalut', color: '#1FA463', make: c => glbPawn('miner', c) || makeMiner(c) },
+  { name: 'Gracz 4', pawn: 'Ekspres do kawy', color: '#F2B72E', make: c => glbPawn('espresso', c) || makeEspresso(c) },
 ];
 
 // Stosy kart na środku: ułatwienia przy narożniku START, utrudnienia naprzeciwko (od strony dziekanatu)
@@ -106,6 +108,7 @@ renderer.domElement.after(labelRenderer.domElement);
 
 // Czcionki do napisów na planszy. Czekamy najwyżej 3 s; jeśli dojdą później, tekstury z napisami
 // rysują się jeszcze raz (inaczej napisy na polach zostawały w zapasowej czcionce).
+const modelsReady = loadModels();   // modele z Blendera wczytują się razem z czcionkami
 let fontsOk = false;
 const fontsLoaded = Promise.all([
   document.fonts.load('700 120px Fredoka'),
@@ -114,6 +117,7 @@ const fontsLoaded = Promise.all([
 ]).then(() => { fontsOk = true; }, () => {});
 await Promise.race([fontsLoaded, new Promise(r => setTimeout(r, 3000))]);
 const fontsLate = !fontsOk;
+await Promise.race([modelsReady, new Promise(r => setTimeout(r, 2500))]);   // modele z Blendera są potrzebne już do makiety
 
 // Logo uczelni. Plik jest okrągły na białym tle, więc rysujemy je przycięte do koła.
 // Kolory logo: granat i jasny szaroniebieski.
@@ -268,6 +272,7 @@ const bezelMat = mat('#161A24', { roughness: 0.4 });
 const flags = [];
 const steams = [];
 const coins = [];
+const liveParts = [];   // ruchome części modeli z Blendera: wentylatory, rosnący wydruk, głowica drukarki
 
 // ---------------------------------------------------------------------------
 // Tekstury pól
@@ -698,13 +703,17 @@ function makeBanner(color) {
   const pole = mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.86, 12), goldMat); pole.position.set(px, 0.5, 0);
   const knob = mesh(new THREE.SphereGeometry(0.034, 16, 12), goldMat); knob.position.set(px, 0.955, 0);
   const tip = mesh(new THREE.ConeGeometry(0.022, 0.08, 12), goldMat); tip.position.set(px, 1.02, 0);
+  g.add(foot, pole, knob, tip, bannerFlag(color, px));
+  return g;
+}
+// Flaga sztandaru z logo uczelni, falująca na wietrze (fale liczone w każdej klatce)
+function bannerFlag(color, px) {
   const geo = new THREE.PlaneGeometry(0.36, 0.34, 18, 6);
   geo.translate(0.18, 0, 0);
   const flag = mesh(geo, new THREE.MeshStandardMaterial({ map: bannerTexture(color), side: THREE.DoubleSide, roughness: 0.75 }));
   flag.position.set(px + 0.014, 0.73, 0);
   flags.push({ geo, base: Float32Array.from(geo.attributes.position.array), width: 0.36 });
-  g.add(foot, pole, knob, tip, flag);
-  return g;
+  return flag;
 }
 
 // Drukarka 3D: rama w kolorze gracza, stół, głowica i wydruk
@@ -794,22 +803,59 @@ function makeEspresso(color) {
   const coffee = mesh(new THREE.CircleGeometry(0.03, 20), mat('#4E321E', { roughness: 0.25 }), false);
   coffee.rotation.x = -Math.PI / 2; coffee.position.set(0, y0 + 0.07, 0.07);
   g.add(body, cut, tray, top, group, handle, gauge, needle, cup, coffee);
-  for (let k = 0; k < 2; k++) {   // para nad filiżanką
+  addSteam(g, y0 + 0.08, 0.07);
+  return g;
+}
+// Para nad filiżanką (dwie smużki, które falują i przygasają)
+function addSteam(g, y, z) {
+  for (let k = 0; k < 2; k++) {
     const pts3 = [];
     for (let j = 0; j <= 8; j++) {
       const t = j / 8;
-      pts3.push(new THREE.Vector3((k ? 0.015 : -0.015) + Math.sin(t * Math.PI * 2 + k * 2) * 0.012, y0 + 0.08 + t * 0.2, 0));
+      pts3.push(new THREE.Vector3((k ? 0.015 : -0.015) + Math.sin(t * Math.PI * 2 + k * 2) * 0.012, y + t * 0.2, 0));
     }
     const steam = new THREE.Mesh(
       new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts3), 24, 0.008, 8, false),
       new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.45, depthWrite: false }),
     );
-    steam.position.z = 0.07;
+    steam.position.z = z;
     steam.userData.phase = k * 1.7;
     steams.push(steam);
     g.add(steam);
   }
-  return g;
+}
+
+// ---------------------------------------------------------------------------
+// Pionki z Blendera (assets/models/pawns.glb, tools/blender/pawns.py): fazowane krawędzie, więcej detali
+// i cienie kontaktowe wypalone w kolorach wierzchołków. Bez pliku zostają pionki z kodu (wyżej).
+// ---------------------------------------------------------------------------
+const glbMats = new Map();
+function pawnSwap(name, color) {
+  const key = `${name}|${color}`;
+  if (!glbMats.has(key)) {
+    let m = null;
+    if (name === 'player') m = new THREE.MeshPhysicalMaterial({ color, roughness: 0.34, clearcoat: 0.7, clearcoatRoughness: 0.18, vertexColors: true });
+    else if (name === 'player_dark') m = mat('#0A2A66', { roughness: 0.45, vertexColors: true });
+    else if (name === 'player_light') m = mat('#DDE3EE', { roughness: 0.4, vertexColors: true });
+    else if (name === 'player_band') m = mat(color, { roughness: 0.35, emissive: color, emissiveIntensity: 0.12, vertexColors: true });
+    else if (name === 'player_glow') m = new THREE.MeshBasicMaterial({ color: mix(color, '#ffffff', 0.35), toneMapped: false });
+    glbMats.set(key, m);
+  }
+  return glbMats.get(key);
+}
+function glbPawn(name, color) {
+  const o = cloneModel(name, n => pawnSwap(n, color));
+  if (!o) return null;
+  o.traverse(m => { if (/^fan_/.test(m.name)) liveParts.push({ obj: m, kind: 'fan' }); });
+  const coin = o.getObjectByName('coin');
+  if (coin) { coin.userData.spin = true; coins.push(coin); }
+  const print = o.getObjectByName('print');
+  if (print) liveParts.push({ obj: print, kind: 'print', phase: Math.random() });
+  const head = o.getObjectByName('carriage');
+  if (head) liveParts.push({ obj: head, kind: 'slide', x0: head.position.x, phase: Math.random() * 6 });
+  if (name === 'banner') o.add(bannerFlag(color, -0.1));
+  if (name === 'espresso') addSteam(o, 0.21, 0.1);
+  return o;
 }
 
 // ---------------------------------------------------------------------------
@@ -999,28 +1045,66 @@ function makeServerRoom(color) {
   return g;
 }
 
+// Budynki z Blendera (assets/models/buildings.glb, tools/blender/buildings.py); bez pliku zostają budynki z kodu
+const glbBuildMats = new Map();
+let glbKeysMat;
+function buildingSwap(name, color) {
+  if (name === 'screen') return screenMat(color);
+  if (name === 'keys') return (glbKeysMat ??= new THREE.MeshStandardMaterial({ map: getKeyboardTex(), roughness: 0.7 }));
+  if (!name.startsWith('player')) return null;
+  const key = `${name}|${color}`;
+  if (!glbBuildMats.has(key)) {
+    const p = pal(color);
+    const src = { player: p.main, player_dark: p.dark, player_light: p.light }[name];
+    let m = p.glow;
+    if (src) { m = src.clone(); m.vertexColors = true; }
+    glbBuildMats.set(key, m);
+  }
+  return glbBuildMats.get(key);
+}
+const glbBuilding = (name, color) => cloneModel(name, n => buildingSwap(n, color));
+
 // scale: w widoku Modele, board: na polu planszy
 const BUILDINGS = [
-  { name: 'Telefon', make: makePhone, scale: 2.4, board: 1.5 },
-  { name: 'Laptop', make: makeLaptop, scale: 1.9, board: 1.05 },
-  { name: 'Komputer', make: makeComputer, scale: 1.6, board: 0.85 },
-  { name: 'Szafa rack', make: makeRack, scale: 1.45, board: 0.95 },
-  { name: 'Serwerownia', make: makeServerRoom, scale: 1.4, board: 0.72 },
+  { name: 'Telefon', make: c => glbBuilding('phone', c) || makePhone(c), scale: 2.4, board: 1.5 },
+  { name: 'Laptop', make: c => glbBuilding('laptop', c) || makeLaptop(c), scale: 1.9, board: 1.05 },
+  { name: 'Komputer', make: c => glbBuilding('computer', c) || makeComputer(c), scale: 1.6, board: 0.85 },
+  { name: 'Szafa rack', make: c => glbBuilding('rack', c) || makeRack(c), scale: 1.45, board: 0.95 },
+  { name: 'Serwerownia', make: c => glbBuilding('serverroom', c) || makeServerRoom(c), scale: 1.4, board: 0.72 },
 ];
 
 // ---------------------------------------------------------------------------
 // Plansza
 // ---------------------------------------------------------------------------
-// Plansza i pola mają ostre krawędzie i proste ściany, jak prawdziwa plansza do druku.
+// Plansza jak z pudełka premium: lakierowana podstawa z zaokrąglonymi krawędziami, na brzegu złota inkrustacja
+// z rozetami w narożnikach, pola z fazowanymi brzegami i fakturą papieru, złota folia na polach specjalnych.
 const board = new THREE.Group();
 scene.add(board);
 
-const baseSideMat = mat(LOOK.baseSide, { roughness: 0.6 });
-const baseTopMat = mat(LOOK.baseTop, { roughness: 0.6 });
-const base = mesh(new THREE.BoxGeometry(S + 2 * LOOK.margin, BASE_H, S + 2 * LOOK.margin),
+const baseSideMat = new THREE.MeshPhysicalMaterial({ color: LOOK.baseSide, roughness: 0.45, clearcoat: 0.5, clearcoatRoughness: 0.28 });
+const baseTopMat = new THREE.MeshPhysicalMaterial({ color: LOOK.baseTop, roughness: 0.55, clearcoat: 0.3, clearcoatRoughness: 0.35 });
+const base = mesh(new RoundedBoxGeometry(S + 2 * LOOK.margin, BASE_H, S + 2 * LOOK.margin, 5, 0.09),
   [baseSideMat, baseSideMat, baseTopMat, baseSideMat, baseSideMat, baseSideMat], true, true);
 base.position.y = -BASE_H / 2;
 board.add(base);
+const inlay = new THREE.Group();
+{
+  const gold = mat(GOLD, { metalness: 1, roughness: 0.26 });
+  const R0 = S / 2 + LOOK.margin * 0.5, L = 2 * R0;
+  for (const [w, d, x, z] of [[L, 0.032, 0, R0], [L, 0.032, 0, -R0], [0.032, L, R0, 0], [0.032, L, -R0, 0]]) {
+    const bar = mesh(new THREE.BoxGeometry(w, 0.005, d), gold, false, true);
+    bar.position.set(x, 0.0025, z);
+    inlay.add(bar);
+  }
+  const roseGeo = new THREE.CylinderGeometry(0.1, 0.11, 0.012, 48), dotGeo = new THREE.CylinderGeometry(0.045, 0.045, 0.016, 32);
+  const navyDot = new THREE.MeshPhysicalMaterial({ color: '#00276F', roughness: 0.3, clearcoat: 1 });
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+    const rose = mesh(roseGeo, gold, false, true); rose.position.set(sx * R0, 0.006, sz * R0);
+    const dot = mesh(dotGeo, navyDot, false, true); dot.position.set(sx * R0, 0.008, sz * R0);
+    inlay.add(rose, dot);
+  }
+}
+board.add(inlay);
 
 // Miękki cień planszy na stole
 const floorGroup = new THREE.Group();
@@ -1058,9 +1142,28 @@ const WZ0 = SHORE_Z + 0.6, WD = BZF - WZ0;                // powierzchnia wody: 
 // Fale Gerstnera: grzbiety ostrzejsze, doliny łagodniejsze, woda krąży po małych okręgach.
 // [kierunek x, kierunek z, długość fali, stromość]. Ta sama funkcja liczy powierzchnię w shaderze
 // i pozycję łodzi, motorówki i boi, więc wszystko unosi się i przechyla razem z falą.
-const WAVES = [[1, 0.35, 9, 0.16], [0.6, 1, 5.5, 0.12], [-0.4, 1, 3.4, 0.09], [1, -0.6, 2.2, 0.06]]
-  .map(([x, z, L, st]) => { const l = Math.hypot(x, z); return [x / l, z / l, L, st]; });
+// Widmo fal jak na morzu (uproszczone widmo JONSWAP): dziesięć fal od 11 do 0,9 długości, z kierunku wiatru
+// z rozrzutem (krótkie fale bardziej rozrzucone). Najwięcej energii mają fale o długości ok. 6,5.
+// Suma stromości jest ograniczona, żeby grzbiety się nie zawijały.
+const WAVES = (() => {
+  let seed = 7;
+  const r = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const wind = Math.atan2(0.35, 1), n = 10, Lp = 6.5, out = [];
+  for (let k = 0; k < n; k++) {
+    const L = 11 * Math.pow(0.9 / 11, k / (n - 1)), w = Math.sqrt(Lp / L);   // częstość względem szczytu widma
+    const sig = w <= 1 ? 0.07 : 0.09;
+    const S = Math.pow(w, -5) * Math.exp(-1.25 * Math.pow(w, -4)) * Math.pow(3.3, Math.exp(-((w - 1) ** 2) / (2 * sig * sig)));
+    const amp = Math.sqrt(S * w) * L;                 // wysokość fali z energii w paśmie
+    const a = wind + (r() - 0.5) * (0.5 + 1.4 * k / n);
+    out.push([Math.cos(a), Math.sin(a), L, (2 * Math.PI / L) * amp]);
+  }
+  const sum = out.reduce((s2, w) => s2 + w[3], 0);
+  return out.map(([x, z, L, st]) => [x, z, L, st * 0.62 / sum]);
+})();
+const WAVE_MAX = WAVES.reduce((s2, [, , L, st]) => s2 + st * L / (2 * Math.PI), 0);   // najwyższy możliwy grzbiet
 const WAVE_SPEED = 0.55;
+// Zmarszczki z symulacji (równanie falowe, src/scene/ripples.js) na całej powierzchni wody: fale od łodzi i ryb
+const ripples = new RippleSim({ nx: 200, nz: 56, x0: -BX, x1: BX, z0: WZ0, z1: BZF, speed: 2.6, decay: 0.55 });
 const smooth01 = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 function waveAt(x, z, t) {   // [wysokość, nachylenie w x, nachylenie w z]
   const u = (x + BX) / (2 * BX), v = 1 - (z - WZ0) / WD;
@@ -1281,7 +1384,22 @@ function campusBuilding(w, h, d, kind, wall = '#F2F4F8') {
   grp.add(canopy);
   return grp;
 }
+// Drzewa z Blendera (assets/models/nature.glb): liściaste o koronie z kilku nieregularnych brył, iglaste, brzozy
+const TREE_KINDS = ['tree_round_a', 'tree_round_b', 'tree_round_c', 'tree_round_a', 'tree_pine', 'tree_birch'];
 function lowTree(scale = 1) {
+  const pick = TREE_KINDS[Math.floor(wr() * TREE_KINDS.length)];
+  const glb = cloneModel(pick, () => null);
+  if (glb) {
+    glb.scale.setScalar(scale);
+    glb.rotation.y = wr() * Math.PI * 2;
+    glb.traverse(m => { m.castShadow = false; });
+    const ph = wr() * 6, amp = 0.012 + wr() * 0.01;
+    worldAnim.push(t => { glb.rotation.z = amp * Math.sin(t * 1.15 + ph); glb.rotation.x = amp * 0.6 * Math.sin(t * 0.9 + ph * 1.3); });
+    return glb;
+  }
+  return lowTreeCode(scale);
+}
+function lowTreeCode(scale = 1) {
   const grp = new THREE.Group();
   const trunk = mesh(new THREE.CylinderGeometry(0.12, 0.18, 1.2, 6), flat('#8A5A3B'), false, false);
   trunk.position.y = 0.6;
@@ -1323,6 +1441,14 @@ function blob(x, z, r, y = GROUND_Y + 0.03) {
 }
 // Plaża: palma, parasol, leżak
 function palm(h = 3.6) {
+  const glb = cloneModel('palm', () => null);
+  if (glb) {
+    glb.scale.setScalar(h / 3.6);
+    glb.traverse(m => { m.castShadow = false; });
+    const ph = wr() * 6;
+    worldAnim.push(t => { glb.rotation.z = 0.025 * Math.sin(t * 0.8 + ph); });
+    return glb;
+  }
   const g = new THREE.Group();
   const trunkM = flat('#9C7148');
   let x = 0, y = 0;
@@ -1390,9 +1516,8 @@ function clockTexture() {
   g.strokeStyle = IRON; g.lineWidth = 12; g.stroke();
   g.fillStyle = IRON;
   for (let k = 0; k < 12; k++) { const a = (k / 12) * Math.PI * 2; g.fillRect(128 + Math.cos(a) * 92 - 5, 128 + Math.sin(a) * 92 - 5, 10, 10); }
-  g.lineCap = 'round'; g.strokeStyle = IRON;
-  g.lineWidth = 10; g.beginPath(); g.moveTo(128, 128); g.lineTo(128, 62); g.stroke();
-  g.lineWidth = 8; g.beginPath(); g.moveTo(128, 128); g.lineTo(178, 128); g.stroke();
+  for (let k = 0; k < 60; k++) { if (k % 5) { const a = (k / 60) * Math.PI * 2; g.fillRect(128 + Math.cos(a) * 98 - 1.5, 128 + Math.sin(a) * 98 - 1.5, 3, 3); } }
+  g.beginPath(); g.arc(128, 128, 9, 0, Math.PI * 2); g.fill();
   return tex(c);
 }
 function universityHall() {
@@ -1437,12 +1562,24 @@ function universityHall() {
   tower.position.set(0, H + 3.25, -0.6);
   g.add(tower);
   const clockM = new THREE.MeshStandardMaterial({ map: clockTexture(), roughness: 0.5, transparent: true });
+  // zegar działa: wskazówki pokazują prawdziwą godzinę (czas komputera gracza)
+  const handM = mat(IRON, { roughness: 0.4, metalness: 0.3 });
+  const hourGeo = new THREE.BoxGeometry(0.11, 0.62, 0.035).translate(0, 0.25, 0), minGeo = new THREE.BoxGeometry(0.07, 0.92, 0.035).translate(0, 0.38, 0);
+  const hands = [];
   for (const [x, z, ry] of [[0, 1.01, 0], [0, -2.21, Math.PI], [1.61, -0.6, Math.PI / 2], [-1.61, -0.6, -Math.PI / 2]]) {
     const cl = new THREE.Mesh(new THREE.CircleGeometry(1.15, 32), clockM);
     cl.position.set(x, H + 4.6, z);
     cl.rotation.y = ry;
+    const hh = new THREE.Mesh(hourGeo, handM), mh = new THREE.Mesh(minGeo, handM);
+    hh.position.z = 0.03; mh.position.z = 0.055;
+    cl.add(hh, mh);
+    hands.push([hh, mh]);
     g.add(cl);
   }
+  worldAnim.push(() => {
+    const d = new Date(), m = d.getMinutes() + d.getSeconds() / 60, h = (d.getHours() % 12) + m / 60;
+    for (const [hh, mh] of hands) { hh.rotation.z = -h / 12 * Math.PI * 2; mh.rotation.z = -m / 60 * Math.PI * 2; }
+  });
   const roof = mesh(new THREE.ConeGeometry(2.6, 2.6, 4), flat(ROOF), false, false);
   roof.rotation.y = Math.PI / 4;
   roof.position.set(0, H + 6.5 + 1.3, -0.6);
@@ -1452,7 +1589,14 @@ function universityHall() {
   return g;
 }
 // Parking: samochodziki w różnych kolorach
+const carMats = new Map();
 function car(color) {
+  const glb = cloneModel('car', n => {
+    if (n !== 'player') return null;
+    if (!carMats.has(color)) carMats.set(color, new THREE.MeshPhysicalMaterial({ color, roughness: 0.32, metalness: 0.15, clearcoat: 1, clearcoatRoughness: 0.08, vertexColors: true }));
+    return carMats.get(color);
+  });
+  if (glb) { glb.traverse(m => { m.castShadow = false; }); return glb; }
   const g = new THREE.Group();
   const body = mesh(new THREE.BoxGeometry(1.0, 0.42, 2.0), flat(color, { roughness: 0.4 }), false, false);
   body.position.y = 0.36;
@@ -1669,17 +1813,6 @@ function motorboat(stripe = '#F2B72E') {
   railing(g, sec, L, 0.62, 0.97, 0.18, mat('#D5DBE4', { roughness: 0.3, metalness: 0.6 }));
   return g;
 }
-// Ślad za łodzią: pasek piany, który zanika
-function wakeMesh(len = 6, w = 1.4) {
-  const [c, g] = makeCanvas(64, 256);
-  const gr = g.createLinearGradient(0, 0, 0, 256);
-  gr.addColorStop(0, 'rgba(255,255,255,.85)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
-  g.fillStyle = gr; g.fillRect(8, 0, 48, 256);
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, len), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false }));
-  m.rotation.x = -Math.PI / 2;
-  m.renderOrder = 4;
-  return m;
-}
 
 {
   // Blok ziemi: trawa na górze, warstwy ziemi na bokach (ląd i podstawa pod wodą)
@@ -1732,17 +1865,20 @@ function wakeMesh(len = 6, w = 1.4) {
   wet.position.set(0, GROUND_Y + 0.02, SHORE_Z - 0.9);
   world.add(wet);
 
-  // Woda: przezroczysta jak galaretka, z falami na powierzchni i widoczna w przekroju
+  // Woda: przezroczysta jak galaretka, z falami na powierzchni i widoczna w przekroju.
+  // Jak prawdziwa woda: przez powierzchnię widać dno (załamane przez fale), a im głębiej, tym więcej światła
+  // woda pochłania: najpierw czerwień, potem zieleń, więc płycizna jest prawie przezroczysta i turkusowa,
+  // a głębia granatowa. Pod małym kątem odbija niebo (Fresnel), słońce daje ostry połysk.
   const {
-    Fn, uniform, vec3, vec4, float, uv, positionLocal, positionWorld, normalLocal, normalView, positionViewDirection,
-    smoothstep, mix, sin, cos, cross, normalize, pow, clamp, dot, varyingProperty, output, select,
+    Fn, uniform, vec2, vec3, vec4, float, uv, positionLocal, positionWorld, normalLocal, cameraPosition, screenUV,
+    smoothstep, mix, sin, cos, cross, normalize, pow, clamp, dot, abs, exp, max, varyingProperty, output, select,
+    texture, viewportSharedTexture, transformNormalToView, normalView, positionViewDirection, mx_noise_float,
   } = TSL;
   const waterU = { uTime: uniform(0), uSky: uniform(new THREE.Color('#DCE6EF')) };
-  // gładka powierzchnia (bez płaskich trójkątów), połysk słońca, odbicie nieba pod małym kątem (Fresnel),
-  // płytko turkus, głęboko granat morza, biała piana na grzbietach fal
-  const waterMat = new THREE.MeshStandardNodeMaterial({ roughness: 0.07, metalness: 0, transparent: true, opacity: 0.8 });
-  const waveH = varyingProperty('float', 'vWaveH');
-  // fale Gerstnera liczone na karcie graficznej: przesunięcie powierzchni i nowa normalna
+  const ripTex = ripples.getTexture();
+  const waterMat = new THREE.MeshStandardNodeMaterial({ roughness: 0.075, metalness: 0, transparent: true });
+  const waveH = varyingProperty('float', 'vWaveH'), waveN = varyingProperty('vec3', 'vWaveN');
+  // fale Gerstnera i zmarszczki z symulacji liczone na karcie graficznej: przesunięcie powierzchni i nowa normalna
   waterMat.positionNode = Fn(() => {
     const p = positionLocal, u = uv();
     const wp = vec3(p.x, float(WZ0 + WD / 2).sub(p.y), 0);
@@ -1757,24 +1893,58 @@ function wakeMesh(len = 6, w = 1.4) {
       tan = tan.add(vec3(st.mul(sf).mul(-dx * dx), st.mul(cf).mul(dx), st.mul(sf).mul(-dx * dz)));
       bin = bin.add(vec3(st.mul(sf).mul(-dx * dz), st.mul(cf).mul(dz), st.mul(sf).mul(-dz * dz)));
     }
+    const rip = texture(ripTex, vec2(p.x.add(BX).div(2 * BX), wp.y.sub(WZ0).div(WD))).level(0).r;
     const n = normalize(cross(bin, tan));
     normalLocal.assign(vec3(n.x, n.z.negate(), n.y));
+    waveN.assign(n);
     waveH.assign(disp.y);
-    return p.add(vec3(disp.x, disp.z.negate(), disp.y));
+    return p.add(vec3(disp.x, disp.z.negate(), disp.y.add(rip)));
   })();
-  waterMat.colorNode = mix(vec3(0.02, 0.27, 0.46), vec3(0.24, 0.80, 0.78), smoothstep(0.3, 0.98, uv().y));
-  // po oświetleniu: odbicie nieba pod małym kątem i piana tylko na najwyższych grzbietach
-  const fres = pow(clamp(dot(normalView, positionViewDirection), 0, 1).oneMinus(), 4);
-  waterMat.outputNode = vec4(
-    mix(output.rgb, waterU.uSky, fres.mul(0.6)).add(smoothstep(0.31, 0.46, waveH).mul(0.38)),
-    mix(output.a, 0.96, fres),
-  );
-  const water = new THREE.Mesh(new THREE.PlaneGeometry(BX * 2, WD, 220, 90), waterMat);
+  // drobne zmarszczki od wiatru (fale kapilarne) i nachylenie zmarszczek z symulacji: tylko w normalnej
+  const ripUV = vec2(positionWorld.x.add(BX).div(2 * BX), positionWorld.z.sub(WZ0).div(WD));
+  const rdx = 1 / (ripples.nx - 1), rdz = 1 / (ripples.nz - 1);
+  const ripH = texture(ripTex, ripUV).r;
+  const gx = texture(ripTex, ripUV.add(vec2(rdx, 0))).r.sub(texture(ripTex, ripUV.sub(vec2(rdx, 0))).r).div(2 * ripples.dx);
+  const gz = texture(ripTex, ripUV.add(vec2(0, rdz))).r.sub(texture(ripTex, ripUV.sub(vec2(0, rdz))).r).div(2 * ripples.dz);
+  let csx = float(0), csz = float(0);
+  const near = smoothstep(45, 14, positionWorld.distance(cameraPosition));   // z daleka bez drobnych zmarszczek (nie migoczą)
+  for (const [dx, dz, L, a] of [[0.8, 0.6, 0.95, 0.011], [-0.3, 1, 0.62, 0.008]]) {
+    const k = 2 * Math.PI / L, f = positionWorld.x.mul(dx).add(positionWorld.z.mul(dz)).mul(k).sub(waterU.uTime.mul(Math.sqrt(9.8 * k) * 0.6));
+    const c = cos(f).mul(near.mul(a * k));
+    csx = csx.add(c.mul(dx)); csz = csz.add(c.mul(dz));
+  }
+  const nW = normalize(waveN.add(vec3(gx.add(csx).negate(), 0, gz.add(csz).negate())));
+  waterMat.normalNode = transformNormalToView(vec3(nW.x, nW.z.negate(), nW.y));
+  // grubość wody pod punktem: poziom wody minus dno (ten sam profil co seabedY: suma odcinków)
+  let bed = float(SEABED[0][1]);
+  for (let k = 1; k < SEABED.length; k++) {
+    const [z0, y0] = SEABED[k - 1], [z1, y1] = SEABED[k];
+    bed = bed.add(clamp(positionWorld.z.sub(z0), 0, z1 - z0).mul((y1 - y0) / (z1 - z0)));
+  }
+  const depth = max(float(WATER_Y).sub(bed), 0);
+  const cosV = max(abs(normalize(cameraPosition.sub(positionWorld)).y), 0.2);
+  const T = exp(vec3(0.42, 0.11, 0.075).mul(depth.div(cosV)).negate());   // Beer–Lambert: ile światła przechodzi
+  const refr = screenUV.add(vec2(nW.x, nW.z.negate()).mul(0.045).mul(smoothstep(0, 1.4, depth)));
+  waterMat.backdropNode = viewportSharedTexture(refr).rgb.mul(T).add(vec3(0.02, 0.27, 0.38).mul(T.oneMinus()));
+  waterMat.backdropAlphaNode = float(1);
+  // po oświetleniu: odbicie nieba pod małym kątem i piana: na najwyższych grzbietach (poszarpana szumem)
+  // i tam, gdzie łodzie i ryby mocno wzburzyły wodę
+  const fres = pow(clamp(dot(normalView, positionViewDirection), 0, 1).oneMinus(), 5);
+  const breakup = smoothstep(-0.15, 0.55, mx_noise_float(vec3(positionWorld.x.mul(1.6), positionWorld.z.mul(1.6), waterU.uTime.mul(0.25))));
+  const ripSlope = vec2(gx, gz).length();
+  const foamAmt = smoothstep(WAVE_MAX * 0.6, WAVE_MAX * 0.9, waveH).mul(0.6).add(smoothstep(0.22, 0.55, ripSlope).mul(0.8)).mul(breakup);
+  waterMat.outputNode = vec4(mix(output.rgb, waterU.uSky, fres.mul(0.65)).add(clamp(foamAmt, 0, 1).mul(0.55)), 1);
+  const water = new THREE.Mesh(new THREE.PlaneGeometry(BX * 2, WD, 260, 100), waterMat);
   water.rotation.x = -Math.PI / 2;
   water.position.set(0, WATER_Y, WZ0 + WD / 2);
   water.renderOrder = 2;
   world.add(water);
-  worldAnim.push(t => { waterU.uTime.value = t; waterU.uSky.value.copy(skyU.bottom.value).lerp(skyU.top.value, 0.35); });
+  worldAnim.push((t, dt) => {
+    waterU.uTime.value = t;
+    waterU.uSky.value.copy(skyU.bottom.value).lerp(skyU.top.value, 0.35);
+    ripples.step(dt);
+    ripples.upload();
+  });
   // piana na linii brzegu: biała, poszarpana, lekko przypływa i odpływa
   const [fc2, fg2] = makeCanvas(512, 64);
   {
@@ -2026,6 +2196,29 @@ function wakeMesh(len = 6, w = 1.4) {
       c.rotation.y = dz < 0 ? 0 : Math.PI;
       world.add(c);
     });
+    // dwa samochody jeżdżą po alejce parkingu: w jedną stronę jednym pasem, zawracają łukiem i wracają drugim
+    const L0 = 22.6, L1 = 31.4, R = 0.55, len = 2 * (L1 - L0) + 2 * Math.PI * R;
+    const lane = (sd, out) => {
+      let d = ((sd % len) + len) % len;
+      if (d < L1 - L0) return out.set(L0 + d, 4 + R, 0);
+      d -= L1 - L0;
+      if (d < Math.PI * R) { const a = d / R; return out.set(L1 + R * Math.sin(a), 4 + R * Math.cos(a), a); }
+      d -= Math.PI * R;
+      if (d < L1 - L0) return out.set(L1 - d, 4 - R, Math.PI);
+      d -= L1 - L0;
+      const a = d / R;
+      return out.set(L0 - R * Math.sin(a), 4 - R * Math.cos(a), Math.PI + a);
+    };
+    const pv = new THREE.Vector3();
+    [['#2F7FF0', 0], ['#E5484D', len / 2]].forEach(([col, off]) => {
+      const c = car(col);
+      world.add(c);
+      worldAnim.push(t => {
+        lane(t * 1.7 + off, pv);
+        c.position.set(pv.x, GROUND_Y + 0.02, pv.y);
+        c.rotation.y = Math.PI / 2 + pv.z;
+      });
+    });
     homes.push([27, 4, 7.5]);
   }
   // drzewa na trawie
@@ -2088,7 +2281,7 @@ function wakeMesh(len = 6, w = 1.4) {
   const W_UP = new THREE.Vector3(0, 1, 0), wN = new THREE.Vector3(), wQ = new THREE.Quaternion(), wQy = new THREE.Quaternion();
   const floatOn = (obj, x, z, yaw, t, lift = 0, tilt = 1) => {
     const [y, sx, sz] = waveAt(x, z, t);
-    obj.position.set(x, WATER_Y + y + lift, z);
+    obj.position.set(x, WATER_Y + y + ripples.heightAt(x, z) + lift, z);
     wQ.setFromUnitVectors(W_UP, wN.set(-sx * tilt, 1, -sz * tilt).normalize());
     obj.quaternion.copy(wQ).multiply(wQy.setFromAxisAngle(W_UP, yaw));
   };
@@ -2148,23 +2341,25 @@ function wakeMesh(len = 6, w = 1.4) {
     worldAnim.push(t => { beam.rotation.y = t * 0.8; });
   }
 
-  // Żaglówki i motorówka: płyną wzdłuż plaży i zawracają, za nimi ślad piany; kołyszą się na fali
-  const along = (obj, wake, z, speed, x0, x1, ph, tilt = 0.8) => {
-    world.add(obj, wake);
+  // Żaglówki i motorówka: płyną wzdłuż plaży i zawracają, kołyszą się na fali; za nimi zostaje prawdziwy klin fal
+  // z symulacji zmarszczek (piana pojawia się tam, gdzie fale są najbardziej strome)
+  const along = (obj, z, speed, x0, x1, ph, tilt = 0.8) => {
+    world.add(obj);
     worldAnim.push(t => {
       const u = ((t * speed + ph) % 2 + 2) % 2, back = u > 1, k = back ? 2 - u : u;
       const e = 0.5 - 0.5 * Math.cos(Math.PI * k);
       const x = x0 + (x1 - x0) * e, dir = back ? -1 : 1, zz = z + 0.6 * Math.sin(t * 0.4 + ph);
       floatOn(obj, x, zz, dir > 0 ? Math.PI / 2 : -Math.PI / 2, t, 0.02, tilt);
-      wake.position.set(x - dir * 3.4, WATER_Y + waveAt(x - dir * 3.4, zz, t)[0] + 0.07, zz);
-      wake.rotation.z = dir > 0 ? Math.PI / 2 : -Math.PI / 2;
-      wake.material.opacity = 0.35 + 0.5 * Math.sin(Math.PI * k);
+      // kadłub wypiera wodę: dziób i rufa robią falę, która rozchodzi się klinem za łodzią
+      const v = Math.abs(Math.sin(Math.PI * k)) * Math.PI * speed * Math.abs(x1 - x0);   // prędkość łodzi
+      ripples.disturb(x + dir * 1.0, zz, 0.0011 * v * tilt, 0.8);
+      ripples.disturb(x - dir * 1.0, zz, -0.0007 * v * tilt, 0.9);
     });
   };
-  along(sailboat('#E5484D'), wakeMesh(6, 1.3), SHORE_Z + 11, 0.035, -30, 22, 0);
-  along(sailboat('#2F7FF0'), wakeMesh(6, 1.3), SHORE_Z + 16, 0.028, -26, 26, 0.9);
-  along(sailboat('#F2B72E'), wakeMesh(6, 1.3), SHORE_Z + 19, 0.04, -30, 24, 1.5);
-  along(motorboat(), wakeMesh(9, 1.0), SHORE_Z + 7.5, 0.09, -28, 26, 0.3, 1.2);
+  along(sailboat('#E5484D'), SHORE_Z + 11, 0.035, -30, 22, 0);
+  along(sailboat('#2F7FF0'), SHORE_Z + 16, 0.028, -26, 26, 0.9);
+  along(sailboat('#F2B72E'), SHORE_Z + 19, 0.04, -30, 24, 1.5);
+  along(motorboat(), SHORE_Z + 7.5, 0.09, -28, 26, 0.3, 1.2);
   // Boje wyznaczające kąpielisko: kilka sztuk, kołyszą się na fali
   const buoy = col => {
     const g = new THREE.Group();
@@ -2288,7 +2483,7 @@ function wakeMesh(len = 6, w = 1.4) {
     const splash = new THREE.Mesh(new THREE.RingGeometry(0.35, 0.5, 32), ringMat);
     splash.rotation.x = -Math.PI / 2;
     world.add(fishG, splash);
-    let next = 3, at = 0, fx = 0, fz = 0;
+    let next = 3, at = 0, fx = 0, fz = 0, fishOut = false;
     worldAnim.push(t => {
       if (t > next) { next = t + wrr(3, 7); at = t; fx = wrr(-30, 28); fz = SHORE_Z + wrr(6, 19); }
       const u = (t - at) / 1.1;
@@ -2299,7 +2494,9 @@ function wakeMesh(len = 6, w = 1.4) {
         fish.rotation.x = Math.PI / 2 + (u - 0.5) * 2.4;
       }
       const v = (t - at - 1.05) / 1.5;
-      ringMat.opacity = v > 0 && v < 1 ? 0.7 * (1 - v) : 0;
+      if (u > 0 && !fishOut) { fishOut = true; ripples.disturb(fx - 0.9, fz, 0.035, 0.7); }
+      if (v > 0 && fishOut) { fishOut = false; ripples.disturb(fx + 0.9, fz, 0.055, 0.75); }
+      ringMat.opacity = 0;
       if (v > 0 && v < 1) { splash.position.set(fx + 0.9, WATER_Y + 0.08, fz); splash.scale.setScalar(1 + v * 4); }
     });
   }
@@ -2420,6 +2617,7 @@ function applySkin(name) {
   sun.color.set(r ? '#FFEBD2' : LOOK.sun[0]);
   sun.intensity = r ? 2.1 : LOOK.sun[1];
   base.material = t ? [kraftMat, kraftMat, paperMat, kraftMat, kraftMat, kraftMat] : [baseSideMat, baseSideMat, baseTopMat, baseSideMat, baseSideMat, baseSideMat];
+  inlay.visible = !t;
   tileBodyMat.map = t ? kraftTex : null;
   tileBodyMat.color.set(t ? '#FFFFFF' : LOOK.tileBody);
   tileBodyMat.needsUpdate = true;
@@ -2428,8 +2626,65 @@ function applySkin(name) {
   document.body.style.background = t ? 'linear-gradient(180deg, #F4F1EC, #E2DCD2)' : r ? '#D9D2C6' : `linear-gradient(180deg, ${LOOK.bg[0]}, ${LOOK.bg[1]})`;
 }
 
-const tileGeo = new THREE.BoxGeometry(W - 0.06, TILE_H, D - 0.06);
-const cornerGeo = new THREE.BoxGeometry(D - 0.06, TILE_H, D - 0.06);
+const tileGeo = new RoundedBoxGeometry(W - 0.06, TILE_H, D - 0.06, 2, 0.007);
+const cornerGeo = new RoundedBoxGeometry(D - 0.06, TILE_H, D - 0.06, 2, 0.007);
+// Faktura papieru: włókna i drobne ziarno jako mapa normalnych (widać je, gdy światło pada z boku)
+const paperNormal = (() => {
+  const n = 256;
+  let seed = 11;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const hgt = new Float32Array(n * n);
+  for (let k = 0; k < hgt.length; k++) hgt[k] = rnd() * 0.35;
+  for (let f = 0; f < 900; f++) {   // włókna: krótkie, lekko zakrzywione kreski
+    let x = rnd() * n, y = rnd() * n, a = rnd() * Math.PI * 2;
+    const len = 6 + rnd() * 18;
+    for (let s = 0; s < len; s++) {
+      x += Math.cos(a); y += Math.sin(a); a += (rnd() - 0.5) * 0.3;
+      hgt[((Math.round(y) % n + n) % n) * n + ((Math.round(x) % n + n) % n)] += 0.8;
+    }
+  }
+  const [c, g] = makeCanvas(n, n);
+  const img = g.createImageData(n, n);
+  const at = (x, y) => hgt[((y + n) % n) * n + ((x + n) % n)];
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+    const dx = at(x + 1, y) - at(x - 1, y), dy = at(x, y + 1) - at(x, y - 1);
+    const len = Math.hypot(dx, dy, 2), o = (y * n + x) * 4;
+    img.data[o] = 128 - (dx / len) * 127; img.data[o + 1] = 128 + (dy / len) * 127; img.data[o + 2] = 128 + (2 / len) * 127; img.data[o + 3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(2, 3);
+  t.anisotropy = maxAniso;
+  return t;
+})();
+// Złota folia: piksele w kolorze złota stają się metalem z połyskiem (mapa: zielony = szorstkość, niebieski = metal)
+function foilMap(t) {
+  const c = t.image, g = c.getContext('2d'), { width: w, height: h } = c;
+  const src = g.getImageData(0, 0, w, h).data;
+  const [c2, g2] = makeCanvas(w, h);
+  const out = g2.createImageData(w, h);
+  let n = 0;
+  for (let k = 0; k < src.length; k += 4) {
+    const dr = src[k] - 224, dg = src[k + 1] - 176, db = src[k + 2] - 74;
+    const gold = dr * dr + dg * dg + db * db < 2600;
+    if (gold) n++;
+    out.data[k + 1] = gold ? 72 : 209; out.data[k + 2] = gold ? 230 : 0; out.data[k + 3] = 255;
+  }
+  if (n < w * h * 0.004) return null;
+  g2.putImageData(out, 0, 0);
+  const f = new THREE.CanvasTexture(c2);
+  f.anisotropy = maxAniso;
+  return f;
+}
+// matowy, drukowany papier: kolory są czyste i nie bieleją od odbić lampy i okna
+function tileMaterial(i) {
+  const map = tileTexture(i), f = FIELDS[i]?.type === 'special' || i % SIDE === 0 ? foilMap(map) : null;
+  return new THREE.MeshStandardMaterial({
+    map, normalMap: paperNormal, normalScale: new THREE.Vector2(0.22, 0.22), envMapIntensity: f ? 1.4 : 0.6,
+    roughness: f ? 1 : 0.82, metalness: f ? 1 : 0, roughnessMap: f, metalnessMap: f,
+  });
+}
 const tileTops = [];
 const cellGroups = [];
 for (let i = 0; i < TOTAL; i++) {
@@ -2442,8 +2697,7 @@ for (let i = 0; i < TOTAL; i++) {
   const w = p.corner ? D : W;
   const body = mesh(p.corner ? cornerGeo : tileGeo, tileBodyMat, false, true);
   body.position.y = TILE_H / 2;
-  // matowy, drukowany papier: kolory są czyste i nie bieleją od odbić lampy i okna
-  const top = mesh(new THREE.PlaneGeometry(w - 0.1, D - 0.1), new THREE.MeshStandardMaterial({ map: tileTexture(i), roughness: 0.82, envMapIntensity: 0.6 }), false, true);
+  const top = mesh(new THREE.PlaneGeometry(w - 0.1, D - 0.1), tileMaterial(i), false, true);
   top.rotation.x = -Math.PI / 2;
   top.position.y = TILE_H + 0.002;
   top.userData.cell = i;
@@ -2455,7 +2709,7 @@ const center = mesh(new THREE.PlaneGeometry(INNER, INNER), new THREE.MeshStandar
 if (fontsLate) fontsLoaded.then(() => {   // czcionki doszły później: przerysuj pola i środek planszy
   if (!fontsOk) return;
   const swap = (m, t) => { const old = m.map; m.map = t; m.needsUpdate = true; old?.dispose(); };
-  tileTops.forEach(top => swap(top.material, tileTexture(top.userData.cell)));
+  tileTops.forEach(top => { const old = top.material; top.material = tileMaterial(top.userData.cell); old.map?.dispose(); old.roughnessMap?.dispose(); old.dispose(); });
   swap(center.material, centerTexture());
 });
 center.rotation.x = -Math.PI / 2;
@@ -2469,7 +2723,24 @@ function cardBackTexture(deck) {
 }
 const deckFaces = [];
 const cardEdgeMats = [mat('#F7F8FB', { roughness: 0.7 }), mat('#E7EAF0', { roughness: 0.7 })];
-const cardGeo = new THREE.BoxGeometry(CARD_W, 0.014, CARD_L);
+// Karta: zaokrąglone rogi jak w prawdziwej talii, grubość kartonu; przód z mapowaniem obrazu na cały prostokąt
+function roundedRect(w, l, r) {
+  const s = new THREE.Shape();
+  s.moveTo(-w / 2 + r, -l / 2);
+  s.lineTo(w / 2 - r, -l / 2); s.quadraticCurveTo(w / 2, -l / 2, w / 2, -l / 2 + r);
+  s.lineTo(w / 2, l / 2 - r); s.quadraticCurveTo(w / 2, l / 2, w / 2 - r, l / 2);
+  s.lineTo(-w / 2 + r, l / 2); s.quadraticCurveTo(-w / 2, l / 2, -w / 2, l / 2 - r);
+  s.lineTo(-w / 2, -l / 2 + r); s.quadraticCurveTo(-w / 2, -l / 2, -w / 2 + r, -l / 2);
+  return s;
+}
+const cardGeo = new THREE.ExtrudeGeometry(roundedRect(CARD_W, CARD_L, 0.13), { depth: 0.014, bevelEnabled: false, curveSegments: 6 })
+  .rotateX(-Math.PI / 2).translate(0, -0.007, 0);
+const cardFaceGeo = (() => {
+  const w = CARD_W - 0.03, l = CARD_L - 0.03, geo = new THREE.ShapeGeometry(roundedRect(w, l, 0.115), 6);
+  const pos = geo.attributes.position, uv = geo.attributes.uv;
+  for (let k = 0; k < pos.count; k++) uv.setXY(k, (pos.getX(k) + w / 2) / w, (pos.getY(k) + l / 2) / l);
+  return geo.rotateX(-Math.PI / 2);
+})();
 let deckSeed = 7;
 const deckRnd = () => ((deckSeed = (deckSeed * 16807) % 2147483647) / 2147483647) - 0.5;
 for (const deck of DECKS) {
@@ -2483,8 +2754,11 @@ for (const deck of DECKS) {
     top.rotation.y = deckRnd() * 0.06;
     pile.add(top);
   }
-  const face = mesh(new THREE.PlaneGeometry(CARD_W - 0.03, CARD_L - 0.03), new THREE.MeshStandardMaterial({ map: cardBackTexture(deck), roughness: 0.5 }), false, true);
-  face.rotation.x = -Math.PI / 2;
+  // tył karty z folią holograficzną: tęczowy połysk zmienia się z kątem patrzenia
+  const face = mesh(cardFaceGeo, new THREE.MeshPhysicalMaterial({
+    map: cardBackTexture(deck), roughness: 0.32, clearcoat: 0.6, clearcoatRoughness: 0.2,
+    iridescence: 0.7, iridescenceIOR: 1.7, iridescenceThicknessRange: [180, 640],
+  }), false, true);
   face.position.y = 0.0075;
   face.userData.deck = deck;
   top.add(face);
@@ -2522,6 +2796,18 @@ function addShowItem(obj, x, z, scale, title, sub) {
   holder.add(label);
   show.add(holder);
 }
+await Promise.race([modelsReady, new Promise(r => setTimeout(r, 2500))]);
+// Wypukłe ikony z Blendera nad nadrukiem pól Szansa i Parking (środek ikony: 24% wysokości nadruku)
+modelsReady.then(() => {
+  for (let i = 0; i < TOTAL; i++) {
+    const type = FIELDS[i]?.type, name = type === 'chance' ? 'icon_chance' : type === 'station' ? 'icon_parking' : null;
+    const icon = name && cloneModel(name, () => null);
+    if (!icon) continue;
+    icon.position.set(0, TILE_H + 0.002, -(D - 0.1) * 0.26);
+    icon.traverse(m => { m.castShadow = false; m.receiveShadow = true; });
+    cellGroups[i].add(icon);
+  }
+});
 PLAYERS.forEach((p, i) => addShowItem(p.make(p.color), -3.75 + i * 2.5, -2.3, 2.4, p.pawn, 'pionek'));
 const demoColor = PLAYERS[1].color;
 BUILDINGS.forEach((b, i) => addShowItem(b.make(demoColor), -4.4 + i * 2.2, 2.0, b.scale, b.name, i === 4 ? 'hotel · poziom 5' : `budynek · poziom ${i + 1}`));
@@ -2710,7 +2996,7 @@ const sparkGeo = new THREE.BoxGeometry(0.07, 0.07, 0.025);
 const ringGeo = new THREE.RingGeometry(0.42, 0.56, 48);
 
 function disposeTree(obj) {
-  obj.traverse(o => { if (o.geometry && o.geometry !== dustGeo && o.geometry !== sparkGeo && o.geometry !== ringGeo) o.geometry.dispose(); });
+  obj.traverse(o => { if (o.geometry && !o.userData.shared && o.geometry !== dustGeo && o.geometry !== sparkGeo && o.geometry !== ringGeo) o.geometry.dispose(); });
 }
 function burst(cg, color) {
   const group = new THREE.Group();
@@ -2753,10 +3039,43 @@ function burst(cg, color) {
   });
 }
 // Budynek spada z góry, ląduje z wyraźnym odbiciem
+// Rusztowanie: stawia się przed budową (rośnie z pola), znika, gdy budynek wyląduje
+const scaffoldMat = mat('#F2B72E', { roughness: 0.4, metalness: 0.35 });
+const plankMat = mat('#C98B4E', { roughness: 0.8 });
+const poleGeo = new THREE.CylinderGeometry(0.016, 0.016, 1, 8);
+const plankGeo = new THREE.BoxGeometry(1, 0.018, 0.13);
+function scaffold(size) {
+  const g = new THREE.Group(), a = 0.44 * size, h = 0.95 * size;
+  const pole = (x, y, z, len, rx, rz) => {
+    const m = mesh(poleGeo, scaffoldMat, true, false);
+    m.position.set(x, y, z); m.scale.y = len; m.rotation.set(rx, 0, rz);
+    g.add(m);
+  };
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) pole(sx * a, h / 2, sz * a, h, 0, 0);
+  for (const y of [0.33, 0.66, 0.97]) {
+    for (const s2 of [-1, 1]) { pole(0, y * h, s2 * a, 2 * a, 0, Math.PI / 2); pole(s2 * a, y * h, 0, 2 * a, Math.PI / 2, 0); }
+  }
+  pole(0, h / 2, a, Math.hypot(2 * a, h * 0.6), 0, Math.atan2(2 * a, h * 0.6));   // ukośne zastrzały
+  pole(-a, h / 2, 0, Math.hypot(2 * a, h * 0.6), Math.atan2(2 * a, h * 0.6), 0);
+  for (const y of [0.33, 0.66]) {
+    const pl = mesh(plankGeo, plankMat, true, false);
+    pl.scale.x = 2 * a + 0.1; pl.position.set(0, y * h + 0.02, a + 0.04);
+    g.add(pl);
+  }
+  return g;
+}
 async function dropIn(obj, s, color, cg) {
   const y0 = TILE_H;
   obj.scale.setScalar(s);
   obj.rotation.y = -0.8;
+  let sc = null;
+  if (!reduceMotion) {
+    sc = scaffold(Math.min(1.25, Math.max(0.8, s)));
+    sc.position.set(obj.position.x, y0, obj.position.z);
+    sc.scale.set(1, 0.001, 1);
+    cg.add(sc);
+    await tween(300, t => sc.scale.set(1, Math.max(0.001, easeOut3(t)), 1));
+  }
   await tween(reduceMotion ? 80 : 430, t => {
     obj.position.y = y0 + 2.6 * (1 - t * t);
     obj.rotation.y = -0.8 * (1 - t);
@@ -2766,8 +3085,10 @@ async function dropIn(obj, s, color, cg) {
   await tween(reduceMotion ? 80 : 520, t => {
     const k = Math.sin(t * Math.PI * 3) * Math.exp(-4.5 * t) * 0.32;
     obj.scale.set(s * (1 + k * 0.55), s * (1 - k), s * (1 + k * 0.55));
+    if (sc) sc.scale.set(1 + t * 0.15, Math.max(0.001, 1 - easeInOut(t)), 1 + t * 0.15);
   });
   obj.scale.setScalar(s);
+  if (sc) cg.remove(sc);
 }
 // Stary budynek kurczy się i znika
 async function shrinkOut(obj, cg) {
@@ -2779,6 +3100,29 @@ async function shrinkOut(obj, cg) {
   });
   cg.remove(obj);
   disposeTree(obj);
+}
+// Pionek się cieszy: podskok z pełnym obrotem i ugięciem przy lądowaniu (kupno pola, wygrana)
+function pawnJoy(p) {
+  const o = p.obj, y0 = o.position.y, r0 = o.rotation.y;
+  if (reduceMotion || o.userData.busy) return Promise.resolve();
+  o.userData.busy = true;
+  return tween(720, t => {
+    o.position.y = y0 + 0.55 * Math.sin(Math.PI * Math.min(1, t * 1.15));
+    o.rotation.y = r0 + Math.PI * 2 * easeInOut(t);
+    const sq = t < 0.12 ? 1 - 0.5 * Math.sin(t / 0.12 * Math.PI) * 0.25 : t > 0.86 ? 1 - Math.sin((t - 0.86) / 0.14 * Math.PI) * 0.16 : 1;
+    o.scale.set(1 / Math.sqrt(sq), sq, 1 / Math.sqrt(sq));
+  }).then(() => { o.position.y = y0; o.rotation.y = r0; o.scale.set(1, 1, 1); o.userData.busy = false; });
+}
+// Pionek jest smutny: przechyla się, kiwa i przygasa (bankructwo), potem znika
+function pawnSad(p) {
+  const o = p.obj;
+  if (reduceMotion) return Promise.resolve();
+  return tween(900, t => {
+    const e = easeInOut(Math.min(1, t * 1.6));
+    o.rotation.x = 0.38 * e + 0.06 * Math.sin(t * Math.PI * 5) * (1 - t);
+    o.position.y = TILE_H - 0.05 * e;
+    o.scale.setScalar(1 - 0.12 * e);
+  });
 }
 function cellTarget(cell) {
   const p = cellPose(cell);
@@ -4836,18 +5180,20 @@ const rentOf = i => R.rentOf(G.snap, i);
 function liftCard(kind) {
   const deck = DECKS[kind === 'bonus' ? 0 : 1];
   const card = mesh(cardGeo, cardEdgeMats[0], true, false);
-  const face = mesh(new THREE.PlaneGeometry(CARD_W - 0.03, CARD_L - 0.03), deckFaces[kind === 'bonus' ? 0 : 1].material, false, false);
-  face.rotation.x = -Math.PI / 2; face.position.y = 0.0075;
+  const face = mesh(cardFaceGeo, deckFaces[kind === 'bonus' ? 0 : 1].material, false, false);
+  face.position.y = 0.0075;
   card.add(face);
   card.position.set(deck.x, CENTER_Y + 0.2, deck.z);
   card.rotation.y = deck.rotY;
   board.add(card);
   sfx('card');
-  return tween(reduceMotion ? 100 : 650, t => {
-    card.position.y = CENTER_Y + 0.2 + 2.6 * t;
-    card.rotation.x = -1.2 * t;
-    card.scale.setScalar(1 + 0.4 * t);
-  }).then(() => { board.remove(card); face.geometry.dispose(); });
+  // karta wyskakuje ze stosu, obraca się w locie i błyska folią
+  return tween(reduceMotion ? 100 : 760, t => {
+    const e = easeOut3(t);
+    card.position.y = CENTER_Y + 0.2 + 2.8 * e;
+    card.rotation.set(-1.25 * e, deck.rotY + Math.PI * 2 * e, 0.25 * Math.sin(Math.PI * t));
+    card.scale.setScalar(1 + 0.45 * e);
+  }).then(() => board.remove(card));
 }
 let cardUid = 0;
 function cardSvg(card) {
@@ -4930,6 +5276,7 @@ async function playEvent(ev) {
     case 'poolTaken': if (ev.amount) fxConfetti(POOL_AT.clone(), [GOLD, '#FFFFFF', p.hex], 120, 0.8); return;
     case 'bought':
       refreshMarks(ev.cell);
+      pawnJoy(p);
       fxRing(cellTarget(ev.cell), p.hex, 1.4);
       fxText(cellTarget(ev.cell).setY(1.6), 'KUPIONE', '#FFFFFF', 0.75);
       if (ev.monopoly) fxMonopoly(p, FIELDS[ev.cell].group);
@@ -4947,7 +5294,7 @@ async function playEvent(ev) {
     case 'decision': showDecision(ev.decision); return;
     case 'decided': return closeDecision(ev);
     case 'answered': return showAnswer(ev);
-    case 'bankrupt': shrinkOut(p.obj, board); shake(0.25, 600); fxRing(p.obj.position, '#5B6475', 2); return;
+    case 'bankrupt': shake(0.25, 600); fxRing(p.obj.position, '#5B6475', 2); return pawnSad(p).then(() => shrinkOut(p.obj, board));
     case 'over': return showEnd(ev.result);
   }
 }
@@ -5410,12 +5757,13 @@ const timeLeft = () => G?.driver?.timeLeft ?? 0;
 // Widok nowej gry: pionki na planszy, panel graczy, kamera. Gra przy jednym komputerze i online.
 function beginGame(players, snap, { teams, semester, view, online = false }) {
   quitGame(true);
+  // ile animowanych części było przed grą: po końcu gry części jej pionków znikają z listy animacji
+  const anim = { flags: flags.length, steams: steams.length, coins: coins.length, parts: liveParts.length };
   const g = G = {
     players: players.map(sp => ({ ...structuredClone(sp), obj: gamePawn(sp) })),
     own: new Map(), marks: new Map(), pool: 0, turn: 0, over: false, paused: false, teams,
     semester, timeUp: false, deckLeft: { bonus: 0, penalty: 0 }, snap: null,
-    queue: [], pumping: false, driver: null, online, seq: 0,
-    anim: { flags: flags.length, steams: steams.length, coins: coins.length },
+    queue: [], pumping: false, driver: null, online, seq: 0, anim,
   };
   applySnap(snap);
   for (const p of g.players) { board.add(p.obj); placePawn(p); }
@@ -5511,7 +5859,7 @@ function quitGame(keep = false) {
   clearHands();
   viewCorner = 0;
   controls.enableZoom = true;
-  flags.length = g.anim.flags; steams.length = g.anim.steams; coins.length = g.anim.coins;
+  flags.length = g.anim.flags; steams.length = g.anim.steams; coins.length = g.anim.coins; liveParts.length = g.anim.parts;
   dice.forEach(d => { d.visible = false; });
   selectCell(null);
 }
@@ -5593,6 +5941,7 @@ function showEnd(result) {
   layer.innerHTML = '';
   openUi = null;
   sfx('fanfare');
+  winners.forEach((p, k) => sleep(200 + k * 250).then(() => pawnJoy(p)).then(() => sleep(900)).then(() => pawnJoy(p)));
   for (let k = 0; k < 3; k++) sleep(k * 650).then(() => fxConfetti(new THREE.Vector3((Math.random() - 0.5) * 6, 0.5, (Math.random() - 0.5) * 6), [...winners.map(p => p.hex), GOLD, '#FFFFFF'], 180, 1.1));
   const title = result.teams ? `Wygrywa ${TEAMS[winners[0].team].name}` : `Wygrywa ${escHtml(winners[0].name)}`;
   const bd = openModal(`
@@ -6564,7 +6913,7 @@ function openPromo(fromLink = false) {
   gameMusic();   // podkład z menu cichnie, prezentacja ma swój utwór
   P.saved = {
     bg: scene.background, minD: controls.minDistance, maxD: controls.maxDistance, polar: controls.maxPolarAngle,
-    anim: { flags: flags.length, steams: steams.length, coins: coins.length },
+    anim: { flags: flags.length, steams: steams.length, coins: coins.length, parts: liveParts.length },
   };
   if (!G) demoStart();
   closeDropdown();
@@ -6626,7 +6975,7 @@ function closePromo(goPlay = false) {
   controls.minDistance = P.saved.minD;
   controls.maxDistance = P.saved.maxD;
   controls.maxPolarAngle = P.saved.polar;
-  flags.length = P.saved.anim.flags; steams.length = P.saved.anim.steams; coins.length = P.saved.anim.coins;
+  flags.length = P.saved.anim.flags; steams.length = P.saved.anim.steams; coins.length = P.saved.anim.coins; liveParts.length = P.saved.anim.parts;
   jumpTo(presetBoard());
   controls.enabled = !menuOpen;
   controls.autoRotate = menuOpen && prefs.spin && !reduceMotion;
@@ -6803,6 +7152,15 @@ function frame() {
     }
     if (view === 'models') turntables.forEach(o => { o.rotation.y += dt * 0.45; });
     for (const c of coins) { c.rotation.y += dt * 2.2; c.position.y = 0.52 + 0.02 * Math.sin(t * 2); }
+    if (G) for (const p of G.players) {   // pionki lekko „oddychają”, gdy stoją
+      const m = p.obj.children[0];
+      if (m) m.scale.y = PAWN_SCALE * (1 + 0.014 * Math.sin(t * 2.3 + p.idx * 1.7));
+    }
+    for (const p of liveParts) {
+      if (p.kind === 'fan') p.obj.rotateY(dt * 16);
+      else if (p.kind === 'print') p.obj.scale.y = 0.12 + 0.88 * Math.min(1, ((t * 0.07 + p.phase) % 1.15));   // wydruk rośnie i zaczyna od nowa
+      else if (p.kind === 'slide') p.obj.position.x = p.x0 + 0.035 * Math.sin(t * 2.1 + p.phase);
+    }
   }
   controls.update();
   // Bliska płaszczyzna odcięcia rośnie z odległością kamery od celu (dokładniejsza głębia):

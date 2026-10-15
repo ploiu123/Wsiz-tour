@@ -166,6 +166,15 @@ body.in-game .hud { display: none !important; }
 .g-card-show { width: min(270px, 62vw, calc(52vh * 630 / 880)); margin: 14px auto 4px; }
 .g-opts .m-btn[data-ok] { justify-content: center; }
 .g-card-show .flip-inner { transition: transform .75s cubic-bezier(.2, .7, .2, 1); }
+/* Folia holograficzna na dobranej karcie: tęczowy połysk przesuwa się po karcie jak przy przechylaniu */
+.g-card-show .face::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(115deg, transparent 22%, rgba(255, 128, 204, .3) 34%, rgba(124, 220, 255, .34) 44%, rgba(160, 255, 176, .3) 54%, rgba(255, 238, 140, .28) 63%, transparent 76%);
+  background-size: 280% 280%; mix-blend-mode: color-dodge; opacity: .75;
+  animation: g-foil 3.4s ease-in-out infinite;
+}
+@keyframes g-foil { 0%, 100% { background-position: 100% 100%; } 50% { background-position: 0% 0%; } }
+@media (prefers-reduced-motion: reduce) { .g-card-show .face::after { animation: none; } }
 .g-shuffle { position: relative; width: 220px; height: 230px; margin: 10px auto 0; }
 .g-shuffle img { position: absolute; left: 50%; top: 50%; width: 140px; margin: -98px 0 0 -70px; border-radius: 10px; box-shadow: 0 8px 20px rgba(0, 0, 0, .25); animation: g-shuf 1.1s ease-in-out infinite; }
 .g-shuffle img:nth-child(2) { animation-delay: .14s; }

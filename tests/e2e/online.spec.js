@@ -77,7 +77,8 @@ test('online: party z kodem, gospodarz i gość grają, powrót po odświeżeniu
   // gospodarz kończy grę dla wszystkich
   await host.page.locator('#gMenuBtn').click();
   await host.page.locator('[data-p="end"]').click();
-  for (const { page } of [host, guest]) await expect(page.locator('table.g-end')).toBeVisible();
+  // (bez karty graficznej strona gościa po odświeżeniu jest wolna: dwie gry 3D w jednym procesorze)
+  for (const { page } of [host, guest]) await expect(page.locator('table.g-end')).toBeVisible({ timeout: 180_000 });
 
   expect(host.errors).toEqual([]);
   expect(guest.errors).toEqual([]);

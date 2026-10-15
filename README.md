@@ -54,6 +54,7 @@ Paczkę można sprawdzić przed wysłaniem: `npm run preview` (adres http://loca
 | `npm run server` | serwer gry: tryb online (pokoje z kodem) i pliki gry z `dist/` |
 | `npm run check` | lint, typy, testy i paczka naraz |
 | `npm run sim -- 300` | symulacja 300 gier botów: długość gier, bankructwa, majątek (do strojenia ekonomii) |
+| `npm run assets` | modele z Blendera od nowa (pionki, budynki, ikony pól) do `assets/models/`; potrzebny Blender jako moduł Pythona, raz: `python3 -m venv tools/blender/.venv && tools/blender/.venv/bin/pip install bpy==5.0.1`. Gotowe modele są w repozytorium, więc do gry Blender nie jest potrzebny |
 
 ## Co jest w repozytorium
 
@@ -64,13 +65,14 @@ Paczkę można sprawdzić przed wysłaniem: `npm run preview` (adres http://loca
 | `src/data/` | Dane gry bez grafiki (TypeScript): plansza i pola, ekonomia, karty, kolory graczy |
 | `src/core/` | Silnik gry (TypeScript): tury, zasady, pytania, losowanie z ziarnem, boty; ten sam silnik działa na serwerze gry online |
 | `src/legacy/game.js` | Grafika 3D i interfejs: odtwarza zdarzenia silnika z animacjami i odsyła decyzje gracza |
-| `src/render/` | Jakość grafiki: poziomy od Niskiej do Ultra 4K, cienie kontaktowe, poświata, wygładzanie krawędzi |
+| `src/render/` | Jakość grafiki: poziomy od Niskiej do Ultra 4K, cienie kontaktowe, poświata, wygładzanie krawędzi; fizyka kości; wczytywanie modeli z Blendera (`assets.js`) |
 | `src/scene/` | Pokój ze stołem: drugi wygląd do wyboru w Ustawieniach (stół, pokój, światło, odbicia), rysowany w kodzie; główny wygląd to makieta nad wodą |
 | `src/net/` | Połączenie z serwerem gry w trybie online (Socket.IO) |
 | `server/` | Serwer gry (Node.js, TypeScript): pokoje online, silnik gry po stronie serwera, pliki gry |
 | `src/styles/` | Wygląd: podstawy, menu, rozgrywka, prezentacja |
 | `tests/` | Testy jednostkowe (`unit`) i w przeglądarce (`e2e`) |
-| `assets/` | Logo uczelni i muzyka (podpisy autorów w `assets/muzyka/AUTORZY.md`) |
+| `assets/` | Logo uczelni, muzyka (podpisy autorów w `assets/muzyka/AUTORZY.md`) i modele 3D z Blendera (`assets/models/`) |
+| `tools/blender/` | Skrypty Blendera, z których powstają modele: pionki, budynki, ikony pól (`npm run assets`) |
 | `docs/zalozenia.md` | Wszystkie ustalenia dotyczące gry: zasady, pola, karty, harmonogram |
 | `docs/plan-techniczny.md` | Plan rozwoju krok po kroku (Vite, serwer, grafika 4K, fizyka kości) |
 | `druk/karty-pytan.html` | Karty z pytaniami do druku (63 × 88 mm) i gotowe pliki PDF obok |
@@ -93,7 +95,8 @@ python3 pytania/excel-na-js.py
 
 - [Three.js](https://threejs.org) do grafiki 3D: WebGPU, a w starszych przeglądarkach WebGL2 (licencja MIT), [Rapier](https://rapier.rs) do fizyki kości (Apache 2.0), [Vite](https://vite.dev) do budowania paczki (MIT), [Socket.IO](https://socket.io) do trybu online (MIT).
 - Czcionki Fredoka, Figtree, Inter Tight i Anton z pakietów Fontsource, dołączone do paczki (licencja SIL Open Font License). Gra nie łączy się z Google Fonts.
-- Modele 3D, grafiki pól i ilustracje kart są rysowane w kodzie, bez gotowych plików i bez generatorów obrazów.
+- Modele 3D powstają z naszych skryptów w Blenderze (`tools/blender/`, Blender jako moduł Pythona `bpy`, licencja GPL dotyczy programu, nie modeli). Grafiki pól i ilustracje kart są rysowane w kodzie. Bez gotowych plików 3D i bez generatorów obrazów.
+- [glTF Transform](https://gltf-transform.dev) i [meshoptimizer](https://meshoptimizer.org) do kompresji modeli (MIT).
 - Dźwięki i muzyka zapasowa są generowane w kodzie (Web Audio). Utwory z plików i ich licencje: `assets/muzyka/AUTORZY.md`.
 - Logo uczelni i pytania od wykładowców zostaną dodane po uzyskaniu zgody.
 

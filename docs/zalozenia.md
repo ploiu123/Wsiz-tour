@@ -328,6 +328,8 @@ Ilustracje kart są wektorowe (SVG), rysowane w kodzie przez asystenta AI (Claud
   - u góry obok prawej górnej karty: pula Stypendium rektorskiego, czas gry (jeśli jest limit) i przycisk Menu,
   - na dole obok Twojej karty: „Twoje karty” (zwinięte, po rozwinięciu rosną w górę); przycisk „Rzuć kostkami” na środku planszy,
   - pionki w grze są o 18% większe, a budynki na polach o 20% większe, żeby było je dobrze widać z wyższej kamery.
+- **Plansza v2 (od 14.10.2026):** lakierowana podstawa z zaokrąglonymi krawędziami, złota inkrustacja wokół pól z rozetami w narożnikach, pola z fazowanymi brzegami i fakturą papieru (włókna widać przy świetle z boku), złota folia z połyskiem na polach specjalnych i narożnikach, wypukłe ikony Szansy (znak zapytania na krążku) i Parkingu (znak P).
+- **Karty v2 (od 14.10.2026):** karty na stosach mają zaokrąglone rogi i grubość kartonu, a tył z folią holograficzną (tęczowy połysk zmienia się z kątem patrzenia). Dobrana karta wyskakuje ze stosu z obrotem, a w okienku po odwróceniu przesuwa się po niej tęczowy połysk folii.
 - Na mniejszym ekranie (do 1100 px) gracze są w pasku nad planszą, a pula, menu i karty w pasku pod planszą. Na telefonie gracze są w dwóch rzędach.
 - Kwoty w panelu przewijają się do nowej wartości, a przy zmianie pojawia się zielony albo czerwony znaczek z kwotą.
 
@@ -340,10 +342,16 @@ W Ustawieniach → „Wygląd planszy” są trzy wersje (zapamiętuje się wyb�
    - **Realistyczny teren wokół planszy:** kostka granitowa w wiązaniu (każda kostka w innym odcieniu, z ziarnem kamienia, fugą i fazowanymi brzegami, które łapią światło), granitowa opaska na brzegach placu, krawężnik promenady nad plażą, piasek ze zmarszczkami, mokry pas piasku przy wodzie i piana, która przypływa i odpływa. Pod ludźmi, ławkami, latarniami, parasolami i palmami leżą miękkie cienie. Z tyłu placu: kosze na śmieci, stojak z rowerami i donica z kwiatami.
    - **Przed planszą nic wysokiego nie stoi** (pusty kawałek plaży i placu od strony kamery), więc w grze nic nie jest ogromne ani ucięte przy dolnej krawędzi ekranu.
    - **Kolory bez granatu:** dachy z dachówki (jak na starówce w Bielsku-Białej), jasne kamienne gzymsy, latarnie i ławki w grafitowym kolorze.
-   - **Wzdłuż boku planszy jest plaża i woda (klimat wakacji):** piasek tuż za placem, parasole w kolorach graczy i uczelni, leżaki z ręcznikami, palmy, wieża ratownika, pomost z łódką, falochron z latarnią w biało-czerwone pasy, sześć boi wyznaczających kąpielisko, żaglówki i skuter wodny z pianą za sobą, ryby wyskakujące z wody, kaustyki (falujące światło) na dnie.
+   - **Wzdłuż boku planszy jest plaża i woda (klimat wakacji):** piasek tuż za placem, parasole w kolorach graczy i uczelni, leżaki z ręcznikami, palmy, wieża ratownika, pomost z łódką, falochron z latarnią w biało-czerwone pasy, sześć boi wyznaczających kąpielisko, żaglówki i motorówka z falą za sobą, ryby wyskakujące z wody, kaustyki (falujące światło) na dnie.
    - **Z drugiej strony uniwersytet:** główny gmach z kolumnadą, frontonem i wieżą zegarową, wydziały i biblioteka (jedna przeszklona), dziedziniec z aleją i fontanną, boisko, parking z samochodzikami, drzewa, latarnie, ławki i flagi uczelni.
    - Ciągle coś się dzieje: łodzie i skuter pływają i kołyszą się na falach, mewy krążą nad wodą, kolorowy balon lata nad kampusem, chmurki płyną wysoko za kampusem, fontanna tryska, ryby wyskakują z wody. Bez ludzików (usunięci 13.10.2026) i bez świetlików.
-   - **Woda z prawdziwymi falami:** suma kilku fal Gerstnera (ostre grzbiety, łagodne doliny), gładka powierzchnia z połyskiem słońca, odbiciem nieba pod małym kątem, turkusem na płyciźnie i ciemniejszym kolorem w głębi oraz pianą na najwyższych grzbietach. Te same fale liczy kod łodzi, skutera, łódki przy pomoście i boi, więc unoszą się i przechylają razem z wodą. Przy brzegu fale są mniejsze.
+   - **Woda jak prawdziwa (od 15.10.2026, Etap 2 planu AAA):**
+     - fale z widma morskiego (uproszczone widmo JONSWAP): dziesięć fal Gerstnera od długich i łagodnych do krótkich i stromych, z kierunku wiatru z rozrzutem; z bliska drobne zmarszczki od wiatru,
+     - przez wodę widać dno, pale pomostu i kile łodzi, a fale je zniekształcają (załamanie światła),
+     - im głębiej, tym więcej światła woda pochłania (prawo Beera–Lamberta: najpierw czerwień, potem zieleń): płycizna przy plaży jest prawie przezroczysta, dalej turkus, w głębi granat,
+     - pod małym kątem woda odbija niebo (Fresnel), słońce błyszczy na falach, piana na najwyższych grzbietach i przy brzegu,
+     - **fizyka zmarszczek:** równanie falowe na siatce 200 × 56 (`src/scene/ripples.js`). Łodzie i motorówka wypierają wodę, więc za nimi rozchodzi się prawdziwy klin fal (motorówka płynie szybciej niż fala), skaczące ryby robią kręgi, a łodzie i boje unoszą się na sumie fal i zmarszczek. Przy brzegach siatki fale wygasają, nie odbijają się od krawędzi makiety.
+   - **Makieta v2 (od 15.10.2026):** drzewa z Blendera (liściaste z koroną z kilku nieregularnych brył w trzech odcieniach, iglaste z piętrami gałęzi, brzozy z paskami na korze) kołyszą się na wietrze; palmy z wygiętym pniem w pierścieniach i liśćmi z listkami; samochody z szybami, felgami, lusterkami i światłami, dwa jeżdżą po alejce parkingu (ruch prawostronny, zawracają łukiem); zegar na wieży gmachu pokazuje prawdziwą godzinę.
    - W grze, przy stałej kamerze, plaża i woda są widoczne obok planszy (lewy dolny róg ekranu). Całą makietę widać w menu, w podglądzie planszy po oddaleniu i w prezentacji (tam nocą, ze świecącymi oknami i latarnią).
 2. **Czysta tektura:** sama plansza jak gra planszowa z kartonu, na jasnym, gładkim stole. Boki planszy i pól mają fakturę falistej tektury, podstawa jest z jasnego papieru. Pieniądze i karty graczy leżą na stole obok planszy. Bez makiety i ruchu w tle.
 
@@ -421,7 +429,8 @@ Prezentacja zawsze pokazuje dioramę, a po jej zamknięciu wraca wybrany wygląd
 | 5 (hotel) | serwerownia: pomieszczenie z trzema szafami rack |
 
 - Budynki są **w całości w kolorze gracza**, który ma pole (jaśniejsze i ciemniejsze odcienie tego koloru), żeby od razu było widać, czyje to pole.
-- Budowanie i ulepszanie ma animację: stary budynek kurczy się i znika, nowy spada na pole, odbija się, a dookoła lecą kurz, iskry w kolorze gracza i kolorowy krąg. Kamera przybliża się do pola.
+- Budowanie i ulepszanie ma animację: stary budynek kurczy się i znika, na polu wyrasta żółte rusztowanie z deskami, nowy budynek spada w nie, odbija się, a dookoła lecą kurz, iskry w kolorze gracza i kolorowy krąg; rusztowanie się składa. Kamera przybliża się do pola.
+- **Budynki v2 (od 14.10.2026):** modele ze skryptów w Blenderze (`tools/blender/buildings.py`) z cieniami kontaktowymi. Telefon: szklany front z wyspą aparatu, przyciski, dwa obiektywy i lampa błyskowa. Laptop: klawiatura, gładzik, głośniki, zawias, kamerka w ramce, świecące logo. Komputer: monitor z cienką ramką, obudowa ze szklanym bokiem i świecącym wnętrzem (karta graficzna, pamięć RAM, chłodzenie wodne, wentylatory), mysz na podkładce. Szafa rack: osiem serwerów z dyskami, diodami, kratkami i uchwytami, szklane drzwi z klamką. Serwerownia: podłoga techniczna z płyt, trzy szafy, korytko z kablami, klimatyzacja i ekran na ścianie.
 - Na planszy jest pokaz budowania (na dole po lewej): kliknij salę, wybierz kolor gracza i klikaj „Buduj” albo „Ulepsz”. „Zburz” usuwa budynek.
 
 ## Pionki
@@ -433,6 +442,12 @@ Prezentacja zawsze pokazuje dioramę, a po jej zamknięciu wraca wybrany wygląd
   3. **Koparka kryptowalut**: rama z kartami graficznymi i obracająca się złota moneta,
   4. **Ekspres do kawy** z filiżanką i parą.
 - Pionki mają kolor gracza. Warianty kolorów do wyboru: czerwony, niebieski, zielony, żółty.
+- **Pionki v2 (od 14.10.2026, Etap 1 planu AAA):** modele z naszych skryptów w Blenderze (`tools/blender/pawns.py`), z fazowanymi krawędziami i cieniami kontaktowymi wypalonymi w modelu. Wspólna podstawa: lakierowany granatowy krążek uczelni z zaokrąglonym brzegiem, pas w kolorze gracza, szczotkowana płytka ze srebrnym rantem i złotą inkrustacją.
+  1. Sztandar: złote drzewce z pierścieniami, grot, sznur z chwostem i frędzlami, flaga z logo faluje na wietrze,
+  2. Drukarka 3D: obudowa z ekranem i pokrętłem, rama z profili, stół, głowica z wentylatorem i świecącym hotendem (jeździ w lewo i w prawo), szpula z rurką do głowicy, wazon, który rośnie warstwa po warstwie,
+  3. Koparka kryptowalut: trzy karty graficzne wentylatorami do przodu (wentylatory się kręcą), świecące paski i pierścienie w kolorze gracza, kable, złota moneta z literą W i ząbkami na rancie,
+  4. Ekspres do kawy: szczotkowana stal, reling na górze, manometr pod szkłem, przyciski z podświetleniem, kolba z gumowym uchwytem, dysza pary, kratka ociekacza, szklana filiżanka z kawą i pianką na spodku, para.
+- **Animacje pionków:** lekki „oddech”, gdy stoją, ugięcie przy lądowaniu, podskok z pełnym obrotem przy kupnie pola i przy wygranej, smutne przechylenie przed zniknięciem przy bankructwie.
 
 ## Serwer i logowanie
 

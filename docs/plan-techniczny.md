@@ -105,8 +105,8 @@ Autor uruchomił grę na MacBooku i chce gry klasy AAA: plansza wielkością jak
 | Krok | Zakres | Stan |
 |---|---|---|
 | Krok 0 | ostry obraz Retina i 4K, makieta znowu domyślna, ranking tylko autora, plansza jak w Business Tour (kamera, układ ekranu, większe pionki i budynki, większe napisy na polach) | **zrobione 14.10.2026** |
-| Etap 1 | potok Blender, pionki v2, plansza v2, karty v2 (3D, folia holograficzna), budynki v2 | |
-| Etap 2 | makieta v2 (`src/scene/diorama.js`), realistyczna woda (`src/scene/water.js`: widmo fal JONSWAP, piana, odbicia, załamanie i pochłanianie światła, kaustyki) i fizyka wody (symulacja zmarszczek, kilwater łodzi) | |
+| Etap 1 | potok Blender, pionki v2, plansza v2, karty v2 (3D, folia holograficzna), budynki v2 | **zrobione 14.10.2026** |
+| Etap 2 | makieta v2, realistyczna woda (widmo fal JONSWAP, piana, odbicia, załamanie i pochłanianie światła) i fizyka wody (symulacja zmarszczek, klin fal za łodziami) | **zrobione 15.10.2026** |
 | Etap 3 | pora dnia, niebo fizyczne, promienie słońca, odbicia SSR, TRAA, korekcja kolorów LUT, SSGI na Ultra | |
 | Etap 4 | muzyka prezentacji w kodzie (`src/audio/`), nowe efekty dźwiękowe, nowe sceny prezentacji, film i strona-wizytówka | |
 | Etap 5 | wykres majątku po grze, osiągnięcia, emotki online, samouczek, tryb zdjęć, ekonomia z filmu wzorcowego, GitHub Actions, licznik klatek | |
@@ -118,4 +118,19 @@ Autor uruchomił grę na MacBooku i chce gry klasy AAA: plansza wielkością jak
 - **Napisy na polach:** większy numer pola, nazwa sali i podpisy grup.
 - **Makieta domyślna:** `prefs.skin = 'diorama'` z migracją `skinV: 3`, w Ustawieniach „Makieta nad wodą”, „Pokój ze stołem”, „Czysta tektura”.
 - **Ranking:** tylko wyniki gracza z tej przeglądarki (trzy karty z rekordami i jeden wiersz), bez przykładowych graczy.
+
+### Etap 1: potok Blender, pionki, budynki, plansza i karty
+
+- **Potok:** Blender 5.0.1 jako moduł Pythona (`bpy`) w `tools/blender/.venv`. Skrypty `tools/blender/pawns.py`, `buildings.py` i `icons.py` budują modele z naszego kodu, a `common.py` ma wspólne narzędzia: części w układzie gry (oś Y w górę), fazowanie krawędzi, wypalanie cieni kontaktowych (AO) w Cycles do kolorów wierzchołków, łączenie części o tym samym materiale (mniej wywołań rysowania; części animowane zostają osobno), eksport GLB. `npm run assets` (`tools/assets.mjs`) uruchamia skrypty i kompresuje pliki przez glTF Transform (meshopt, kwantyzacja): pionki 675 KB (39 tys. wierzchołków), budynki 670 KB (40 tys.), ikony 43 KB. Gotowe pliki leżą w `assets/models/`.
+- **Tekstury:** modele nie mają tekstur z plików (kolory z materiałów, cienie w kolorach wierzchołków). Ekrany i klawiatury dostają w grze obrazy rysowane w kodzie, więc tekstury KTX2 nie są potrzebne.
+- **W grze:** `src/render/assets.js` wczytuje pliki razem z czcionkami (najwyżej 2,5 s czekania) i robi kopie modeli. Materiały `player*` gra zamienia na kolor gracza (z cieniem kontaktowym z kolorów wierzchołków), `screen` na obraz ekranu, `keys` na klawiaturę. Ruchome części: wentylatory (`fan_*`), moneta (`coin`), wydruk (`print`) i głowica drukarki (`carriage`). Gdy pliku nie ma, zostają modele z kodu.
+- **Plansza i karty:** w Three.js (plansza powstaje z danych pól): `RoundedBoxGeometry` podstawy i pól, złota inkrustacja, mapa normalnych papieru liczona w canvasie, złota folia z mapy metaliczności (piksele w kolorze złota), ikony z `icons.glb` nad nadrukiem, karty z `ExtrudeGeometry` o zaokrąglonych rogach i `MeshPhysicalMaterial` z `iridescence`.
+- **Test:** `tests/unit/assets.test.ts` czyta pliki GLB i sprawdza modele, nazwy części, materiały gracza, mapowanie ekranów i rozmiar.
+
+### Etap 2: woda i makieta
+
+- **Woda** (shader TSL w `src/legacy/game.js`, część „Woda”): dziesięć fal Gerstnera z uproszczonego widma JONSWAP (`WAVES`, suma stromości 0,62), ta sama funkcja `waveAt` w kodzie łodzi. Materiał wody używa `backdropNode`: obraz sceny pod wodą (`viewportSharedTexture`) przesunięty o nachylenie fali (załamanie) i przyciemniony według grubości wody pod punktem (profil dna `SEABED` liczony w shaderze jako suma odcinków) i kąta patrzenia, osobno dla czerwieni, zieleni i błękitu (prawo Beera–Lamberta, współczynniki 0,42 / 0,11 / 0,075 na jednostkę). Na to światło słońca, odbicie nieba (Fresnel), piana z wysokości grzbietów i stromości zmarszczek, poszarpana szumem `mx_noise_float`. Drobne zmarszczki od wiatru gasną z odległością (bez migotania).
+- **Fizyka zmarszczek** (`src/scene/ripples.js`, test `tests/unit/ripples.test.ts`): równanie falowe na siatce 200 × 56 ze stałym krokiem 1/60 s, prędkość fali 2,6, tłumienie, lepkość gasząca szum siatki i pas tłumiący przy brzegach. Co klatkę siatka trafia do karty graficznej jako tekstura (16-bitowe liczby) i przesuwa powierzchnię wody oraz jej normalne. Łodzie wypierają wodę przy dziobie i rufie, ryby przy skoku.
+- **Makieta:** `tools/blender/nature.py` (drzewa trzech rodzajów, palma, krzew, samochód) do `assets/models/nature.glb` (364 KB, cienie kontaktowe wypalone). Drzewa i palmy kołyszą się na wietrze, dwa samochody jeżdżą po parkingu, zegar na wieży pokazuje czas komputera. Bez pliku zostają stare modele z kodu.
+- **Nie zrobione w tym etapie:** wypalone oświetlenie całej makiety w Cycles (lightmapy) i wydzielenie makiety z `game.js` do osobnego pliku. Woda z widmem i zmarszczkami działa na WebGPU i WebGL2, więc FFT na shaderach obliczeniowych nie było potrzebne.
 

@@ -21,5 +21,5 @@ export default defineConfig(
     extends: [tseslint.configs.recommended],
     rules: { '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true, varsIgnorePattern: '^_' }] },
   },
-  { files: ['*.config.js', 'tests/**/*.js'], languageOptions: { globals: { ...globals.node } } },
+  { files: ['*.config.js', 'tests/**/*.js', 'tools/**/*.mjs'], languageOptions: { globals: { ...globals.node } } },
 );
