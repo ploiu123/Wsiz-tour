@@ -74,6 +74,18 @@ export function createGameServer({ staticDir = process.env.STATIC_DIR ?? `${ROOT
       r.broadcastLobby();
     });
 
+    // Widz: ogląda grę z kodem party (przed startem czeka w poczekalni), bez miejsca i bez decyzji
+    socket.on('watch', (msg: { code?: unknown; name?: unknown }, ack) => {
+      const reply = safe(ack);
+      const r = roomOf(msg?.code), name = nameOk(msg?.name);
+      if (!r) return reply({ error: 'Nie ma party z takim kodem.' });
+      if (!name) return reply({ error: 'Nick musi mieć od 2 do 20 znaków.' });
+      if (!r.watch(socket.id, name)) return reply({ error: 'Tę grę ogląda już najwięcej widzów.' });
+      room = r;
+      token = '';
+      reply({ code: r.code, token: '', seat: -1, lobby: r.lobby(), game: r.engine ? r.startMsg(-1) : null });
+    });
+
     // Powrót po rozłączeniu (np. odświeżenie strony): ten sam token, to samo miejsce
     socket.on('resume', (msg: { code?: unknown; token?: unknown }, ack) => {
       const reply = safe(ack);

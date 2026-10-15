@@ -50,6 +50,21 @@ test('samouczek i tryb zdjęć: podpowiedź przy rzucie, zdjęcie 4K, powrót do
   expect(errors).toEqual([]);
 });
 
+test('menu w każdej chwili: Escape i przycisk Menu w oknie decyzji', async ({ page, errors }) => {
+  test.setTimeout(300_000);
+  await startGame(page);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.g-pause [data-p="back"]')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.g-pause')).toHaveCount(0);
+  await page.locator('#gRoll').click({ force: true });
+  // pierwsze okno w grze (decyzja gracza albo bota) ma własny przycisk Menu, bo zasłania ten w panelu
+  await page.locator('.g-backdrop [data-menu]').first().click({ timeout: 200_000 });
+  await page.locator('.g-pause [data-p="end"]').click();
+  await expect(page.locator('.g-end-head')).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
 test.describe('telefon', () => {
   test.use({ viewport: { width: 390, height: 844 } });
   test('gracze w jednym rzędzie, przycisk rzutu widoczny', async ({ page, errors }) => {
@@ -88,5 +103,13 @@ test('rozgrywka: gracz rzuca, decyduje i odpowiada, boty grają, koniec gry z pa
   await page.locator('[data-p="end"]').click();
   await expect(page.locator('.g-end-head')).toBeVisible();
   await expect(page.locator('.g-end tbody tr')).toHaveCount(4);
+  // najlepsze momenty (gdy w tej grze były): kamera przelatuje nad polami, Pomiń wraca do wyniku
+  const moments = page.locator('[data-e="moments"]');
+  if (await moments.isVisible()) {
+    await moments.click();
+    await expect(page.locator('.g-banner')).toBeVisible({ timeout: 30_000 });
+    await page.locator('.g-replay-skip').click({ timeout: 3000 }).catch(() => {});   // powtórka mogła się już skończyć
+    await expect(page.locator('.g-end-head')).toBeVisible({ timeout: 60_000 });
+  }
   expect(errors).toEqual([]);
 });

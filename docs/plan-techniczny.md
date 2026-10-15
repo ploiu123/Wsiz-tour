@@ -110,6 +110,7 @@ Autor uruchomił grę na MacBooku i chce gry klasy AAA: plansza wielkością jak
 | Etap 3 | pora dnia, korekcja kolorów LUT, poświata zależna od pory dnia (promienie słońca, SSR, TRAA, SSGI i niebo fizyczne świadomie pominięte, niżej dlaczego) | **zrobione 15.10.2026** |
 | Etap 4 | muzyka prezentacji w kodzie, nowe efekty dźwiękowe i tło dźwiękowe, nowe sceny prezentacji, nowe zrzuty na stronie-wizytówce i w filmie | **zrobione 15.10.2026** |
 | Etap 5 | wykres majątku po grze, osiągnięcia, emotki online, samouczek, tryb zdjęć, GitHub Actions, licznik klatek (ekonomia z filmu wzorcowego czeka na film) | **zrobione 15.10.2026, bez ekonomii** |
+| Etap 6 | menu w każdej chwili, najlepsze momenty po grze, widzowie online, ekran zerwanego połączenia, rozmycie ruchu karty, nowe sceny prezentacji, porządek w kodzie | w trakcie |
 
 ### Krok 0: co się zmieniło
 
@@ -161,5 +162,13 @@ Autor uruchomił grę na MacBooku i chce gry klasy AAA: plansza wielkością jak
 - **Tryb zdjęć:** z menu pauzy (`enterPhoto`, `exitPhoto`): panele znikają, kamera bez ograniczeń (obrót, przybliżenie, przesuwanie), głębia ostrości na punkcie, na który patrzy kamera. Zdjęcie: `Graphics.capture(3840)` rysuje jedną klatkę w szerokości 3840 pikseli i od razu kopiuje ją z płótna (`toBlob`), potem wraca do zwykłej rozdzielczości. Gra z komputerem stoi, online toczy się dalej, a gdy przychodzi decyzja gracza, tryb zdjęć sam się zamyka.
 - **Licznik klatek:** ustawienie `prefs.fps`, średnia z pół sekundy i rozmiar obrazu u góry ekranu.
 - **GitHub Actions** (`.github/workflows/testy.yml`): przy każdej zmianie na `main` i w pull requestach lint, typy, testy jednostkowe i paczka. Testy w przeglądarce trwają kilkanaście minut bez karty graficznej, więc zostają lokalne (`npm run e2e`).
-- **Nie zrobione:** ekonomia jak w grze z filmu wzorcowego (potrzebny film MP4 od autora), powtórka najlepszych momentów, widzowie w grze online, dalsze dzielenie `game.js` na moduły.
+- **Nie zrobione w Etapie 5:** ekonomia jak w grze z filmu wzorcowego (potrzebny film MP4 od autora). Powtórka najlepszych momentów, widzowie i ekran powrotu po rozłączeniu doszły w Etapie 6.
+
+### Etap 6: dokończenie planu (15.10.2026)
+
+- **Menu w każdej chwili:** okno w trakcie gry (`openModal`) ma własny przycisk Menu w miejscu przycisku z panelu (na telefonie w rogu ekranu), bo okno go zasłania. Escape otwiera i zamyka pauzę. Okno pauzy (`.g-pause`) leży nad oknem decyzji, a minutnik pytania stoi, gdy gra stoi.
+- **Najlepsze momenty po grze:** `collectMoment` w `src/legacy/game.js` zbiera w trakcie gry: monopol, serwerownię, bankructwo, przelew między graczami od 40 zł, pulę od 50 zł, dziekanat. `pickMoments` (`src/ui/moments.js`, test `tests/unit/moments.test.ts`) wybiera najwyżej 5 o najwyższej wadze, jeden na pole, w kolejności gry. Przycisk „Najlepsze momenty” na ekranie końca gry: kamera przelatuje nad polami (`flyTo`, `cellTarget`), przy każdym podpis (`banner`), „Pomiń” kończy powtórkę.
+- **Widzowie online:** `Room.watch` w `server/room.ts` (najwyżej 8 widzów na pokój), zdarzenie `watch` w `server/index.ts`, `OnlineClient.watch` w `src/net/online.ts`. Widz ma miejsce -1: dostaje stan i zdarzenia jak gracz, karty wszystkich graczy są u niego ukryte, nie decyduje i nie wysyła emotek. W menu Online trzecia opcja „Oglądaj grę”, w poczekalni i w grze liczba widzów (`#gWatch`). Testy: serwer (`tests/unit/server.test.ts`) i przeglądarka (`tests/e2e/online.spec.js`).
+- **Zerwane połączenie:** nakładka `#gLost` (`lostScreen`): „Łączę ponownie z serwerem gry…”, po 20 s „Spróbuj jeszcze raz” i „Wyjdź do menu”; gdy nie da się wrócić na miejsce, tylko wyjście. Po powrocie znika sama. Test w przeglądarce zrywa połączenie gospodarza (`__t.dropNet`, tylko w paczce testowej).
+- **Rozmycie ruchu karty:** `liftCard` dodaje trzy półprzezroczyste kopie karty o 35, 70 i 105 tysięcznych lotu z tyłu; ich przezroczystość zależy od prędkości obrotu (pochodna `easeOut3`), po locie znikają.
 

@@ -58,6 +58,7 @@
         <span class="g-chip" id="gPool"></span>
         <button class="m-btn m-secondary" id="gMenuBtn" type="button">Menu</button>
         <span class="g-chip" id="gTimer" hidden></span>
+        <span class="g-chip" id="gWatch" hidden></span>
       </div>
       <section class="m-card g-hand" id="gHand" aria-label="Twoje karty"></section>
       <div class="g-emotes" id="gEmotes" aria-label="Emotki dla innych graczy" hidden></div>
@@ -79,6 +80,14 @@
     <button class="m-btn m-secondary" id="photoExit" type="button">Wróć do gry</button>
   </div>
   <div class="photo-flash" id="photoFlash" aria-hidden="true"></div>
+  <div class="g-lost" id="gLost" role="alertdialog" aria-labelledby="gLostTitle" hidden>
+    <div class="m-card g-lost-card">
+      <span class="g-lost-spin" id="gLostSpin" aria-hidden="true"></span>
+      <h2 id="gLostTitle">Połączenie zerwane</h2>
+      <p id="gLostText"></p>
+      <div class="g-opts two" id="gLostBtns" hidden><button class="m-btn m-primary" id="gLostRetry" type="button">Spróbuj jeszcze raz</button><button class="m-btn m-secondary" id="gLostQuit" type="button">Wyjdź do menu</button></div>
+    </div>
+  </div>
   <output class="fps-meter" id="fpsMeter" hidden></output>
 
 

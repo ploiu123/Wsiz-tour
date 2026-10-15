@@ -417,6 +417,14 @@ Do każdej pory dnia jest delikatna korekcja kolorów (tablica LUT liczona w kod
 - **Tryb zdjęć:** w menu gry przycisk „Tryb zdjęć”. Panele znikają, kamerę można obracać, przybliżać i przesuwać, a „Zrób zdjęcie 4K” zapisuje obraz PNG o szerokości 3840 pikseli. W grze z komputerem gra w tym czasie stoi, online toczy się dalej.
 - **Licznik klatek:** w Ustawieniach „Licznik klatek”: u góry ekranu liczba klatek na sekundę i rozmiar obrazu.
 
+## Menu, powtórka, widzowie i zerwane połączenie (od 15.10.2026, Etap 6 planu AAA)
+
+- **Menu w każdej chwili:** gdy okno decyzji zasłania przycisk Menu, okno ma własny przycisk Menu w tym samym miejscu. Klawisz Escape otwiera i zamyka pauzę.
+- **Najlepsze momenty:** na ekranie po grze przycisk „Najlepsze momenty”. Kamera przelatuje nad najwyżej 5 polami, gdzie działo się najwięcej: monopol, serwerownia, bankructwo, duży czynsz, zgarnięta pula, dziekanat. Przy każdym podpis, „Pomiń” wraca do wyniku.
+- **Widzowie:** w menu Online opcja „Oglądaj grę” z kodem party. Widz ogląda grę na żywo, ale nie gra, nie widzi kart graczy i nie wysyła emotek. Jedną grę może oglądać najwyżej 8 widzów. Gracze widzą liczbę widzów w rogu ekranu.
+- **Zerwane połączenie:** zamiast krótkiego komunikatu okno „Połączenie zerwane”. Gra łączy się sama, a po 20 s bez połączenia pokazuje „Spróbuj jeszcze raz” i „Wyjdź do menu”. W tym czasie za gracza decyduje bot, a miejsce czeka, dopóki trwa gra.
+- **Karta w locie:** przy szybkim obrocie za kartą zostaje lekka smuga.
+
 ## Efekty w grze (od 13.10.2026)
 
 - Nad pionkiem pojawia się kwota (+ zielona, − czerwona).

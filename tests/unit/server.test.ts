@@ -127,6 +127,47 @@ describe('serwer gry online', () => {
     host.close(); again.close();
   });
 
+  it('widz: ogląda grę z kodem, dostaje zdarzenia bez kart graczy, nie decyduje i nie wysyła emotek', async () => {
+    const host = client(), watcher = client();
+    const { code } = await call<{ code: string }>(host, 'create', { name: 'Gospodarz', config: { seats: [seats[0], seats[2]], teams: false, semester: 8, timer: 0 } });
+    expect(await call<{ error?: string }>(watcher, 'watch', { code: 'ZZZZZZ', name: 'Widz' })).toHaveProperty('error');
+    const w = await call<{ seat: number; token: string; game: unknown; lobby: { watchers: number } }>(watcher, 'watch', { code, name: 'Widz' });
+    expect(w.seat).toBe(-1);
+    expect(w.token).toBe('');
+    expect(w.game).toBeNull();   // gra jeszcze się nie zaczęła
+    expect(server.lobby(code)!.watchers).toBe(1);
+    const evs: GameEvent[] = [];
+    const emotes: unknown[] = [];
+    let started = false, stolen = 0;
+    watcher.on('start', () => { started = true; });
+    watcher.on('emote', m => emotes.push(m));
+    watcher.on('event', async (ev: GameEvent) => {
+      evs.push(ev);
+      if (ev.type === 'decision' && (await call<{ ok: boolean }>(watcher, 'submit', { id: ev.decision.id, value: null })).ok) stolen++;
+    });
+    host.on('event', (ev: GameEvent) => { if (ev.type === 'decision' && ev.decision.player === 0) host.emit('submit', { id: ev.decision.id, value: ev.decision.kind === 'choose' ? ev.decision.options.find(o => !o.disabled)!.value : ev.decision.kind === 'answer' ? 0 : null }, () => {}); });
+    expect((await call<{ ok?: boolean }>(host, 'start')).ok).toBe(true);
+    await new Promise(r => setTimeout(r, 1500));
+    expect(started).toBe(true);
+    expect(evs.length).toBeGreaterThan(3);
+    expect(stolen).toBe(0);
+    for (const ev of evs) for (const p of ev.snap.players) for (const c of p.cards) expect(c.icon).toBe('hidden');
+    watcher.emit('emote', 1);
+    host.emit('emote', 2);
+    await new Promise(r => setTimeout(r, 200));
+    expect(emotes).toEqual([{ player: 0, k: 2 }]);   // widz widzi emotki graczy, ale sam nie wysyła
+    // dołączenie w trakcie gry: od razu stan gry; wyjście widza zmniejsza licznik
+    const late = client();
+    const l = await call<{ game: { you: number; mine: number[] } | null }>(late, 'watch', { code, name: 'Spóźniony' });
+    expect(l.game?.you).toBe(-1);
+    expect(l.game?.mine).toEqual([]);
+    expect(server.lobby(code)!.watchers).toBe(2);
+    late.close();
+    await new Promise(r => setTimeout(r, 150));
+    expect(server.lobby(code)!.watchers).toBe(1);
+    host.close(); watcher.close();
+  });
+
   it('emotki: trafiają do wszystkich w pokoju, najwyżej jedna na 1,5 s, tylko z listy', async () => {
     const host = client(), guest = client();
     const { code } = await call<{ code: string }>(host, 'create', { name: 'Gospodarz', config: { seats: [seats[0], seats[1]], teams: false, semester: 8, timer: 0 } });

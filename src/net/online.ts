@@ -8,7 +8,7 @@ export type SeatKind = 'host' | 'online' | 'local' | 'bot';
 export interface SeatConfig { kind: SeatKind; level?: string; pawnIdx: number; colorIdx: number }
 export interface RoomConfig { seats: SeatConfig[]; teams: boolean; semester: number; timer: number }
 export interface LobbySeat { kind: SeatKind; name: string; filled: boolean; connected: boolean; pawnIdx: number; colorIdx: number; level?: string }
-export interface LobbyState { code: string; seats: LobbySeat[]; teams: boolean; semester: number; timer: number; started: boolean; canStart: boolean }
+export interface LobbyState { code: string; seats: LobbySeat[]; teams: boolean; semester: number; timer: number; started: boolean; canStart: boolean; watchers?: number }
 export interface StartMsg { snap: PublicState; seq: number; you: number; mine: number[]; pending: Decision | null; timeLeft: number; teams: boolean; semester: number }
 export interface Joined { code: string; token: string; seat: number; lobby: LobbyState; game?: StartMsg | null }
 type Reply<T> = T | { error: string };
@@ -24,13 +24,14 @@ export class OnlineClient {
   code = '';
   token = '';
   seat = -1;
+  watching = '';   // nick widza: widz nie ma miejsca ani tokenu, po zerwaniu połączenia dołącza znowu jako widz
   onLobby: (l: LobbyState) => void = () => {};
   onStart: (m: StartMsg) => void = () => {};
   onEvent: (ev: GameEvent) => void = () => {};
   onClock: (ms: number) => void = () => {};
   onNote: (text: string) => void = () => {};
   onClosed: (text: string) => void = () => {};   // gospodarz zamknął party
-  onLost: () => void = () => {};             // zerwane połączenie (socket.io sam próbuje połączyć się znowu)
+  onLost: (gone?: boolean) => void = () => {};   // zerwane połączenie (socket.io sam próbuje połączyć się znowu); gone = miejsca już nie ma
   onBack: (j: Joined) => void = () => {};    // połączenie wróciło: miejsce w grze odzyskane
   onEmote: (m: { player: number; k: number }) => void = () => {};   // emotka gracza nad jego pionkiem
 
@@ -45,9 +46,14 @@ export class OnlineClient {
     this.socket.on('closed', (text: string) => { forget(); this.token = ''; this.onClosed(text); });
     this.socket.on('disconnect', reason => { if (reason !== 'io client disconnect') this.onLost(); });
     this.socket.io.on('reconnect', async () => {
+      if (this.watching) {
+        const r = await this.call<Joined>('watch', { code: this.code, name: this.watching });
+        if ('error' in r) this.onLost(true); else this.onBack(r);
+        return;
+      }
       if (!this.token) return;
       const r = await this.call<Joined>('resume', { code: this.code, token: this.token });
-      if ('error' in r) { forget(); this.onLost(); } else this.onBack(r);
+      if ('error' in r) { forget(); this.onLost(true); } else this.onBack(r);
     });
   }
 
@@ -83,8 +89,17 @@ export class OnlineClient {
   create(name: string, config: RoomConfig) { return this.enter('create', { name, config }); }
   join(code: string, name: string, pawnIdx: number) { return this.enter('join', { code, name, pawnIdx }); }
   resume(code: string, token: string) { return this.enter('resume', { code, token }); }
+  // Widz: ogląda grę z kodem party (nie zapamiętujemy go do powrotu po odświeżeniu, wystarczy wpisać kod znowu)
+  async watch(code: string, name: string): Promise<Reply<Joined>> {
+    if (!(await this.connected())) return { error: 'Brak połączenia z serwerem gry.' };
+    const r = await this.call<Joined>('watch', { code, name });
+    if (!('error' in r)) { this.code = r.code; this.seat = -1; this.watching = name; }
+    return r;
+  }
   start() { return this.call<{ ok: true }>('start'); }
   emote(k: number): void { this.socket.emit('emote', k); }
+  // Ponowna próba połączenia od razu (bez czekania na kolejną próbę socket.io)
+  retry(): void { if (!this.socket.connected) this.socket.connect(); }
 
   close(): void {
     forget();

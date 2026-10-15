@@ -10,6 +10,7 @@ import { loadModels, cloneModel } from '../render/assets.js';
 import { RippleSim } from '../scene/ripples.js';
 import { ACHIEVEMENTS, unlock } from '../ui/achievements.js';
 import { wealthChartSvg } from '../ui/wealthChart.js';
+import { pickMoments, rentScore, poolScore } from '../ui/moments.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
@@ -3403,13 +3404,14 @@ function renderPlay() {
   $('modeDesc').textContent = online
     ? 'Gra przez internet: 1 na 1 na 1 na 1 albo 2 na 2. Na każde miejsce możesz zaprosić gracza online, posadzić kogoś przy tym komputerze albo dodać bota.'
     : 'Gra na jednym komputerze, bez internetu. Gracze rzucają po kolei przy tym samym ekranie, a puste miejsca możesz zająć botami. Nikt z zewnątrz nie dołączy.';
-  const joining = online && setup.online === 'join';
+  const watching = online && setup.online === 'watch';
+  const joining = online && (setup.online === 'join' || watching);
   if (online) {
     $('onlineBox').innerHTML = `
-      <div class="chips">${chipHtml('Stwórz party', 'data-online="create"', !joining)}${chipHtml('Dołącz kodem', 'data-online="join"', joining)}</div>
+      <div class="chips">${chipHtml('Stwórz party', 'data-online="create"', !joining)}${chipHtml('Dołącz kodem', 'data-online="join"', joining && !watching)}${chipHtml('Oglądaj grę', 'data-online="watch"', watching)}</div>
       <div class="row" style="margin-top: 12px">${joining
         ? `<input class="m-input" id="joinCode" maxlength="6" placeholder="Kod party, np. K7P3QX" aria-label="Kod party" autocomplete="off" style="max-width: 240px; text-transform: uppercase" value="${escHtml(setup.joinCode)}">
-           <span class="m-hint">Kod dostaniesz od osoby, która stworzyła party. Pionek wybierasz w profilu.</span>`
+           <span class="m-hint">${watching ? 'Widz ogląda grę na żywo, ale nie gra i nie widzi kart graczy.' : 'Kod dostaniesz od osoby, która stworzyła party. Pionek wybierasz w profilu.'}</span>`
         : '<span class="m-hint">Ustaw miejsca graczy poniżej. Po kliknięciu „Stwórz party” dostaniesz kod dla znajomych.</span>'}</div>`;
   } else $('onlineBox').innerHTML = '';
   // dołączając do party, ustawienia gry wybiera gospodarz
@@ -3422,11 +3424,11 @@ function renderPlay() {
   $('timeChips').innerHTML = TIMERS.map(([v, l]) => chipHtml(l, `data-time="${v}"`, setup.timer === v)).join('');
   const ok = joining ? setup.joinCode.length === 6 : online ? n === 4 : n >= 2;
   $('btnStart').disabled = !ok || netBusy;
-  $('btnStart').innerHTML = `${ico(online ? 'globe' : 'play')}${joining ? 'Dołącz do party' : online ? 'Stwórz party' : 'Rozpocznij grę'}`;
+  $('btnStart').innerHTML = `${ico(online ? 'globe' : 'play')}${watching ? 'Oglądaj grę' : joining ? 'Dołącz do party' : online ? 'Stwórz party' : 'Rozpocznij grę'}`;
   const sem = setup.semester === 8 ? 'pytania mieszane' : `semestr ${setup.semester}`;
   const time = TIMERS.find(([v]) => v === setup.timer)[1].toLowerCase();
   $('playHint').textContent = netError || (joining
-    ? (ok ? `Dołączasz jako ${profile.nick}` : 'Wpisz 6-znakowy kod party.')
+    ? (ok ? `${watching ? 'Oglądasz' : 'Dołączasz'} jako ${profile.nick}` : 'Wpisz 6-znakowy kod party.')
     : ok ? `Graczy: ${n}${setup.teams ? ' (2 na 2)' : ''} · ${sem} · ${time}`
     : online ? 'W grze online potrzebne są 4 miejsca: gracze albo boty.' : 'Dodaj co najmniej jednego gracza albo bota.');
   saveSetup();
@@ -3463,7 +3465,7 @@ $('pgPlay').addEventListener('input', e => {
   saveSetup();
   const ok = setup.joinCode.length === 6;
   $('btnStart').disabled = !ok || netBusy;
-  $('playHint').textContent = ok ? `Dołączasz jako ${profile.nick}` : 'Wpisz 6-znakowy kod party.';
+  $('playHint').textContent = ok ? `${setup.online === 'watch' ? 'Oglądasz' : 'Dołączasz'} jako ${profile.nick}` : 'Wpisz 6-znakowy kod party.';
 });
 $('pgPlay').addEventListener('keydown', e => { if (e.target.id === 'joinCode' && e.key === 'Enter' && !$('btnStart').disabled) $('btnStart').click(); });
 $('btnStart').addEventListener('click', () => (setup.mode === 'online' ? openOnline() : startGame()));
@@ -3490,8 +3492,8 @@ async function openOnline() {
     mod = await onlineModule();
     leaveOnline();
     client = new mod.OnlineClient();
-    r = setup.online === 'join'
-      ? await client.join(setup.joinCode, profile.nick, profile.pawn)
+    r = setup.online === 'watch' ? await client.watch(setup.joinCode, profile.nick)
+      : setup.online === 'join' ? await client.join(setup.joinCode, profile.nick, profile.pawn)
       : await client.create(profile.nick, onlineConfig());
   } catch (e) {
     console.error(e);
@@ -3510,7 +3512,7 @@ async function openOnline() {
 }
 function attachNet(mod, client, r) {
   const net = NET = { mod, client, seat: r.seat, lobby: r.lobby };
-  client.onLobby = l => { if (NET !== net) return; net.lobby = l; if (!$('pgLobby').hidden) renderLobby(); };
+  client.onLobby = l => { if (NET !== net) return; net.lobby = l; renderWatchers(); if (!$('pgLobby').hidden) renderLobby(); };
   client.onStart = m => { if (NET === net) beginOnline(m); };
   client.onNote = text => { if (NET === net) toast(text); };
   client.onEmote = m => { if (NET === net) showEmote(m.player, m.k); };
@@ -3521,10 +3523,15 @@ function attachNet(mod, client, r) {
     if (G?.online) { quitGame(); openMenu(); }
     if (menuOpen) go('play');
   };
-  client.onLost = () => { if (NET === net) toast('Zerwane połączenie z serwerem gry. Łączę ponownie…'); };
+  client.onLost = gone => {
+    if (NET !== net) return;
+    if (G?.online) lostScreen(gone ? 'gone' : 'trying');
+    else toast(gone ? 'Nie da się wrócić do tego party.' : 'Zerwane połączenie z serwerem gry. Łączę ponownie…');
+  };
   client.onBack = j => {
     if (NET !== net) return;
     net.lobby = j.lobby;
+    lostScreen(null);
     toast('Połączenie wróciło.');
     if (j.game) beginOnline(j.game);   // odbudowa widoku: w czasie przerwy mogły przyjść ruchy
     else if (!$('pgLobby').hidden) renderLobby();
@@ -3532,6 +3539,25 @@ function attachNet(mod, client, r) {
   if (r.game) beginOnline(r.game);
   else go('lobby');
 }
+// Ekran zerwanego połączenia w grze online: gra łączy się sama; po 20 s bez połączenia gracz może spróbować
+// jeszcze raz albo wyjść. W tym czasie za gracza decyduje bot, a miejsce czeka, dopóki trwa gra.
+let lostTimer = 0;
+function lostScreen(state) {
+  const el = $('gLost');
+  clearTimeout(lostTimer);
+  if (!state) { el.hidden = true; return; }
+  const gone = state === 'gone', slow = state === 'slow';
+  $('gLostText').textContent = gone ? 'Nie da się wrócić na Twoje miejsce: gra mogła się już skończyć.'
+    : slow ? 'Serwer gry dalej nie odpowiada. W tym czasie za Ciebie decyduje bot, a miejsce czeka, dopóki trwa gra.'
+    : 'Łączę ponownie z serwerem gry…';
+  $('gLostRetry').hidden = gone || !slow;
+  $('gLostBtns').hidden = !gone && !slow;
+  $('gLostSpin').hidden = gone || slow;
+  el.hidden = false;
+  if (state === 'trying') lostTimer = setTimeout(() => { if (!el.hidden) lostScreen('slow'); }, 20_000);
+}
+$('gLostRetry').addEventListener('click', () => { NET?.client.retry(); lostScreen('trying'); });
+$('gLostQuit').addEventListener('click', () => { lostScreen(null); quitGame(); openMenu(); });
 function leaveOnline() {
   if (!NET) return;
   const net = NET;
@@ -3554,7 +3580,8 @@ function renderLobby() {
   $('lobbyPill').textContent = lobby.teams ? '2 na 2' : 'Każdy na siebie';
   const sem = lobby.semester === 8 ? 'pytania mieszane' : `semestr ${lobby.semester}`;
   const time = (TIMERS.find(([v]) => v === lobby.timer) || [0, `${lobby.timer} min`])[1].toLowerCase();
-  $('lobbyInfo').textContent = `${host ? 'Podaj ten kod znajomym, żeby dołączyli. ' : ''}${sem[0].toUpperCase() + sem.slice(1)} · ${time}`;
+  const watchers = lobby.watchers ? ` · widzowie: ${lobby.watchers}` : '';
+  $('lobbyInfo').textContent = `${host ? 'Podaj ten kod znajomym, żeby dołączyli. Kodem można też oglądać grę. ' : ''}${sem[0].toUpperCase() + sem.slice(1)} · ${time}${watchers}`;
   $('lobbySeats').innerHTML = lobby.seats.map((s, i) => {
     const waiting = !s.filled;
     const sub = waiting ? 'Czeka na dołączenie kodem'
@@ -3569,7 +3596,8 @@ function renderLobby() {
   const missing = lobby.seats.filter(s => !s.filled).length;
   $('btnLobbyStart').hidden = !host;
   $('btnLobbyStart').disabled = !lobby.canStart;
-  $('lobbyHint').textContent = !host ? 'Gospodarz zacznie grę, gdy wszyscy dołączą.'
+  $('lobbyHint').textContent = seat < 0 ? 'Oglądasz tę grę jako widz. Zacznie się, gdy gospodarz ją uruchomi.'
+    : !host ? 'Gospodarz zacznie grę, gdy wszyscy dołączą.'
     : lobby.canStart ? 'Wszyscy są gotowi.' : `Czekamy na graczy online: ${missing}`;
 }
 $('lobbyLeave').addEventListener('click', () => { leaveOnline(); go('play'); });
@@ -5171,10 +5199,18 @@ function banner(title, sub = '', color = '', ms = 1700) {
     setTimeout(() => { wrap.remove(); r(); }, 240);
   }, ms));
 }
-function openModal(html, cls = '') {
+// menu: okno w trakcie gry ma własny przycisk Menu (okno zasłania przycisk w panelu), bez niego tylko pauza i koniec gry
+function openModal(html, cls = '', menu = true) {
   const bd = document.createElement('div');
   bd.className = 'g-backdrop';
-  bd.innerHTML = `<div class="m-card g-modal ${cls}" role="dialog" aria-modal="true">${html}</div>`;
+  bd.innerHTML = `<div class="m-card g-modal ${cls}" role="dialog" aria-modal="true">${html}</div>${menu && G && !G.over ? '<button type="button" class="m-btn m-secondary g-bd-menu" data-menu>Menu</button>' : ''}`;
+  const mb = bd.querySelector('[data-menu]');
+  if (mb) {
+    mb.addEventListener('click', e => { e.stopPropagation(); pause(); });
+    // na komputerze dokładnie w miejscu przycisku Menu z panelu (u góry); na telefonie panel jest na dole, więc róg ekranu
+    const r = $('gMenuBtn').getBoundingClientRect(), st = stage.getBoundingClientRect(), z = prefs.scale || 1;
+    if (r.width && r.top - st.top < 120) Object.assign(mb.style, { left: `${(r.left - st.left) / z}px`, top: `${(r.top - st.top) / z}px`, width: `${r.width / z}px`, height: `${r.height / z}px`, right: 'auto' });
+  }
   layer.append(bd);
   return bd;
 }
@@ -5301,12 +5337,34 @@ function liftCard(kind) {
   board.add(card);
   sfx('card');
   // karta wyskakuje ze stosu, obraca się w locie i błyska folią
+  const pose = (o, t) => {
+    const e = easeOut3(Math.max(0, t));
+    o.position.set(deck.x, CENTER_Y + 0.2 + 2.8 * e, deck.z);
+    o.rotation.set(-1.25 * e, deck.rotY + Math.PI * 2 * e, 0.25 * Math.sin(Math.PI * Math.max(0, t)));
+    o.scale.setScalar(1 + 0.45 * e);
+  };
+  // rozmycie ruchu: trzy półprzezroczyste kopie karty o chwilę z tyłu; znikają, gdy obrót zwalnia
+  const ghosts = reduceMotion ? [] : [0.035, 0.07, 0.105].map((lag, k) => {
+    const em = cardEdgeMats[0].clone(), fm = face.material.clone();
+    for (const m of [em, fm]) { m.transparent = true; m.depthWrite = false; m.opacity = 0; }
+    const o = mesh(cardGeo, em, false, false), f = mesh(cardFaceGeo, fm, false, false);
+    f.position.y = 0.0075;
+    o.add(f);
+    o.renderOrder = 2;
+    board.add(o);
+    return { o, lag, mats: [em, fm], base: 0.34 - k * 0.09 };
+  });
   return tween(reduceMotion ? 100 : 760, t => {
-    const e = easeOut3(t);
-    card.position.y = CENTER_Y + 0.2 + 2.8 * e;
-    card.rotation.set(-1.25 * e, deck.rotY + Math.PI * 2 * e, 0.25 * Math.sin(Math.PI * t));
-    card.scale.setScalar(1 + 0.45 * e);
-  }).then(() => board.remove(card));
+    pose(card, t);
+    const speed = Math.min(1, 3 * (1 - t) ** 2);   // pochodna easeOut3: szybki obrót na początku lotu
+    for (const g of ghosts) {
+      pose(g.o, t - g.lag);
+      for (const m of g.mats) m.opacity = g.base * speed;
+    }
+  }).then(() => {
+    board.remove(card);
+    for (const g of ghosts) { board.remove(g.o); g.mats.forEach(m => m.dispose()); }
+  });
 }
 let cardUid = 0;
 function cardSvg(card) {
@@ -5362,6 +5420,7 @@ function trackStats(g, ev) {
   g.hist ??= [];
   g.mine ??= { monopoly: false, hotel: false, doubles: 0, jailEscapes: 0, inJail: false };
   if (ev.type === 'turn' || !g.hist.length) g.hist.push(g.players.map(p => (p.out ? 0 : wealth(p))));
+  collectMoment(g, ev);
   const me = g.players.find(p => p.kind === 'me');
   if (!me) return;
   const p = ev.player != null ? g.players[ev.player] : null, m = g.mine;
@@ -5370,6 +5429,54 @@ function trackStats(g, ev) {
   if (ev.type === 'dice' && p === me && ev.a === ev.b) m.doubles += 1;
   if (me.jail > 0) m.inJail = true;
   else if (m.inJail && !me.out) { m.inJail = false; m.jailEscapes += 1; }
+}
+// Najlepsze momenty do powtórki po grze (wybór w src/ui/moments.js)
+function collectMoment(g, ev) {
+  g.moments ??= [];
+  const add = (cell, title, sub, color, score) => g.moments.push({ seq: g.moments.length, cell, title: escHtml(title), sub: escHtml(sub), color, score });
+  const pl = k => g.players[k];
+  if (ev.type === 'bought' && ev.monopoly) { const p = pl(ev.player); add(ev.cell, `Monopol: ${p.name}`, `${FIELDS[ev.cell].name} i cała jej grupa`, p.hex, 80); }
+  else if (ev.type === 'hotel') { const o = g.own.get(ev.cell)?.owner; if (o) add(ev.cell, `Serwerownia: ${o.name}`, FIELDS[ev.cell].name, o.hex, 90); }
+  else if (ev.type === 'money' && typeof ev.from === 'number' && typeof ev.to === 'number' && ev.amount >= 40) {
+    const a = pl(ev.from), b = pl(ev.to);
+    add(a.pos, `${money(ev.amount)} dla gracza ${b.name}`, `Płaci ${a.name}`, b.hex, rentScore(ev.amount));
+  } else if (ev.type === 'poolTaken' && ev.amount >= 50) { const p = pl(ev.player); add(p.pos, `Pula: ${money(ev.amount)}`, `Zgarnia ${p.name}`, p.hex, poolScore(ev.amount)); }
+  else if (ev.type === 'bankrupt') { const p = pl(ev.player); add(p.pos, `Bankructwo: ${p.name}`, FIELDS[p.pos].name, p.hex, 85); }
+  else if (ev.type === 'jail') { const p = pl(ev.player); add(JAIL_CELL, `Dziekanat: ${p.name}`, 'Pionek trafia do dziekanatu', p.hex, 30); }
+}
+// Powtórka: okno wyniku się chowa, kamera przelatuje nad polami najlepszych momentów z podpisem, potem wraca
+async function playMoments(g, bd) {
+  const list = pickMoments(g.moments || []);
+  if (!list.length || G !== g) return;
+  bd.style.display = 'none';
+  document.body.classList.add('replay-mode');
+  const skip = document.createElement('button');
+  skip.type = 'button';
+  skip.className = 'm-btn m-secondary g-replay-skip';
+  skip.textContent = 'Pomiń';
+  let stop = false;
+  skip.addEventListener('click', () => { stop = true; skip.disabled = true; });
+  layer.append(skip);
+  const back = [camera.position.clone(), controls.target.clone()];
+  const dir0 = back[0].clone().sub(back[1]).normalize();
+  cineActive = true;
+  try {
+    for (const [k, m] of list.entries()) {
+      if (stop || G !== g) break;
+      const t = cellTarget(m.cell).setY(0.3);
+      const dir = dir0.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), k % 2 ? 0.35 : -0.35);
+      await flyTo([t.clone().add(dir.multiplyScalar(boardDist() * 0.5)), t], 900);
+      if (stop || G !== g) break;
+      await banner(m.title, `${m.sub} · ${k + 1} z ${list.length}`, m.color, 1900);
+    }
+  } finally {
+    cineActive = false;
+    skip.remove();
+  }
+  if (G !== g) return;
+  await flyTo(back, 800);
+  document.body.classList.remove('replay-mode');
+  bd.style.display = '';
 }
 async function pump(g) {
   if (g.pumping) return;
@@ -5547,7 +5654,15 @@ $('photoShot').addEventListener('click', async () => {
   b.disabled = false;
 });
 $('photoExit').addEventListener('click', () => exitPhoto());
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && photo) exitPhoto(); });
+// Escape: wyjście z trybu zdjęć; w grze otwiera i zamyka pauzę (także gdy otwarte jest okno decyzji)
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (photo) { exitPhoto(); return; }
+  if (!G || G.over || menuOpen || !document.body.classList.contains('in-game')) return;
+  const open = layer.querySelector('.g-pause [data-p="back"]');
+  if (open) open.click();
+  else pause();
+});
 async function closeDecision(ev) {
   $('gRoll').hidden = true;
   const ui = openUi;
@@ -5775,9 +5890,15 @@ function showEmote(player, k) {
   fxText(p.obj.position.clone().add(V3(0, 1.7, 0)), EMOTES[k], p.hex, 0.62);
   sfx('click');
 }
+// Licznik widzów gry online (u widza z napisem, że ogląda)
+function renderWatchers() {
+  const el = $('gWatch'), n = NET?.lobby?.watchers || 0;
+  el.hidden = !G?.online || (!n && !G.spectator);
+  el.innerHTML = G?.spectator ? `Oglądasz <small>widzowie: ${n}</small>` : `Widzowie <small>${n}</small>`;
+}
 function renderEmotes() {
   const box = $('gEmotes');
-  box.hidden = !G?.online;
+  box.hidden = !G?.online || !!G.spectator;
   if (box.hidden || box.childElementCount) return;
   box.innerHTML = EMOTES.map((e, k) => `<button type="button" class="chip" data-emote="${k}">${e}</button>`).join('');
 }
@@ -6052,8 +6173,13 @@ function beginOnline(m) {
   if (!net) return;
   if (m.snap.over) { leaveOnline(); toast('Ta gra już się skończyła.'); return; }
   const kindOf = sp => (m.mine.includes(sp.idx) ? (sp.idx === m.you ? 'me' : 'local') : sp.kind === 'bot' ? 'bot' : 'remote');
-  const g = beginGame(m.snap.players.map(sp => ({ ...sp, kind: kindOf(sp) })), m.snap, { teams: m.teams, semester: m.semester, view: m.you, online: true });
+  const spectator = m.you < 0;   // widz: patrzy z perspektywy gospodarza, nic nie decyduje
+  const g = beginGame(m.snap.players.map(sp => ({ ...sp, kind: kindOf(sp) })), m.snap, { teams: m.teams, semester: m.semester, view: spectator ? 0 : m.you, online: true });
   g.seq = m.seq;
+  g.spectator = spectator;
+  document.body.classList.toggle('spectator', spectator);
+  renderEmotes();
+  renderWatchers();
   g.host = net.lobby.seats[net.seat]?.kind === 'host';
   g.driver = new net.mod.OnlineDriver(net.client, m.timeLeft, () => { if (G === g) renderHud(); });
   net.client.onEvent = ev => {
@@ -6097,7 +6223,9 @@ function quitGame(keep = false) {
   $('gTip').hidden = true;
   exitPhoto(false);
   setStatus('');
-  document.body.classList.remove('in-game');
+  document.body.classList.remove('in-game', 'replay-mode', 'spectator');
+  lostScreen(null);
+  $('gWatch').hidden = true;
   applyView();
   for (const p of g.players) { board.remove(p.obj); disposeTree(p.obj); }
   for (const [i, m] of g.marks) for (const [k, obj] of Object.entries(m)) if (obj) { if (k === 'flag') dropFlag(obj); cellGroups[i].remove(obj); disposeTree(obj); }
@@ -6110,11 +6238,18 @@ function quitGame(keep = false) {
   selectCell(null);
 }
 function pause() {
-  if (!G || G.over) return;
+  if (!G || G.over || layer.querySelector('.g-pause')) return;
   const g = G;
   // gra online nie stoi dla innych graczy: menu tylko przykrywa planszę
   if (!g.online) { g.paused = true; g.driver.pause(true); }
-  const bd = openModal(g.online
+  const bd = openModal(g.spectator
+    ? `<h2>Oglądasz grę</h2><p>Jesteś widzem: gra toczy się dalej, a gracze nie widzą, że menu jest otwarte.</p>
+    <div class="g-opts">
+      <button type="button" class="m-btn m-primary" data-p="back">Wróć do gry</button>
+      <button type="button" class="m-btn m-secondary" data-p="photo">Tryb zdjęć</button>
+      <button type="button" class="m-btn m-secondary" data-p="quit">Przestań oglądać</button>
+    </div>`
+    : g.online
     ? `<h2>Menu gry</h2><p>Gra online toczy się dalej, a inni gracze nie czekają.${g.host ? '' : ' Grę może zakończyć gospodarz.'}</p>
     <div class="g-opts">
       <button type="button" class="m-btn m-primary" data-p="back">Wróć do gry</button>
@@ -6128,7 +6263,7 @@ function pause() {
       <button type="button" class="m-btn m-secondary" data-p="photo">Tryb zdjęć</button>
       <button type="button" class="m-btn m-secondary" data-p="end">Zakończ grę i policz wynik</button>
       <button type="button" class="m-btn m-secondary" data-p="quit">Wyjdź do menu (bez wyniku)</button>
-    </div>`);
+    </div>`, 'g-pause', false);
   bd.style.zIndex = 5;
   bd.addEventListener('click', e => {
     const b = e.target.closest('[data-p]');
@@ -6216,10 +6351,12 @@ function showEnd(result) {
     ${g.hist?.length > 1 ? `<div class="g-wealth-wrap"><h3>Majątek w czasie gry</h3>${wealthChartSvg(g.hist, g.players.map(p => ({ name: p.name, color: p.hex, out: p.out })))}</div>` : ''}
     ${g.freshAch?.length ? `<div class="g-ach"><h3>Nowe osiągnięcia</h3><div class="m-achv">${g.freshAch.map(a => achHtml(a, true)).join('')}</div></div>` : ''}
     <p class="g-ctx">Majątek to gotówka oraz sale i budynki. „Prymus” ma najwyższy procent dobrych odpowiedzi. Pytań i odpowiedzi nie pokazujemy.</p>
-    <div class="g-opts two"><button type="button" class="m-btn m-primary" data-e="again">${g.online ? 'Nowa gra' : 'Zagraj jeszcze raz'}</button><button type="button" class="m-btn m-secondary" data-e="menu">Wróć do menu</button></div>`, 'wide');
+    ${pickMoments(g.moments || []).length ? `<div class="g-opts"><button type="button" class="m-btn m-secondary" data-e="moments">Najlepsze momenty (${pickMoments(g.moments).length})</button></div>` : ''}
+    <div class="g-opts two"><button type="button" class="m-btn m-primary" data-e="again">${g.online ? 'Nowa gra' : 'Zagraj jeszcze raz'}</button><button type="button" class="m-btn m-secondary" data-e="menu">Wróć do menu</button></div>`, 'wide', false);
   bd.addEventListener('click', e => {
     const b = e.target.closest('[data-e]');
     if (!b) return;
+    if (b.dataset.e === 'moments') { playMoments(g, bd); return; }
     if (b.dataset.e === 'again' && !g.online) startGame();
     else { quitGame(); openMenu(); if (b.dataset.e === 'again') go('play'); }
   });
@@ -7650,5 +7787,5 @@ if (new URLSearchParams(location.search).has('prezentacja')) openPromo(true);
 
 // Testy automatyczne (Playwright) dostają dostęp do sceny i prezentacji. W paczce na serwer tego kodu nie ma.
 if (__TEST_HOOKS__) {
-  window.__t = { THREE, testTarget, camera, controls, scene, renderer, setView, setStudio, setWorldMood, applySkin, demoStart, demoStop, throwDice, fxConfetti, fxText, fxFirework, fxMonopoly, fxRing, V3, P, SCENES, goTo: i => goTo(i), enterScene, setPaused, STUDIO_AT, cellTarget, MONO_AT, BUILD_AT, showWorld, board, world, studio, DEMO, Q, GOLD, G: () => G, presetBoard, presetShow, jumpTo, applyView, createMusic, bgmOn: () => !!bgm, gfx, quality: { get ratio() { return gfx.ratio; }, get max() { return gfx.targetRatio(); } } };
+  window.__t = { THREE, testTarget, camera, controls, scene, renderer, setView, setStudio, setWorldMood, applySkin, demoStart, demoStop, throwDice, fxConfetti, fxText, fxFirework, fxMonopoly, fxRing, V3, P, SCENES, goTo: i => goTo(i), enterScene, setPaused, STUDIO_AT, cellTarget, MONO_AT, BUILD_AT, showWorld, board, world, studio, DEMO, Q, GOLD, G: () => G, presetBoard, presetShow, jumpTo, applyView, createMusic, bgmOn: () => !!bgm, dropNet: () => NET?.client.socket.io.engine.close(), liftCard, gfx, quality: { get ratio() { return gfx.ratio; }, get max() { return gfx.targetRatio(); } } };
 }

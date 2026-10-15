@@ -13,7 +13,7 @@ export interface RoomConfig { seats: SeatConfig[]; teams: boolean; semester: num
 interface Seat extends SeatConfig { name: string; token: string | null; socketId: string | null; left: boolean }
 
 export interface LobbySeat { kind: SeatKind; name: string; filled: boolean; connected: boolean; pawnIdx: number; colorIdx: number; level?: BotLevel }
-export interface LobbyState { code: string; seats: LobbySeat[]; teams: boolean; semester: number; timer: number; started: boolean; canStart: boolean }
+export interface LobbyState { code: string; seats: LobbySeat[]; teams: boolean; semester: number; timer: number; started: boolean; canStart: boolean; watchers: number }
 
 // Ile bot „myśli” i ile czekamy na gracza (ms)
 const THINK: Record<Decision['kind'], () => number> = {
@@ -27,6 +27,7 @@ const LEVELS: BotLevel[] = ['łatwy', 'średni', 'trudny'];
 
 export const EMOTES = 5;            // emotki nad pionkiem (napisy w przeglądarce): Brawo, Ups, Hej, Szybciej, Dobra gra
 const EMOTE_GAP = 1500;            // najwyżej jedna emotka na 1,5 s z jednego miejsca
+export const MAX_WATCHERS = 8;     // widzowie w jednym pokoju
 export const newToken = (): string => randomBytes(18).toString('base64url');
 export const newCode = (): string => Array.from({ length: 6 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[randomInt(32)]).join('');
 
@@ -60,6 +61,8 @@ export class Room {
   private answerClock = -1;   // decyzja, dla której minutnik pytania już ruszył (odświeżenie strony go nie cofa)
   private send: (socketId: string, type: string, payload: unknown) => void;
   private readonly pace: number;
+  // Widzowie: oglądają grę, ale nie mają miejsca, nie decydują, nie wysyłają emotek i nie widzą kart graczy (socket → nick)
+  private watchers = new Map<string, string>();
 
   // pace: mnożnik czasu namysłu botów (testy grają szybciej)
   constructor(code: string, config: RoomConfig, send: (socketId: string, type: string, payload: unknown) => void, pace = 1) {
@@ -100,6 +103,19 @@ export class Room {
     return true;
   }
 
+  // Widz dołącza kodem przed grą albo w trakcie; limit widzów na pokój
+  watch(socketId: string, name: string): boolean {
+    if (this.closed || (this.watchers.size >= MAX_WATCHERS && !this.watchers.has(socketId))) return false;
+    this.watchers.set(socketId, name);
+    this.broadcastLobby();
+    return true;
+  }
+  private unwatch(socketId: string): boolean {
+    if (!this.watchers.delete(socketId)) return false;
+    this.broadcastLobby();
+    return true;
+  }
+
   seatOf(token: string | undefined): number {
     return token ? this.seats.findIndex(s => s.token === token) : -1;
   }
@@ -134,12 +150,14 @@ export class Room {
         return { kind: s.kind, name: s.name || 'Czeka na gracza…', filled: always || !!s.token, connected: always || !!s.socketId, pawnIdx: s.pawnIdx, colorIdx: s.colorIdx, level: s.level };
       }),
       canStart: !this.engine && this.seats.every(s => s.kind === 'bot' || s.kind === 'local' || !!s.token),
+      watchers: this.watchers.size,
     };
   }
 
-  // Przeglądarki w pokoju: [socket, miejsce gracza]
+  // Przeglądarki w pokoju: [socket, miejsce gracza]; widzowie mają miejsce -1 (nic nie kontrolują, karty graczy ukryte)
   private viewers(): [string, number][] {
-    return this.seats.flatMap((s, i) => (s.socketId ? [[s.socketId, i] as [string, number]] : []));
+    const players = this.seats.flatMap((s, i) => (s.socketId ? [[s.socketId, i] as [string, number]] : []));
+    return [...players, ...[...this.watchers.keys()].map(sid => [sid, -1] as [string, number])];
   }
   broadcastLobby(): void { for (const [sid] of this.viewers()) this.send(sid, 'lobby', this.lobby()); }
 
@@ -251,6 +269,7 @@ export class Room {
     return seat;
   }
   disconnect(socketId: string): void {
+    if (this.unwatch(socketId)) return;
     const seat = this.seats.findIndex(s => s.socketId === socketId);
     if (seat < 0) return;
     this.seats[seat].socketId = null;
@@ -261,6 +280,7 @@ export class Room {
   }
   // Gracz wyszedł z gry na dobre: przed startem zwalnia miejsce, w trakcie gry gra za niego bot
   leave(socketId: string): void {
+    if (this.unwatch(socketId)) return;
     const seat = this.seats.findIndex(s => s.socketId === socketId);
     if (seat < 0) return;
     const s = this.seats[seat];
