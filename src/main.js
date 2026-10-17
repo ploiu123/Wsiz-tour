@@ -1,5 +1,5 @@
-// Wejście aplikacji: czcionki (z naszego serwera, bez Google Fonts), style i gra.
-// tylko zestawy znaków łacińskich (z polskimi literami), żeby nie pobierać zbędnych plików
+// Wejście aplikacji: style i gra. Gra ma jedną, systemową czcionkę; poniższe czcionki (z naszego serwera,
+// bez Google Fonts) są tylko dla prezentacji, w zestawach łacińskich z polskimi literami.
 import '@fontsource/figtree/latin-400.css';
 import '@fontsource/figtree/latin-ext-400.css';
 import '@fontsource/figtree/latin-500.css';
@@ -10,14 +10,6 @@ import '@fontsource/figtree/latin-700.css';
 import '@fontsource/figtree/latin-ext-700.css';
 import '@fontsource/figtree/latin-800.css';
 import '@fontsource/figtree/latin-ext-800.css';
-import '@fontsource/nunito/latin-600.css';
-import '@fontsource/nunito/latin-ext-600.css';
-import '@fontsource/nunito/latin-700.css';
-import '@fontsource/nunito/latin-ext-700.css';
-import '@fontsource/nunito/latin-800.css';
-import '@fontsource/nunito/latin-ext-800.css';
-import '@fontsource/nunito/latin-900.css';
-import '@fontsource/nunito/latin-ext-900.css';
 import '@fontsource/inter-tight/latin-500.css';
 import '@fontsource/inter-tight/latin-ext-500.css';
 import '@fontsource/inter-tight/latin-600.css';

@@ -41,6 +41,8 @@ const $ = id => document.getElementById(id);
 // ---------------------------------------------------------------------------
 const NAVY = '#1E2A47';
 const GOLD = '#E0B04A';
+// Jedna czcionka w całej grze (menu i napisy na planszy): systemowa, bez pobierania, z pełnymi polskimi literami
+const UI_FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
 
 // Wygląd planszy: jasne pola, trawa na środku, plansza na wyspie kampusu
 const LOOK = {
@@ -129,19 +131,7 @@ labelRenderer.domElement.className = 'labels';
 labelRenderer.domElement.hidden = true;
 renderer.domElement.after(labelRenderer.domElement);
 
-// Czcionki do napisów na planszy. Czekamy najwyżej 3 s; jeśli dojdą później, tekstury z napisami
-// rysują się jeszcze raz (inaczej napisy na polach zostawały w zapasowej czcionce).
-const modelsReady = loadModels();   // modele z Blendera wczytują się razem z czcionkami
-let fontsOk = false;
-const fontsLoaded = Promise.all([
-  // z polskimi literami w tekście: przeglądarka pobiera też zestaw latin-ext (inaczej „ą”, „ł”, „ż” na planszy
-  // mogły się rysować w zapasowej czcionce)
-  document.fonts.load('800 120px Nunito', 'Aąćęłńóśźż ĄĆĘŁŃÓŚŹŻ'),
-  document.fonts.load('700 30px Nunito', 'Aąćęłńóśźż ĄĆĘŁŃÓŚŹŻ'),
-  document.fonts.load('600 48px Figtree', 'Aąćęłńóśźż ĄĆĘŁŃÓŚŹŻ'),
-]).then(() => { fontsOk = true; }, () => {});
-await Promise.race([fontsLoaded, new Promise(r => setTimeout(r, 3000))]);
-const fontsLate = !fontsOk;
+const modelsReady = loadModels();   // modele z Blendera wczytują się w tle
 await Promise.race([modelsReady, new Promise(r => setTimeout(r, 2500))]);   // modele z Blendera są potrzebne już do makiety
 
 // Logo uczelni. Plik jest okrągły na białym tle, więc rysujemy je przycięte do koła.
@@ -309,7 +299,7 @@ function rotatedText(g, w, h, fn) {
 function drawLines(g, text, x, y, maxW, size, weight = 700) {
   let lines;
   for (;;) {
-    g.font = `${Math.min(900, weight + 100)} ${size}px Nunito, sans-serif`;   // Nunito jest lżejsze przy tej samej grubości
+    g.font = `${weight} ${size}px ${UI_FONT}`;
     lines = [];
     let line = '';
     for (const word of text.split(' ')) {
@@ -403,7 +393,7 @@ function drawExamSheet(g, x, y) {
   g.strokeStyle = '#D5DBE6'; g.lineWidth = 5;
   for (let k = 0; k < 5; k++) { g.beginPath(); g.moveTo(-44, -54 + k * 22); g.lineTo(k === 4 ? 0 : 44, -54 + k * 22); g.stroke(); }
   g.strokeStyle = '#D6534F'; g.lineWidth = 7; g.beginPath(); g.arc(26, 46, 30, 0, Math.PI * 2); g.stroke();
-  g.fillStyle = '#D6534F'; g.font = '800 50px Nunito, sans-serif'; g.fillText('2', 26, 49);   // ocena 2 = niezdany
+  g.fillStyle = '#D6534F'; g.font = `700 50px ${UI_FONT}`; g.fillText('2', 26, 49);   // ocena 2 = niezdany
   g.restore();
 }
 function drawCorner(g, i, w, h) {
@@ -418,17 +408,17 @@ function drawCorner(g, i, w, h) {
     g.lineTo(w - 80, h - 132); g.lineTo(w - 80, h - 88); g.lineTo(170, h - 88);
     g.lineTo(170, h - 55); g.closePath(); g.fill();
     rotatedText(g, w, h, () => {
-      g.fillStyle = '#FFFFFF'; g.font = '800 128px Nunito, sans-serif'; g.fillText('START', 0, -20);
-      g.fillStyle = 'rgba(255,255,255,.8)'; g.font = '700 40px Nunito, sans-serif'; g.fillText(`POLE ${i + 1}`, 0, 70);
+      g.fillStyle = '#FFFFFF'; g.font = `700 128px ${UI_FONT}`; g.fillText('START', 0, -20);
+      g.fillStyle = 'rgba(255,255,255,.8)'; g.font = `600 40px ${UI_FONT}`; g.fillText(`POLE ${i + 1}`, 0, 70);
     });
   } else if (i === SIDE) {
     g.fillStyle = '#FFF4E2'; g.fillRect(0, 0, w, h);
     rotatedText(g, w, h, () => {
       g.strokeStyle = NAVY; g.lineWidth = 10;
       g.beginPath(); g.arc(0, -135, 62, 0, Math.PI * 2); g.stroke();
-      g.fillStyle = NAVY; g.font = '800 70px Nunito, sans-serif'; g.fillText('D', 0, -130);
-      g.font = '800 92px Nunito, sans-serif'; g.fillText('DZIEKANAT', 0, 0);
-      g.fillStyle = '#7A849C'; g.font = '700 40px Nunito, sans-serif'; g.fillText(`POLE ${i + 1}`, 0, 85);
+      g.fillStyle = NAVY; g.font = `700 70px ${UI_FONT}`; g.fillText('D', 0, -130);
+      g.font = `700 92px ${UI_FONT}`; g.fillText('DZIEKANAT', 0, 0);
+      g.fillStyle = '#7A849C'; g.font = `600 40px ${UI_FONT}`; g.fillText(`POLE ${i + 1}`, 0, 85);
     });
   } else if (i === 2 * SIDE) {
     g.fillStyle = '#FFF4D2'; g.fillRect(0, 0, w, h);
@@ -438,9 +428,9 @@ function drawCorner(g, i, w, h) {
         g.fillStyle = '#B98A2A'; g.beginPath(); g.ellipse(0, y + 10, 74, 26, 0, 0, Math.PI * 2); g.fill();
         g.fillStyle = GOLD; g.beginPath(); g.ellipse(0, y, 74, 26, 0, 0, Math.PI * 2); g.fill();
       }
-      g.fillStyle = NAVY; g.font = '800 80px Nunito, sans-serif';
+      g.fillStyle = NAVY; g.font = `700 80px ${UI_FONT}`;
       g.fillText('STYPENDIUM', 0, 5); g.fillText('REKTORSKIE', 0, 85);
-      g.fillStyle = '#8A7440'; g.font = '700 38px Nunito, sans-serif'; g.fillText(`POLE ${i + 1}`, 0, 160);
+      g.fillStyle = '#8A7440'; g.font = `600 38px ${UI_FONT}`; g.fillText(`POLE ${i + 1}`, 0, 160);
     });
   } else {
     g.fillStyle = '#FDE9E7'; g.fillRect(0, 0, w, h);
@@ -450,9 +440,9 @@ function drawCorner(g, i, w, h) {
       g.beginPath();
       g.moveTo(-32, -162); g.lineTo(4, -162); g.lineTo(4, -186); g.lineTo(40, -150);
       g.lineTo(4, -114); g.lineTo(4, -138); g.lineTo(-32, -138); g.closePath(); g.fill();
-      g.fillStyle = NAVY; g.font = '800 58px Nunito, sans-serif'; g.fillText('UDAJ SIĘ DO', 0, -35);
-      g.font = '800 88px Nunito, sans-serif'; g.fillText('DZIEKANATU', 0, 45);
-      g.fillStyle = '#A0706C'; g.font = '700 38px Nunito, sans-serif'; g.fillText(`POLE ${i + 1}`, 0, 125);
+      g.fillStyle = NAVY; g.font = `700 58px ${UI_FONT}`; g.fillText('UDAJ SIĘ DO', 0, -35);
+      g.font = `700 88px ${UI_FONT}`; g.fillText('DZIEKANATU', 0, 45);
+      g.fillStyle = '#A0706C'; g.font = `600 38px ${UI_FONT}`; g.fillText(`POLE ${i + 1}`, 0, 125);
     });
   }
 }
@@ -477,7 +467,7 @@ function tileTexture(i) {
       const band = grp ? grp.color : NO_GROUP;   // pas w kolorze grupy
       g.fillStyle = mix(band, '#ffffff', 0.72); g.fillRect(0, 0, w, h * 0.34);   // działka na budynki
       g.fillStyle = band; g.fillRect(0, 0, w, grp ? 92 : 64);
-      if (grp) { g.fillStyle = '#FFFFFF'; g.font = '800 38px Nunito, sans-serif'; g.fillText(grp.name.toUpperCase(), w / 2, 48); }
+      if (grp) { g.fillStyle = '#FFFFFF'; g.font = `700 38px ${UI_FONT}`; g.fillText(grp.name.toUpperCase(), w / 2, 48); }
       if (field) { g.fillStyle = NAVY; drawLines(g, field.name.toUpperCase(), w / 2, h * 0.46, w - 36, 66); }
     } else if (type === 'tax') {
       g.fillStyle = '#FFF7E6'; g.fillRect(0, 0, w, h);
@@ -491,8 +481,8 @@ function tileTexture(i) {
         g.fillStyle = 'rgba(255,255,255,.8)'; g.beginPath(); g.arc(0, 0, 22, 0, Math.PI * 2); g.fill();
         g.restore();
       }
-      g.fillStyle = NAVY; g.font = '800 66px Nunito, sans-serif'; g.fillText('CZESNE', w / 2, h * 0.45);
-      g.fillStyle = '#B4533F'; g.font = '800 32px Nunito, sans-serif'; g.fillText('ZAPŁAĆ DO PULI', w / 2, h * 0.55);
+      g.fillStyle = NAVY; g.font = `700 66px ${UI_FONT}`; g.fillText('CZESNE', w / 2, h * 0.45);
+      g.fillStyle = '#B4533F'; g.font = `700 32px ${UI_FONT}`; g.fillText('ZAPŁAĆ DO PULI', w / 2, h * 0.55);
     } else if (type === 'special') {
       const grad = g.createLinearGradient(0, 0, 0, h);
       grad.addColorStop(0, '#9A3550'); grad.addColorStop(1, '#5C1B2F');
@@ -503,16 +493,16 @@ function tileTexture(i) {
       else if (field.icon === 'senate') drawSenate(g, w / 2, h * 0.2);
       else drawChandelier(g, w / 2, h * 0.2);
       g.fillStyle = '#FFFFFF'; drawLines(g, field.name.toUpperCase(), w / 2, h * 0.47, w - 52, 64);
-      g.fillStyle = GOLD; g.font = '800 32px Nunito, sans-serif'; g.fillText(`SPECJALNE ${field.no}/4`, w / 2, h * 0.61);
+      g.fillStyle = GOLD; g.font = `700 32px ${UI_FONT}`; g.fillText(`SPECJALNE ${field.no}/4`, w / 2, h * 0.61);
       numColor = GOLD;
     } else if (type === 'chance') {
       g.fillStyle = NO_GROUP; g.fillRect(0, 0, w, 20);
       const cy = h * 0.24;
       g.fillStyle = '#2E9E8A'; g.beginPath(); g.arc(w / 2, cy, 80, Math.PI / 2, Math.PI * 1.5); g.fill();
       g.fillStyle = '#D6534F'; g.beginPath(); g.arc(w / 2, cy, 80, -Math.PI / 2, Math.PI / 2); g.fill();
-      g.fillStyle = '#FFFFFF'; g.font = '800 116px Nunito, sans-serif'; g.fillText('?', w / 2, cy + 6);
-      g.fillStyle = NAVY; g.font = '800 62px Nunito, sans-serif'; g.fillText('SZANSA', w / 2, h * 0.45);
-      g.font = '800 30px Nunito, sans-serif';
+      g.fillStyle = '#FFFFFF'; g.font = `700 116px ${UI_FONT}`; g.fillText('?', w / 2, cy + 6);
+      g.fillStyle = NAVY; g.font = `700 62px ${UI_FONT}`; g.fillText('SZANSA', w / 2, h * 0.45);
+      g.font = `700 30px ${UI_FONT}`;
       g.fillStyle = '#2E9E8A'; g.fillText('DOBRZE: UŁATWIENIE', w / 2, h * 0.54);
       g.fillStyle = '#D6534F'; g.fillText('ŹLE: UTRUDNIENIE', w / 2, h * 0.595);
     } else if (type === 'earn') {
@@ -520,32 +510,32 @@ function tileTexture(i) {
       g.fillStyle = NO_GROUP; g.fillRect(0, 0, w, 20);
       drawPot(g, w / 2, h * 0.25);
       g.fillStyle = NAVY; drawLines(g, field.name.toUpperCase(), w / 2, h * 0.45, w - 44, 60);
-      g.fillStyle = '#C4652A'; g.font = '800 32px Nunito, sans-serif'; g.fillText('POLE ZAROBKOWE', w / 2, h * 0.55);
+      g.fillStyle = '#C4652A'; g.font = `700 32px ${UI_FONT}`; g.fillText('POLE ZAROBKOWE', w / 2, h * 0.55);
     } else if (type === 'station') {
       g.fillStyle = '#EEF4FB'; g.fillRect(0, 0, w, h);
       g.fillStyle = NO_GROUP; g.fillRect(0, 0, w, 20);
       const cy = h * 0.24;   // znak parkingu
       g.fillStyle = '#FFFFFF'; g.beginPath(); g.roundRect(w / 2 - 86, cy - 86, 172, 172, 22); g.fill();
       g.fillStyle = '#1F5FBF'; g.beginPath(); g.roundRect(w / 2 - 76, cy - 76, 152, 152, 16); g.fill();
-      g.fillStyle = '#FFFFFF'; g.font = '800 130px Nunito, sans-serif'; g.fillText('P', w / 2, cy + 6);
+      g.fillStyle = '#FFFFFF'; g.font = `700 130px ${UI_FONT}`; g.fillText('P', w / 2, cy + 6);
       g.fillStyle = NAVY; drawLines(g, field.name.toUpperCase(), w / 2, h * 0.45, w - 44, 60);
-      g.fillStyle = '#1F5FBF'; g.font = '800 32px Nunito, sans-serif'; g.fillText(`STACJA ${field.no}/2`, w / 2, h * 0.55);
-      g.font = '800 28px Nunito, sans-serif'; g.fillText('Z BONUSAMI', w / 2, h * 0.6);
+      g.fillStyle = '#1F5FBF'; g.font = `700 32px ${UI_FONT}`; g.fillText(`STACJA ${field.no}/2`, w / 2, h * 0.55);
+      g.font = `700 28px ${UI_FONT}`; g.fillText('Z BONUSAMI', w / 2, h * 0.6);
     } else if (type === 'exam') {
       g.fillStyle = '#FBF1F0'; g.fillRect(0, 0, w, h);
       g.fillStyle = NO_GROUP; g.fillRect(0, 0, w, 20);
       drawExamSheet(g, w / 2, h * 0.21);
       g.fillStyle = NAVY; drawLines(g, field.name.toUpperCase(), w / 2, h * 0.47, w - 44, 50);
-      g.fillStyle = '#B4533F'; g.font = '800 32px Nunito, sans-serif'; g.fillText('PYTANIE', w / 2, h * 0.59);
+      g.fillStyle = '#B4533F'; g.font = `700 32px ${UI_FONT}`; g.fillText('PYTANIE', w / 2, h * 0.59);
     } else if (type === 'todo') {
       g.fillStyle = '#F2F4F8'; g.fillRect(0, 0, w, h);
       g.setLineDash([18, 12]); g.strokeStyle = '#B7BFCE'; g.lineWidth = 5; g.strokeRect(22, 22, w - 44, h - 44); g.setLineDash([]);
-      g.fillStyle = '#9AA3B5'; g.font = '800 110px Nunito, sans-serif'; g.fillText('?', w / 2, h * 0.27);
-      g.font = '800 38px Nunito, sans-serif'; g.fillText('DO USTALENIA', w / 2, h * 0.45);
+      g.fillStyle = '#9AA3B5'; g.font = `700 110px ${UI_FONT}`; g.fillText('?', w / 2, h * 0.27);
+      g.font = `700 38px ${UI_FONT}`; g.fillText('DO USTALENIA', w / 2, h * 0.45);
       numColor = '#8A93A8';
     }
     g.fillStyle = numColor;
-    g.font = `800 ${field ? 96 : 150}px Nunito, sans-serif`;
+    g.font = `700 ${field ? 96 : 150}px ${UI_FONT}`;
     g.fillText(String(i + 1), w / 2, field ? h * 0.83 : h * 0.745);
   }
   g.strokeStyle = 'rgba(30,42,71,.14)'; g.lineWidth = 6; g.strokeRect(3, 3, w - 6, h - 6);
@@ -643,7 +633,7 @@ function medallion(g, cx, cy) {
   g.lineWidth = 6; g.strokeStyle = UNI_LIGHT;
   g.beginPath(); g.arc(cx, cy, R - 28, 0, Math.PI * 2); g.stroke();
   if (!drawLogo(g, cx, cy, R - 46)) {
-    g.fillStyle = 'rgba(30,42,71,.5)'; g.font = '800 124px Nunito, sans-serif';
+    g.fillStyle = 'rgba(30,42,71,.5)'; g.font = `700 124px ${UI_FONT}`;
     g.fillText('LOGO', cx, cy - 68); g.fillText('UCZELNI', cx, cy + 76);
   }
 }
@@ -664,7 +654,7 @@ function centerTexture() {
     g.fillStyle = mix(deck.color, '#ffffff', 0.82);
     g.beginPath(); g.roundRect(-w / 2, -l / 2, w, l, 28); g.fill();
     g.setLineDash([26, 18]); g.strokeStyle = deck.color; g.lineWidth = 8; g.stroke(); g.setLineDash([]);
-    g.font = '800 58px Nunito, sans-serif';
+    g.font = `700 58px ${UI_FONT}`;
     const lw = g.measureText(deck.title).width + 70;
     g.fillStyle = deck.color;
     g.beginPath(); g.roundRect(-lw / 2, l / 2 + 22, lw, 84, 42); g.fill();
@@ -716,7 +706,7 @@ function bannerTexture(color) {
   g.beginPath(); g.arc(128, 110, 66, 0, Math.PI * 2); g.fill();
   if (!drawLogo(g, 128, 110, 62)) {
     g.fillStyle = color; g.textAlign = 'center'; g.textBaseline = 'middle';
-    g.font = '800 34px Nunito, sans-serif'; g.fillText('LOGO', 128, 110);
+    g.font = `700 34px ${UI_FONT}`; g.fillText('LOGO', 128, 110);
   }
   return tex(c);
 }
@@ -2312,7 +2302,7 @@ function motorboat(stripe = '#F2B72E') {
     pg.fillStyle = '#5B6270'; pg.fillRect(0, 0, 512, 512);
     pg.strokeStyle = '#FFFFFF'; pg.lineWidth = 5;
     for (let k = 0; k <= 4; k++) { pg.beginPath(); pg.moveTo(40 + k * 108, 30); pg.lineTo(40 + k * 108, 200); pg.stroke(); pg.beginPath(); pg.moveTo(40 + k * 108, 312); pg.lineTo(40 + k * 108, 482); pg.stroke(); }
-    pg.fillStyle = '#2F7FF0'; pg.font = '800 90px Nunito, sans-serif'; pg.textAlign = 'center'; pg.textBaseline = 'middle'; pg.fillText('P', 256, 256);
+    pg.fillStyle = '#2F7FF0'; pg.font = `700 90px ${UI_FONT}`; pg.textAlign = 'center'; pg.textBaseline = 'middle'; pg.fillText('P', 256, 256);
     const lot = mesh(new THREE.PlaneGeometry(11, 11), mat('#FFFFFF', { map: tex(pc), roughness: 0.95 }), false, true);
     lot.rotation.x = -Math.PI / 2;
     lot.position.set(27, GROUND_Y + 0.02, 4);
@@ -2902,12 +2892,6 @@ for (let i = 0; i < TOTAL; i++) {
 }
 
 const center = mesh(new THREE.PlaneGeometry(INNER, INNER), new THREE.MeshStandardMaterial({ map: centerTexture(), roughness: 0.85 }), false, true);
-if (fontsLate) fontsLoaded.then(() => {   // czcionki doszły później: przerysuj pola i środek planszy
-  if (!fontsOk) return;
-  const swap = (m, t) => { const old = m.map; m.map = t; m.needsUpdate = true; old?.dispose(); };
-  tileTops.forEach(top => { const old = top.material; top.material = tileMaterial(top.userData.cell); old.map?.dispose(); old.roughnessMap?.dispose(); old.dispose(); });
-  swap(center.material, centerTexture());
-});
 center.rotation.x = -Math.PI / 2;
 center.position.y = CENTER_Y;
 board.add(center);
@@ -4488,17 +4472,17 @@ function actionCardSVG(card, kind, idx) {
   const id = `${kind}${idx}`;
   const tag = card.tag && TAGS[card.tag];
   const attack = card.tag === 'atak';
-  const titleLines = wrapSvgText(card.name, '800 46px Nunito, sans-serif', 520);
+  const titleLines = wrapSvgText(card.name, `700 46px ${UI_FONT}`, 520);
   const titleSize = titleLines.length > 1 ? 40 : 46;
   const title = titleLines.map((l, k) => `<text x="315" y="${(titleLines.length > 1 ? 136 : 158) + k * 44}" class="svg-display" font-size="${titleSize}" fill="${st.dark}" text-anchor="middle" dominant-baseline="central">${esc(l)}</text>`).join('');
-  const mainLines = wrapSvgText(card.text, '700 27px Figtree, sans-serif', 470);
+  const mainLines = wrapSvgText(card.text, `700 27px ${UI_FONT}`, 470);
   let y = 618;
   let body = mainLines.map(l => { const t = `<text x="315" y="${y}" class="svg-body" font-size="27" font-weight="700" fill="#1E2A47" text-anchor="middle" dominant-baseline="central">${esc(l)}</text>`; y += 34; return t; }).join('');
   y += 8;
   body += `<path d="M80 ${y} H550" stroke="${st.color}" stroke-opacity=".35" stroke-width="2"/>`;
   y += 28;
   if (card.x2) {
-    const x2Lines = wrapSvgText(`${st.x2}: ${card.x2}`, '600 23px Figtree, sans-serif', 470);
+    const x2Lines = wrapSvgText(`${st.x2}: ${card.x2}`, `600 23px ${UI_FONT}`, 470);
     body += x2Lines.map((l, k) => { const t = `<text x="315" y="${y}" class="svg-body" font-size="23" font-weight="600" fill="${st.dark}" text-anchor="middle" dominant-baseline="central">${esc(l)}</text>`; y += 29; return t; }).join('');
   } else {
     body += `<text x="315" y="${y}" class="svg-body" font-size="23" font-weight="600" fill="#6B7280" text-anchor="middle" dominant-baseline="central">Bez działania ×2</text>`;
@@ -5296,7 +5280,7 @@ function questionBackUrl() {   // tył karty z pytaniem: granat, logo i znak zap
     g.strokeStyle = '#FFFFFF'; g.lineWidth = 10; g.strokeRect(22, 22, 376, 544);
     g.lineWidth = 3; g.strokeRect(38, 38, 344, 512);
     if (!drawLogoInk(g, 210, 210, 92, '#FFFFFF')) { g.fillStyle = '#FFFFFF'; g.beginPath(); g.arc(210, 210, 70, 0, Math.PI * 2); g.fill(); }
-    g.fillStyle = '#FFFFFF'; g.font = '800 150px Nunito, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillStyle = '#FFFFFF'; g.font = `700 150px ${UI_FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle';
     g.fillText('?', 210, 420);
     qBackUrl = c.toDataURL('image/jpeg', 0.9);
   }
@@ -5742,9 +5726,9 @@ function noteTexture() {
   g.strokeStyle = 'rgba(20,80,50,.35)'; g.lineWidth = 2;
   for (let k = 0; k < 18; k++) { g.beginPath(); g.arc(120, 128, 20 + k * 6, 0, Math.PI * 2); g.stroke(); }
   g.fillStyle = 'rgba(255,255,255,.85)'; g.beginPath(); g.arc(120, 128, 62, 0, Math.PI * 2); g.fill();
-  g.fillStyle = '#1F6B45'; g.font = '800 54px Nunito, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
-  g.fillText('100', 120, 120); g.font = '800 26px Nunito, sans-serif'; g.fillText('zł', 120, 160);
-  g.font = '800 70px Nunito, sans-serif'; g.fillStyle = 'rgba(255,255,255,.9)'; g.fillText('100', 390, 128);
+  g.fillStyle = '#1F6B45'; g.font = `700 54px ${UI_FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillText('100', 120, 120); g.font = `700 26px ${UI_FONT}`; g.fillText('zł', 120, 160);
+  g.font = `700 70px ${UI_FONT}`; g.fillStyle = 'rgba(255,255,255,.9)'; g.fillText('100', 390, 128);
   // banderola paczki: kremowy papier ze złotymi brzegami
   g.fillStyle = '#F6EED9'; g.fillRect(232, 0, 52, 256);
   g.fillStyle = GOLD; g.fillRect(232, 0, 4, 256); g.fillRect(280, 0, 4, 256);
@@ -5895,7 +5879,7 @@ function fxTransfer(from, to, amount) {
 }
 function textSprite(text, color, size) {
   const [c, g] = makeCanvas(640, 140);
-  g.font = '800 84px Nunito, sans-serif';
+  g.font = `700 84px ${UI_FONT}`;
   g.textAlign = 'center'; g.textBaseline = 'middle';
   g.lineJoin = 'round'; g.lineWidth = 18; g.strokeStyle = 'rgba(8,18,44,.82)';
   g.strokeText(text, 320, 74);
