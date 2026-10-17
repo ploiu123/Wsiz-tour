@@ -34,7 +34,7 @@
 }
 .qc-who { min-width: 0; }
 .qc-role { font: 800 5pt/1 "Figtree", sans-serif; letter-spacing: .09em; text-transform: uppercase; color: rgba(255, 255, 255, .6); }
-.qc-lecturer { margin-top: .9mm; font: 700 8pt/1.1 "Fredoka", sans-serif; letter-spacing: .01em; }
+.qc-lecturer { margin-top: .9mm; font: 800 8pt/1.1 "Nunito", sans-serif; letter-spacing: .01em; }
 .qc-span { margin-top: .7mm; font: 600 5.4pt/1.2 "Figtree", sans-serif; color: rgba(255, 255, 255, .72); }
 .qc-num {
   flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -42,7 +42,7 @@
   background: var(--qc-gold); color: var(--qc-navy);
 }
 .qc-num small { font: 800 4.6pt/1 "Figtree", sans-serif; letter-spacing: .07em; }
-.qc-num b { margin-top: .5mm; font: 700 13pt/1 "Fredoka", sans-serif; }
+.qc-num b { margin-top: .5mm; font: 800 13pt/1 "Nunito", sans-serif; }
 .qc-stripe { flex: none; height: 1.2mm; }   /* kolory semestrów 1–7, ustawiane w karty-pytan.js */
 
 /* awers: 7 pytań, po jednym z każdego semestru */
@@ -60,7 +60,7 @@
 .qc-sem {
   width: 3.4mm; height: 3.4mm; border-radius: 50%;
   background: var(--qc-acc); color: #fff;
-  font: 700 5.6pt/3.4mm "Fredoka", sans-serif; text-align: center;
+  font: 800 5.6pt/3.4mm "Nunito", sans-serif; text-align: center;
 }
 .qc-qt { font-weight: 700; line-height: 1.17; padding-top: .2mm; }
 .qc-qa { grid-column: 2; display: flex; flex-wrap: wrap; column-gap: 2.3mm; row-gap: .15mm; margin-top: .4mm; font-size: .92em; font-weight: 500; line-height: 1.16; color: var(--qc-ink-2); }
@@ -80,7 +80,7 @@
 }
 .qc-back .qc-stripe { height: calc(1.4mm + var(--qc-b, 0mm)); }
 .qc-bhead { padding: 3mm calc(4mm + var(--qc-b, 0mm)) 2.2mm; text-align: center; }
-.qc-btitle { font: 700 10.5pt/1 "Fredoka", sans-serif; letter-spacing: .05em; }
+.qc-btitle { font: 800 10.5pt/1 "Nunito", sans-serif; letter-spacing: .05em; }
 .qc-bsub { margin-top: 1.1mm; font: 600 5.6pt/1.25 "Figtree", sans-serif; color: rgba(255, 255, 255, .75); }
 .qc-keys {
   flex: 1;
@@ -97,7 +97,7 @@
 }
 .qc-key { display: grid; grid-template-columns: 3.4mm 3.4mm 1fr; align-items: center; column-gap: 1.5mm; padding: .6mm 0; border-bottom: .2mm solid var(--qc-line); }
 .qc-key:last-child { border-bottom: 0; }
-.qc-letter { font: 700 1.3em/1 "Fredoka", sans-serif; color: var(--qc-acc); text-align: center; }
+.qc-letter { font: 800 1.3em/1 "Nunito", sans-serif; color: var(--qc-acc); text-align: center; }
 .qc-txt { font-weight: 700; line-height: 1.15; min-width: 0; }
 .qc-txt small { display: block; margin-top: .25mm; font-size: .76em; font-weight: 600; color: var(--qc-muted); }
 .qc-bfoot {
@@ -105,5 +105,5 @@
   padding: 2.2mm calc(3.6mm + var(--qc-b, 0mm)) calc(2.6mm + var(--qc-b, 0mm));
   font: 600 5.2pt/1.25 "Figtree", sans-serif; color: rgba(255, 255, 255, .75);
 }
-.qc-bnum { font: 700 8pt/1 "Fredoka", sans-serif; color: var(--qc-gold); white-space: nowrap; }
+.qc-bnum { font: 800 8pt/1 "Nunito", sans-serif; color: var(--qc-gold); white-space: nowrap; }
 .qc-bnum small { font: 800 4.8pt "Figtree", sans-serif; letter-spacing: .07em; color: rgba(255, 255, 255, .6); margin-right: .8mm; vertical-align: .3mm; }
