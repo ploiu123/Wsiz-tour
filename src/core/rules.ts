@@ -65,7 +65,8 @@ export function attackable(s: View, cell: number, attacker: number): boolean {
   return !!o && FIELDS[cell].type === 'room' && o.level < 5 && !sameTeam(s, o.owner, attacker) && !(s.players[o.owner].insured > 0);
 }
 
-// Wygrana od razu: wszystkie 4 pola specjalne albo 4 monopole (w trybie 2 na 2 liczą się pola drużyny)
+// Wygrana od razu: wszystkie 4 pola specjalne albo 3 monopole (w trybie 2 na 2 liczą się pola drużyny)
+export const WIN_MONOPOLIES = 3;
 export function instantWin(s: View, player: number): 'specials' | 'monopolies' | null {
   const mine = (o: number | undefined) => o !== undefined && (s.teams ? s.players[o].team === s.players[player].team : o === player);
   if (SPECIAL_CELLS.every(i => mine(s.own[i]?.owner))) return 'specials';
@@ -73,7 +74,7 @@ export function instantWin(s: View, player: number): 'specials' | 'monopolies' |
     const o = s.own[cells[0]]?.owner;
     return mine(o) && cells.every(i => s.own[i]?.owner === o);
   }).length;
-  return monos >= 4 ? 'monopolies' : null;
+  return monos >= WIN_MONOPOLIES ? 'monopolies' : null;
 }
 
 // Wynik: majątek, skuteczność odpowiedzi, zwycięzcy i Prymus

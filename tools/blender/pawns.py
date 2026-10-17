@@ -1,4 +1,5 @@
-# Pionki v2: sztandar uczelni, drukarka 3D, koparka kryptowalut, ekspres do kawy.
+# Pionki v2: sztandar uczelni, drukarka 3D, koparka kryptowalut, ekspres do kawy, robot, dron, biret absolwenta,
+# rakieta startupu.
 # Wymiary jak w starych pionkach z kodu (podstawa o promieniu 0,226), więc pasują do pól planszy.
 # Uruchomienie: npm run assets (albo tools/blender/.venv/bin/python tools/blender/pawns.py wyjście.glb)
 import math
@@ -249,7 +250,139 @@ def espresso():
     return r, ()
 
 
-models = [banner(), printer(), miner(), espresso()]
+# ---------------------------------------------------------------------------
+# 5. Robot: korpus w kolorze gracza, głowa z wizjerem i świecącymi oczami, antena ze świecącą kulką,
+#    ręce na przegubach, panel z diodami na piersi, gąsienice zamiast stóp
+# ---------------------------------------------------------------------------
+def robot():
+    r = root('robot')
+    pawn_base(r)
+    for x in (-0.075, 0.075):
+        box(f'track{x}', (0.07, 0.05, 0.19), (x, Y0 + 0.025, 0), M['rubber'], r, r=0.02)
+        for z in (-0.06, 0.0, 0.06):
+            cyl(f'wheel{x}{z}', 0.018, 0.018, 0.074, (x, Y0 + 0.025, z), M['dark_metal'], r, rot=(0, 0, PI / 2), seg=16)
+        cyl(f'leg{x}', 0.022, 0.026, 0.1, (x, Y0 + 0.1, 0), M['steel'], r, seg=20)
+    yt = Y0 + 0.29
+    box('torso', (0.25, 0.22, 0.18), (0, yt, 0), M['player'], r, r=0.045)
+    box('chest', (0.15, 0.11, 0.012), (0, yt + 0.01, 0.091), M['player_light'], r, r=0.012)
+    for i, m in enumerate(('led_cyan', 'led_green', 'led_orange')):
+        box(f'chestled{i}', (0.026, 0.012, 0.006), (-0.04 + 0.04 * i, yt + 0.04, 0.098), M[m], r, r=0.003)
+    for i in range(3):
+        box(f'vent{i}', (0.1, 0.006, 0.004), (0, yt - 0.01 - 0.016 * i, 0.098), M['dark_metal'], r, r=0.002)
+    # ręce: barki, ramiona z przegubem, dłonie-chwytaki
+    for s in (-1, 1):
+        sphere(f'shoulder{s}', 0.036, (s * 0.142, yt + 0.06, 0), M['steel'], r)
+        tube(f'arm{s}', [(s * 0.15, yt + 0.06, 0), (s * 0.175, yt - 0.02, 0.03), (s * 0.17, yt - 0.1, 0.07)], 0.017, M['brushed'], r)
+        sphere(f'hand{s}', 0.032, (s * 0.17, yt - 0.115, 0.075), M['player'], r)
+    cyl('neck', 0.03, 0.034, 0.05, (0, yt + 0.135, 0), M['steel'], r, seg=24)
+    yh = yt + 0.24
+    box('head', (0.23, 0.16, 0.18), (0, yh, 0), M['player_light'], r, r=0.05)
+    box('visor', (0.18, 0.08, 0.012), (0, yh + 0.005, 0.088), M['dark_metal'], r, r=0.03)
+    for s in (-1, 1):
+        sphere(f'eye{s}', 0.02, (s * 0.045, yh + 0.008, 0.094), M['led_cyan'], r, scale=(1, 1, 0.45))
+        cyl(f'ear{s}', 0.034, 0.034, 0.03, (s * 0.12, yh, 0), M['player'], r, rot=(0, 0, PI / 2), r=0.008)
+    box('mouth', (0.06, 0.008, 0.004), (0, yh - 0.035, 0.093), M['led_cyan'], r, r=0.002)
+    cyl('antenna', 0.0055, 0.0055, 0.12, (0.05, yh + 0.14, 0), M['steel'], r, seg=12)
+    sphere('antenna_tip', 0.022, (0.05, yh + 0.21, 0), M['player_glow'], r)
+    return r, ()
+
+
+# ---------------------------------------------------------------------------
+# 6. Dron: czterowirnikowiec w kolorze gracza zawieszony nad podstawą na smukłym statywie, śmigła kręcą
+#    się w grze (fan_*), kamera na gimbalu i diody pozycyjne
+# ---------------------------------------------------------------------------
+def drone():
+    r = root('drone')
+    pawn_base(r)
+    cyl('standfoot', 0.05, 0.06, 0.02, (0, Y0 + 0.01, 0), M['dark_metal'], r, r=0.006)
+    cyl('stand', 0.008, 0.01, 0.46, (0, Y0 + 0.24, 0), M['brushed'], r, seg=16)
+    yd = Y0 + 0.5
+    box('body', (0.15, 0.06, 0.2), (0, yd, 0), M['player'], r, r=0.025)
+    sphere('canopy', 0.07, (0, yd + 0.02, -0.01), M['player_light'], r, scale=(1, 0.55, 1.25))
+    box('battery', (0.08, 0.03, 0.1), (0, yd - 0.04, -0.02), M['dark_metal'], r, r=0.008)
+    k = 0
+    for sx in (-1, 1):
+        for sz in (-1, 1):
+            ax, az = sx * 0.17, sz * 0.17
+            tube(f'arm{sx}{sz}', [(sx * 0.05, yd, sz * 0.06), (ax * 0.6, yd + 0.006, az * 0.6), (ax, yd + 0.01, az)], 0.014,
+                 M['dark_metal'], r)
+            cyl(f'motor{sx}{sz}', 0.026, 0.028, 0.036, (ax, yd + 0.026, az), M['dark_metal'], r, seg=24, r=0.004)
+            cyl(f'motorcap{sx}{sz}', 0.012, 0.012, 0.012, (ax, yd + 0.05, az), M['player'], r, seg=16, r=0.003)
+            fan(f'fan_{k}', 0.1, (ax, yd + 0.052, az), M['fan_blade'], r, (0, 0, 0), blades=2)
+            torus(f'guard{sx}{sz}', 0.108, 0.0045, (ax, yd + 0.05, az), M['player'], r, seg=48, mseg=8)
+            k += 1
+    # kamera na gimbalu z przodu, pod spodem
+    cyl('gimbal', 0.018, 0.018, 0.03, (0, yd - 0.04, 0.085), M['dark_metal'], r, seg=16)
+    sphere('camera', 0.03, (0, yd - 0.065, 0.09), M['dark_metal'], r)
+    cyl('lens', 0.016, 0.016, 0.01, (0, yd - 0.065, 0.12), M['glass'], r, rot=(PI / 2, 0, 0), seg=24)
+    sphere('led_front', 0.01, (0, yd + 0.01, 0.1), M['led_green'], r)
+    sphere('led_back', 0.01, (0, yd + 0.01, -0.1), M['led_orange'], r)
+    return r, ('fan_',)
+
+
+# ---------------------------------------------------------------------------
+# 7. Biret absolwenta: stos książek w kolorze gracza i granacie, na nich czarny biret ze złotym chwostem,
+#    obok zwinięty dyplom z kokardą
+# ---------------------------------------------------------------------------
+def cap():
+    r = root('cap')
+    pawn_base(r)
+    y = Y0
+    for i, (w, d, h, rot, cover) in enumerate(((0.3, 0.22, 0.055, 0.0, 'player'), (0.28, 0.2, 0.05, 0.2, 'player_dark'),
+                                               (0.27, 0.19, 0.052, -0.12, 'player'), (0.24, 0.17, 0.045, 0.32, 'player_light'))):
+        g = group(f'book{i}', r, (0, y + h / 2, 0), rot=(0, rot, 0))
+        box(f'cover{i}', (w, h, d), (0, 0, 0), M[cover], g, r=0.008)
+        box(f'pages{i}', (w - 0.012, h - 0.012, d - 0.004), (0.006, 0, 0.004), M['ceramic'], g, r=0.002)
+        box(f'spineband{i}', (0.012, h + 0.002, d * 0.7), (-w / 2 + 0.012, 0, 0), M['gold'], g, r=0.002)
+        y += h
+    # biret: czapka i kwadratowa płyta obrócona o 45°, guzik, sznur i chwost
+    lathe('skullcap', [(0.0, 0.0), (0.085, 0.0), (0.095, 0.03), (0.098, 0.065), (0.0, 0.065)], (0, y, 0), M['rubber'], r, seg=48)
+    yb = y + 0.07
+    box('board', (0.29, 0.014, 0.29), (0, yb, 0), M['rubber'], r, rot=(0, PI / 4, 0), r=0.004)
+    cyl('button', 0.016, 0.018, 0.012, (0, yb + 0.012, 0), M['gold'], r, seg=20, r=0.004)
+    tip = (0.2, yb + 0.004, 0.0)
+    tube('tasselcord', [(0, yb + 0.014, 0), (0.1, yb + 0.012, 0.0), (0.19, yb + 0.008, 0.0), tip], 0.0035, M['gold'], r)
+    tube('tasselhang', [tip, (0.205, yb - 0.05, 0.005), (0.208, yb - 0.09, 0.01)], 0.004, M['gold'], r)
+    lathe('tassel', [(0.0, 0.0), (0.006, 0.004), (0.014, 0.03), (0.016, 0.065), (0.0, 0.07)], (0.208, yb - 0.16, 0.01), M['gold_dark'], r, seg=16)
+    # dyplom: zwinięty papier z kokardą w kolorze gracza
+    cyl('diploma', 0.022, 0.022, 0.2, (0.06, Y0 + 0.022, 0.17), M['ceramic'], r, rot=(0, 0.6, PI / 2), seg=24, r=0.004)
+    torus('ribbon', 0.024, 0.006, (0.06, Y0 + 0.022, 0.17), M['player'], r, rot=(0, 0.6, PI / 2), seg=24, mseg=8)
+    return r, ()
+
+
+# ---------------------------------------------------------------------------
+# 8. Rakieta startupu: biały kadłub z nosem i statecznikami w kolorze gracza, bulaj, dysza
+#    ze świecącym płomieniem (flame, migocze w grze) i obłoki dymu przy starcie
+# ---------------------------------------------------------------------------
+def rocket():
+    r = root('rocket')
+    pawn_base(r)
+    y0 = Y0 + 0.13   # spód kadłuba nad płomieniem
+    body = [(0.0, 0.0), (0.06, 0.0), (0.075, 0.03), (0.082, 0.12), (0.082, 0.36), (0.074, 0.44), (0.0, 0.44)]
+    lathe('hull', body, (0, y0, 0), M['ceramic'], r, seg=48)
+    nose = [(0.0, 0.0), (0.074, 0.0), (0.066, 0.08), (0.046, 0.15), (0.022, 0.2), (0.0, 0.225)]
+    lathe('nose', nose, (0, y0 + 0.44, 0), M['player'], r, seg=48)
+    torus('noseband', 0.075, 0.006, (0, y0 + 0.44, 0), M['brushed'], r, seg=48, mseg=8)
+    torus('midband', 0.0835, 0.007, (0, y0 + 0.2, 0), M['player'], r, seg=48, mseg=8)
+    # bulaj
+    cyl('porthole', 0.035, 0.035, 0.012, (0, y0 + 0.31, 0.078), M['steel'], r, rot=(PI / 2, 0, 0), seg=32, r=0.004)
+    sphere('window', 0.027, (0, y0 + 0.31, 0.083), M['led_cyan'], r, scale=(1, 1, 0.35))
+    # stateczniki na trzech stronach (opierają się na podstawie)
+    for k in range(3):
+        a = 2 * PI * k / 3 + PI / 6
+        g = group(f'fin{k}', r, (0, 0, 0), rot=(0, -a, 0))
+        box(f'finplate{k}', (0.1, 0.17, 0.014), (0.11, y0 + 0.02, 0), M['player'], g, rot=(0, 0, -0.18), r=0.006)
+        box(f'finfoot{k}', (0.04, 0.012, 0.02), (0.15, Y0 + 0.006, 0), M['dark_metal'], g, r=0.003)
+    lathe('nozzle', [(0.03, 0.0), (0.05, -0.05), (0.056, -0.06), (0.03, -0.012), (0.0, -0.012)], (0, y0, 0), M['dark_metal'], r, seg=32)
+    g = group('flame', r, (0, y0 - 0.055, 0))
+    lathe('flame_outer', [(0.0, -0.11), (0.03, -0.07), (0.048, -0.02), (0.046, 0.0), (0.0, 0.0)], (0, 0, 0), M['led_orange'], g, seg=24)
+    lathe('flame_inner', [(0.0, -0.075), (0.02, -0.045), (0.03, -0.01), (0.0, 0.0)], (0, -0.004, 0), M['player_glow'], g, seg=20)
+    for k, (x, z, s) in enumerate(((0.13, 0.05, 0.045), (-0.12, 0.08, 0.04), (0.04, -0.14, 0.05), (-0.09, -0.1, 0.035), (0.1, -0.08, 0.03))):
+        sphere(f'smoke{k}', s, (x, Y0 + s * 0.7, z), M['ceramic'], r, seg=20, rings=10)
+    return r, ('flame',)
+
+
+models = [banner(), printer(), miner(), espresso(), robot(), drone(), cap(), rocket()]
 roots = [m[0] for m in models]
 bake_ao(roots, distance=0.09, samples=64)
 for r, keep in models:

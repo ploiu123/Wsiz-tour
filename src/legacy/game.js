@@ -59,6 +59,21 @@ const PLAYERS = [
   { name: 'Gracz 2', pawn: 'Drukarka 3D', color: '#2F7FF0', make: c => glbPawn('printer', c) || makePrinter(c) },
   { name: 'Gracz 3', pawn: 'Koparka kryptowalut', color: '#1FA463', make: c => glbPawn('miner', c) || makeMiner(c) },
   { name: 'Gracz 4', pawn: 'Ekspres do kawy', color: '#F2B72E', make: c => glbPawn('espresso', c) || makeEspresso(c) },
+  { name: 'Gracz 5', pawn: 'Robot', color: '#8B5CF6', make: c => glbPawn('robot', c) || makeRobot(c) },
+  { name: 'Gracz 6', pawn: 'Dron', color: '#F2762E', make: c => glbPawn('drone', c) || makeDrone(c) },
+  { name: 'Gracz 7', pawn: 'Biret absolwenta', color: '#14B3A6', make: c => glbPawn('cap', c) || makeCap(c) },
+  { name: 'Gracz 8', pawn: 'Rakieta startupu', color: '#E5579A', make: c => glbPawn('rocket', c) || makeRocket(c) },
+];
+// Opisy pionków (karty graczy w menu i prezentacja)
+const PAWN_DESC = [
+  'Dla tych, którzy prowadzą. Na złotym maszcie powiewa logo uczelni.',
+  'Dla tych, którzy budują. Drukuje warstwa po warstwie w kolorze gracza.',
+  'Dla tych, którzy liczą. Kopie kryptowaluty, nawet gdy inni śpią.',
+  'Dla tych, którzy nie śpią przed sesją. Para leci naprawdę.',
+  'Dla tych, którzy programują. Świeci oczami, gdy kod się kompiluje.',
+  'Dla tych, którzy patrzą z góry. Cztery śmigła i kamera na gimbalu.',
+  'Dla tych, którzy kończą studia. Biret na stosie przeczytanych książek.',
+  'Dla tych, którzy zakładają firmę. Startuje z ogniem i dymem.',
 ];
 
 // Stosy kart na środku: ułatwienia przy narożniku START, utrudnienia naprzeciwko (od strony dziekanatu)
@@ -814,6 +829,106 @@ function makeEspresso(color) {
   addSteam(g, y0 + 0.08, 0.07);
   return g;
 }
+// Robot: korpus w kolorze gracza, jasna głowa z wizjerem i świecącymi oczami, antena
+function makeRobot(color) {
+  const p = pawnPal(color);
+  const g = new THREE.Group();
+  g.add(pawnBase(color));
+  const y0 = 0.07, eye = new THREE.MeshBasicMaterial({ color: '#5BE7FF', toneMapped: false });
+  for (const x of [-0.075, 0.075]) {
+    const track = mesh(new RoundedBoxGeometry(0.07, 0.05, 0.19, 2, 0.02), p.dark); track.position.set(x, y0 + 0.025, 0);
+    const leg = mesh(new THREE.CylinderGeometry(0.022, 0.026, 0.1, 14), aluMat); leg.position.set(x, y0 + 0.1, 0);
+    g.add(track, leg);
+  }
+  const torso = mesh(new RoundedBoxGeometry(0.25, 0.22, 0.18, 3, 0.045), p.main); torso.position.y = y0 + 0.29;
+  const head = mesh(new RoundedBoxGeometry(0.23, 0.16, 0.18, 3, 0.05), p.light); head.position.y = y0 + 0.53;
+  const visor = mesh(new RoundedBoxGeometry(0.18, 0.08, 0.02, 2, 0.008), p.dark); visor.position.set(0, y0 + 0.535, 0.085);
+  const neck = mesh(new THREE.CylinderGeometry(0.03, 0.034, 0.05, 14), aluMat); neck.position.y = y0 + 0.425;
+  const ant = mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.12, 8), aluMat); ant.position.set(0.05, y0 + 0.67, 0);
+  const tip = new THREE.Mesh(new THREE.SphereGeometry(0.022, 16, 12), new THREE.MeshBasicMaterial({ color: mix(color, '#ffffff', 0.35), toneMapped: false }));
+  tip.position.set(0.05, y0 + 0.74, 0);
+  g.add(torso, head, visor, neck, ant, tip);
+  for (const s of [-1, 1]) {
+    const e = new THREE.Mesh(new THREE.SphereGeometry(0.02, 14, 10), eye); e.scale.z = 0.45; e.position.set(s * 0.045, y0 + 0.538, 0.096);
+    const arm = mesh(new THREE.CylinderGeometry(0.017, 0.017, 0.17, 10), aluMat); arm.position.set(s * 0.17, y0 + 0.25, 0.03); arm.rotation.x = 0.35;
+    const hand = mesh(new THREE.SphereGeometry(0.032, 14, 10), p.main); hand.position.set(s * 0.17, y0 + 0.175, 0.075);
+    g.add(e, arm, hand);
+  }
+  return g;
+}
+// Dron: czterowirnikowiec na statywie, śmigła kręcą się w grze
+function makeDrone(color) {
+  const p = pawnPal(color);
+  const g = new THREE.Group();
+  g.add(pawnBase(color));
+  const y0 = 0.07, yd = y0 + 0.5;
+  const stand = mesh(new THREE.CylinderGeometry(0.008, 0.01, 0.46, 10), aluMat); stand.position.y = y0 + 0.24;
+  const body = mesh(new RoundedBoxGeometry(0.15, 0.06, 0.2, 2, 0.025), p.main); body.position.y = yd;
+  const canopy = mesh(new THREE.SphereGeometry(0.07, 20, 12), p.light); canopy.scale.set(1, 0.55, 1.25); canopy.position.set(0, yd + 0.02, -0.01);
+  g.add(stand, body, canopy);
+  const bladeMat = new THREE.MeshBasicMaterial({ color: '#E9EEF6', transparent: true, opacity: 0.85 });
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+    const arm = mesh(new THREE.BoxGeometry(0.02, 0.016, 0.22), p.dark);
+    arm.position.set(sx * 0.1, yd, sz * 0.1); arm.rotation.y = Math.atan2(sx, sz);
+    const motor = mesh(new THREE.CylinderGeometry(0.026, 0.028, 0.036, 16), p.dark); motor.position.set(sx * 0.17, yd + 0.026, sz * 0.17);
+    const rotor = new THREE.Group();
+    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.003, 0.024), bladeMat);
+    rotor.add(blade); rotor.position.set(sx * 0.17, yd + 0.052, sz * 0.17);
+    liveParts.push({ obj: rotor, kind: 'fan' });
+    const guard = mesh(new THREE.TorusGeometry(0.108, 0.0045, 6, 36), p.main); guard.rotation.x = Math.PI / 2; guard.position.copy(rotor.position);
+    g.add(arm, motor, rotor, guard);
+  }
+  return g;
+}
+// Biret absolwenta na stosie książek
+function makeCap(color) {
+  const p = pawnPal(color);
+  const g = new THREE.Group();
+  g.add(pawnBase(color));
+  let y = 0.07;
+  const pages = mat('#FAFAF7', { roughness: 0.6 });
+  for (const [w, d, h, rot, m] of [[0.3, 0.22, 0.055, 0, p.main], [0.28, 0.2, 0.05, 0.2, p.dark], [0.27, 0.19, 0.052, -0.12, p.main], [0.24, 0.17, 0.045, 0.32, p.light]]) {
+    const book = mesh(new RoundedBoxGeometry(w, h, d, 2, 0.008), m); book.position.y = y + h / 2; book.rotation.y = rot;
+    const pg = mesh(new THREE.BoxGeometry(w - 0.012, h - 0.012, d - 0.004), pages); pg.position.set(0.006, 0, 0.004); book.add(pg);
+    g.add(book);
+    y += h;
+  }
+  const black = mat('#1B1E25', { roughness: 0.8 });
+  const skull = mesh(new THREE.CylinderGeometry(0.098, 0.085, 0.065, 28), black); skull.position.y = y + 0.0325;
+  const board = mesh(new THREE.BoxGeometry(0.29, 0.014, 0.29), black); board.position.y = y + 0.07; board.rotation.y = Math.PI / 4;
+  const button = mesh(new THREE.CylinderGeometry(0.016, 0.018, 0.012, 14), goldMat); button.position.y = y + 0.082;
+  const cord = mesh(new THREE.CylinderGeometry(0.0035, 0.0035, 0.2, 6), goldMat); cord.rotation.z = Math.PI / 2; cord.position.set(0.1, y + 0.082, 0);
+  const tassel = mesh(new THREE.ConeGeometry(0.016, 0.08, 10), goldMat); tassel.position.set(0.205, y + 0.02, 0);
+  g.add(skull, board, button, cord, tassel);
+  return g;
+}
+// Rakieta startupu: biały kadłub, nos i stateczniki w kolorze gracza, płomień migocze w grze
+function makeRocket(color) {
+  const p = pawnPal(color);
+  const g = new THREE.Group();
+  g.add(pawnBase(color));
+  const y0 = 0.07 + 0.13;
+  const white = mat('#FAFAF7', { roughness: 0.3 });
+  const hull = mesh(new THREE.LatheGeometry([[0, 0], [0.06, 0], [0.075, 0.03], [0.082, 0.12], [0.082, 0.36], [0.074, 0.44], [0, 0.44]].map(([x, y]) => new THREE.Vector2(x, y)), 32), white);
+  hull.position.y = y0;
+  const nose = mesh(new THREE.ConeGeometry(0.074, 0.225, 32), p.main); nose.position.y = y0 + 0.44 + 0.1125;
+  const win = new THREE.Mesh(new THREE.SphereGeometry(0.027, 16, 10), new THREE.MeshBasicMaterial({ color: '#5BE7FF', toneMapped: false }));
+  win.scale.z = 0.35; win.position.set(0, y0 + 0.31, 0.082);
+  g.add(hull, nose, win);
+  for (let k = 0; k < 3; k++) {
+    const a = (2 * Math.PI * k) / 3 + Math.PI / 6;
+    const fin = mesh(new THREE.BoxGeometry(0.1, 0.17, 0.014), p.main);
+    fin.position.set(0.11 * Math.cos(a), y0 + 0.02, -0.11 * Math.sin(a)); fin.rotation.y = a;
+    g.add(fin);
+  }
+  const flame = new THREE.Group();
+  const fl = new THREE.Mesh(new THREE.ConeGeometry(0.046, 0.11, 16), new THREE.MeshBasicMaterial({ color: '#FF8A2A', toneMapped: false }));
+  fl.rotation.x = Math.PI; fl.position.y = -0.055;
+  flame.add(fl); flame.position.y = y0 - 0.02;
+  liveParts.push({ obj: flame, kind: 'flame', phase: Math.random() * 6 });
+  g.add(flame);
+  return g;
+}
 // Para nad filiżanką (dwie smużki, które falują i przygasają)
 function addSteam(g, y, z) {
   for (let k = 0; k < 2; k++) {
@@ -861,6 +976,8 @@ function glbPawn(name, color) {
   if (print) liveParts.push({ obj: print, kind: 'print', phase: Math.random() });
   const head = o.getObjectByName('carriage');
   if (head) liveParts.push({ obj: head, kind: 'slide', x0: head.position.x, phase: Math.random() * 6 });
+  const flame = o.getObjectByName('flame');
+  if (flame) liveParts.push({ obj: flame, kind: 'flame', phase: Math.random() * 6 });
   if (name === 'banner') o.add(bannerFlag(color, -0.1));
   if (name === 'espresso') addSteam(o, 0.21, 0.1);
   return o;
@@ -2885,7 +3002,8 @@ modelsReady.then(() => {
     cellGroups[i].add(icon);
   }
 });
-PLAYERS.forEach((p, i) => addShowItem(p.make(p.color), -3.75 + i * 2.5, -2.3, 2.4, p.pawn, 'pionek'));
+// pionki w dwóch rzędach, drugi przesunięty o pół odstępu (pionki z przodu stoją między tymi z tyłu)
+PLAYERS.forEach((p, i) => addShowItem(p.make(p.color), i < 4 ? -4.5 + i * 3 : -3 + (i - 4) * 3, i < 4 ? -5.8 : -2.4, 2.2, p.pawn, 'pionek'));
 const demoColor = PLAYERS[1].color;
 BUILDINGS.forEach((b, i) => addShowItem(b.make(demoColor), -4.4 + i * 2.2, 2.0, b.scale, b.name, i === 4 ? 'hotel · poziom 5' : `budynek · poziom ${i + 1}`));
 
@@ -3221,6 +3339,10 @@ const PAWN_ICONS = {
   'Koparka kryptowalut': '<rect x="3" y="10.5" width="18" height="10" rx="2.2" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="8.3" cy="15.5" r="2.5" stroke="currentColor" stroke-width="1.6" fill="none"/><circle cx="15.7" cy="15.5" r="2.5" stroke="currentColor" stroke-width="1.6" fill="none"/><circle cx="8.3" cy="15.5" r=".9" fill="currentColor"/><circle cx="15.7" cy="15.5" r=".9" fill="currentColor"/><circle cx="12" cy="5.3" r="3.3" fill="currentColor"/><path d="M12 3.7v3.2" stroke="#00276F" stroke-width="1.2" stroke-linecap="round" opacity=".55"/>',
   'Ekspres do kawy': '<path d="M6 3.5h12a1 1 0 0 1 1 1V20.5H5V4.5a1 1 0 0 1 1-1zM5 8h14" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" fill="none"/><path d="M11 8v2.4M13 8v2.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M8.8 13.3h5.8v2.6a2.2 2.2 0 0 1-2.2 2.2h-1.4a2.2 2.2 0 0 1-2.2-2.2z" fill="currentColor"/><path d="M14.6 14.1h.7a1.25 1.25 0 0 1 0 2.5h-.7" stroke="currentColor" stroke-width="1.3" fill="none"/>',
 };
+PAWN_ICONS.Robot = '<rect x="6" y="6.5" width="12" height="9" rx="2.6" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="10" cy="11" r="1.4" fill="currentColor"/><circle cx="14" cy="11" r="1.4" fill="currentColor"/><path d="M12 6.5V3.8M8.5 19.5h7M9.5 15.5v4M14.5 15.5v4M6 10H4M20 10h-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="3" r="1.3" fill="currentColor"/>';
+PAWN_ICONS.Dron = '<rect x="9" y="10" width="6" height="4.6" rx="1.6" fill="currentColor"/><path d="M9.5 10.5 6.5 7.5M14.5 10.5l3-3M9.5 14.2l-3 3M14.5 14.2l3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M3.2 6.8h6.6M14.2 6.8h6.6M3.2 17.9h6.6M14.2 17.9h6.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>';
+PAWN_ICONS['Biret absolwenta'] = '<path d="M12 4.5 2.5 9 12 13.5 21.5 9z" fill="currentColor"/><path d="M6.5 11.2v4.3c0 1.4 2.5 2.8 5.5 2.8s5.5-1.4 5.5-2.8v-4.3" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M19.5 10v5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="19.5" cy="16.5" r="1.2" fill="currentColor"/>';
+PAWN_ICONS['Rakieta startupu'] = '<path d="M12 2.8c3 2.3 4.4 5.5 4.4 9.2v4H7.6v-4c0-3.7 1.4-6.9 4.4-9.2z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" fill="none"/><circle cx="12" cy="9.6" r="1.8" fill="currentColor"/><path d="M7.6 12.5 5 15.5v2h2.6M16.4 12.5l2.6 3v2h-2.6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" fill="none"/><path d="M10.4 18.5h3.2l-1.6 3z" fill="currentColor"/>';
 const pawnSvg = (name, color) => `<svg viewBox="0 0 24 24" aria-hidden="true" style="color:${color}">${PAWN_ICONS[name]}</svg>`;
 // Ikony menu (rysowane w kodzie, linią)
 const ICONS = {
@@ -3354,7 +3476,8 @@ const KIND_LABEL = { me: 'Ty', local: 'Gracz na tym komputerze', online: 'Gracz 
 const KINDS = { solo: ['local', 'bot', 'empty'], online: ['online', 'local', 'bot', 'empty'] };
 const TEAMS = [{ name: 'Drużyna A', color: '#00276F' }, { name: 'Drużyna B', color: '#5B6B8C' }];
 const BOT_LEVELS = ['łatwy', 'średni', 'trudny'];
-const TIMERS = [[0, 'Bez limitu'], [30, '30 min'], [45, '45 min'], [60, '60 min'], [90, '90 min']];
+const TIMERS = [[15, '15 min'], [30, '30 min'], [60, '1 h'], [90, '90 min'], [0, 'Bez limitu']];
+if (!TIMERS.some(([v]) => v === setup.timer)) setup.timer = 0;   // czas z dawnej listy (np. 45 min): bez limitu
 const slotPawn = s => (s.kind === 'me' ? profile.pawn : s.pawn);
 const slotColor = s => (s.kind === 'me' ? profile.color : s.color);
 const filledSlots = () => setup.slots.filter(s => s.kind !== 'empty');
@@ -3366,7 +3489,7 @@ function fixColors() {
   const used = new Set();
   for (const s of filledSlots()) {
     let c = slotColor(s);
-    if (used.has(c)) { c = [0, 1, 2, 3].find(k => !used.has(k)); setSlotColor(s, c); }
+    if (used.has(c)) { c = PAWN_COLORS.findIndex((_, k) => !used.has(k)); setSlotColor(s, c); }
     used.add(c);
   }
 }
@@ -3666,7 +3789,7 @@ const RULES = [
   { t: 'Dziekanat', b: '<ul><li>Stajesz na polu Dziekanat: dostajesz pytanie dziekanatu. Zła odpowiedź to 1 kolejka postoju.</li><li>Pole „Udaj się do dziekanatu” albo trzeci dublet: 2 kolejki. Wcześniej wyjdziesz, płacąc za warunek, rzucając dubletem po dobrej odpowiedzi albo kartą „Wyjście z dziekanatu”.</li></ul>' },
   { t: 'Szansa i karty', b: '<p>Na polu Szansa odpowiadasz na pytanie. Dobra odpowiedź daje kartę ułatwienia, zła kartę utrudnienia. Drugie pytanie może podwoić działanie karty.</p>' },
   { t: '2 na 2 i boty', b: '<ul><li>W drużynie nie płacisz czynszu partnerowi. Możesz rozbudować jego salę, ale sala i czynsz zostają jego.</li><li>Boty mają 3 poziomy: łatwy, średni i trudny. Im trudniejszy bot, tym częściej odpowiada dobrze i rozsądniej wydaje pieniądze.</li></ul>' },
-  { t: 'Koniec gry', b: '<p>Gra trwa do końca albo do upływu ustawionego czasu. Liczy się majątek: gotówka, sale i budynki. Przy remisie wygrywa lepsza skuteczność, a gracz z najlepszą skutecznością dostaje tytuł „Prymus”. Wygrywasz od razu, gdy zbierzesz 4 monopole albo wszystkie 4 pola specjalne. Na koniec zobaczysz swoją skuteczność, ale nie pytania ani dobre odpowiedzi.</p>' },
+  { t: 'Koniec gry', b: '<p>Gra trwa do końca albo do upływu ustawionego czasu. Liczy się majątek: gotówka, sale i budynki. Przy remisie wygrywa lepsza skuteczność, a gracz z najlepszą skutecznością dostaje tytuł „Prymus”. Wygrywasz od razu, gdy zbierzesz 3 monopole albo wszystkie 4 pola specjalne. Na koniec zobaczysz swoją skuteczność, ale nie pytania ani dobre odpowiedzi.</p>' },
 ];
 const exampleHtml = () => `
   <div class="m-q">
@@ -6194,7 +6317,7 @@ const REASONS = {
   time: 'Koniec czasu. Wygrywa największy majątek.',
   bankruptcy: 'Pozostali gracze zbankrutowali.',
   specials: 'Zebrane wszystkie 4 pola specjalne: wygrana od razu!',
-  monopolies: '4 monopole: wygrana od razu!',
+  monopolies: '3 monopole: wygrana od razu!',
   manual: 'Gra zakończona. Wygrywa największy majątek.',
 };
 function showEnd(result) {
@@ -6530,7 +6653,7 @@ const SCENES = [
     html: () => `<div class="pr-scene at-top-right">
       ${fadeP('pr-eyebrow', 'Monopol', 0.2)}
       <h2 class="pr-h">${bline('Cała grupa', 0.3)}${bline('<span class="pr-gold">to czynsz ×2</span>', 0.7)}</h2>
-      ${fadeP('pr-sub', 'Zbierz cztery monopole albo cztery pola specjalne, a wygrasz od razu.', 1.4)}</div>`,
+      ${fadeP('pr-sub', 'Zbierz trzy monopole albo cztery pola specjalne, a wygrasz od razu.', 1.4)}</div>`,
   },
   {
     name: 'Karty', dur: 7600, energy: 2, blur: true,
@@ -7213,6 +7336,7 @@ function frame() {
       if (p.kind === 'fan') p.obj.rotateY(dt * 16);
       else if (p.kind === 'print') p.obj.scale.y = 0.12 + 0.88 * Math.min(1, ((t * 0.07 + p.phase) % 1.15));   // wydruk rośnie i zaczyna od nowa
       else if (p.kind === 'slide') p.obj.position.x = p.x0 + 0.035 * Math.sin(t * 2.1 + p.phase);
+      else if (p.kind === 'flame') p.obj.scale.set(1, 0.8 + 0.2 * Math.sin(t * 23 + p.phase) + 0.1 * Math.sin(t * 37), 1);   // płomień rakiety migocze
     }
   }
   controls.update();

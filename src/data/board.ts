@@ -31,7 +31,7 @@ export const CORNER_INFO: Record<number, [string, string]> = {
   16: ['Pole 17 · Stypendium rektorskie', 'Narożnik, zasady do ustalenia'],
   24: ['Pole 25 · Udaj się do dziekanatu', 'Narożnik, zasady do ustalenia'],
 };
-// Grupy kolorów: kto ma wszystkie sale z grupy, ma monopol. 4 monopole = wygrana.
+// Grupy kolorów: kto ma wszystkie sale z grupy, ma monopol. 3 monopole = wygrana.
 export const GROUPS: Record<number, Group> = {
   1: { name: 'Grupa 1', color: '#9A5B3A' },
   2: { name: 'Grupa 2', color: '#4FB3E8' },

@@ -5,7 +5,7 @@ import { randomBytes, randomInt } from 'node:crypto';
 import { GameEngine } from '../src/core/engine.ts';
 import type { Decision, GameEvent, PlayerSetup, PublicState, QuestionBank } from '../src/core/types.ts';
 import type { BotLevel } from '../src/data/economy.ts';
-import { PAWN_COLORS } from '../src/data/players.ts';
+import { PAWN_COLORS, PAWN_COUNT } from '../src/data/players.ts';
 
 export type SeatKind = 'host' | 'online' | 'local' | 'bot';   // local = drugi gracz przy komputerze gospodarza
 export interface SeatConfig { kind: SeatKind; level?: BotLevel; pawnIdx: number; colorIdx: number }
@@ -82,7 +82,7 @@ export class Room {
     for (const s of c.seats) {
       if (!s || !['host', 'online', 'local', 'bot'].includes(s.kind)) return null;
       const pawnIdx = Number(s.pawnIdx), colorIdx = Number(s.colorIdx);
-      if (!Number.isInteger(pawnIdx) || pawnIdx < 0 || pawnIdx > 3 || !Number.isInteger(colorIdx) || colorIdx < 0 || colorIdx >= PAWN_COLORS.length || colors.has(colorIdx)) return null;
+      if (!Number.isInteger(pawnIdx) || pawnIdx < 0 || pawnIdx >= PAWN_COUNT || !Number.isInteger(colorIdx) || colorIdx < 0 || colorIdx >= PAWN_COLORS.length || colors.has(colorIdx)) return null;
       colors.add(colorIdx);
       seats.push({ kind: s.kind, pawnIdx, colorIdx, ...(s.kind === 'bot' ? { level: LEVELS.includes(s.level as BotLevel) ? s.level : 'średni' } : {}) });
     }
@@ -137,7 +137,7 @@ export class Room {
     s.name = name;
     s.token = newToken();
     s.socketId = socketId;
-    if (kind === 'online' && Number.isInteger(pawnIdx) && pawnIdx! >= 0 && pawnIdx! <= 3) s.pawnIdx = pawnIdx!;
+    if (kind === 'online' && Number.isInteger(pawnIdx) && pawnIdx! >= 0 && pawnIdx! < PAWN_COUNT) s.pawnIdx = pawnIdx!;
     return { seat, token: s.token };
   }
 

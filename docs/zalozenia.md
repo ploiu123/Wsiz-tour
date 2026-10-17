@@ -51,7 +51,7 @@ Rozgrywka działa w `index.html` od 13.10.2026 (opis niżej, w sekcji „Rozgryw
 - Każde okrążenie liczy się osobno. Po przejściu przez START licznik zaczyna się od zera.
 
 **Czas gry i koniec**
-- Przed grą: gra bez limitu (do końca) albo z limitem czasu (timer).
+- Przed grą: gra bez limitu (do końca) albo z limitem czasu. Od 17.10.2026 do wyboru: 15 min, 30 min, 1 h, 90 min albo bez limitu (decyzja autora).
 - Na koniec czasu gra liczy majątek (gotówka i wartość pól z budynkami) oraz skuteczność odpowiedzi z całej gry.
 - Ekran końca pokazuje majątek i procent dobrych i złych odpowiedzi. Nie zdradza, które pytania padły, ile ich było ani jakie były dobre odpowiedzi.
 - Zwycięzca: **do ustalenia** (propozycja: wygrywa największy majątek, przy remisie decyduje skuteczność, a gracz z najlepszą skutecznością dostaje dodatkowy tytuł „Prymus”).
@@ -108,7 +108,7 @@ Tam, gdzie autor jeszcze nie zdecydował, przyjęte są ustawienia tymczasowe. W
 
 **Koniec gry i wygrana**
 - Wygrywa największy majątek (gotówka, sale i budynki). Przy remisie wygrywa lepsza skuteczność. Gracz z najlepszą skutecznością dostaje tytuł „Prymus”.
-- Wygrana od razu: 4 monopole albo wszystkie 4 pola specjalne. Monopol to cała grupa sal u jednego gracza. W trybie 2 na 2 monopole i pola specjalne partnerów się sumują.
+- Wygrana od razu: 3 monopole (od 17.10.2026, wcześniej 4) albo wszystkie 4 pola specjalne. Monopol to cała grupa sal u jednego gracza. W trybie 2 na 2 monopole i pola specjalne partnerów się sumują.
 - Gra kończy się też, gdy zostaje jeden gracz (albo jedna drużyna), po upływie czasu (po dokończeniu bieżącej tury) albo z menu pauzy („Zakończ grę i policz wynik”).
 - Ekran końca pokazuje majątek i procent dobrych odpowiedzi, bez pytań i bez ich liczby.
 - Wyniki gracza „Ty” zapisują się w przeglądarce (profil i wiersz w rankingu).
@@ -181,7 +181,7 @@ Do ustalenia: co z Kuchnią.
 ### Grupy kolorów i monopole
 - Sale z jednej grupy mają wspólny kolor na pasku pola.
 - Kto ma wszystkie sale z grupy, ma **monopol**.
-- **Kto zbierze 4 monopole, wygrywa grę.**
+- **Kto zbierze 3 monopole, wygrywa grę** (od 17.10.2026, decyzja autora; wcześniej 4).
 | Grupa | Kolor | Pola |
 |---|---|---|
 | 1 | brązowy | Sala 04, Sala 05 |
@@ -481,12 +481,17 @@ Do każdej pory dnia jest delikatna korekcja kolorów (tablica LUT liczona w kod
   2. **Drukarka 3D** z wydrukiem na stole i szpulą filamentu,
   3. **Koparka kryptowalut**: rama z kartami graficznymi i obracająca się złota moneta,
   4. **Ekspres do kawy** z filiżanką i parą.
-- Pionki mają kolor gracza. Warianty kolorów do wyboru: czerwony, niebieski, zielony, żółty.
+- Pionki mają kolor gracza. Kolory do wyboru (od 17.10.2026 osiem): czerwony, niebieski, zielony, żółty, fioletowy, pomarańczowy, turkusowy, różowy. Każdy gracz ma inny kolor.
 - **Pionki v2 (od 14.10.2026, Etap 1 planu AAA):** modele z naszych skryptów w Blenderze (`tools/blender/pawns.py`), z fazowanymi krawędziami i cieniami kontaktowymi wypalonymi w modelu. Wspólna podstawa: lakierowany granatowy krążek uczelni z zaokrąglonym brzegiem, pas w kolorze gracza, szczotkowana płytka ze srebrnym rantem i złotą inkrustacją.
   1. Sztandar: złote drzewce z pierścieniami, grot, sznur z chwostem i frędzlami, flaga z logo faluje na wietrze,
   2. Drukarka 3D: obudowa z ekranem i pokrętłem, rama z profili, stół, głowica z wentylatorem i świecącym hotendem (jeździ w lewo i w prawo), szpula z rurką do głowicy, wazon, który rośnie warstwa po warstwie,
   3. Koparka kryptowalut: trzy karty graficzne wentylatorami do przodu (wentylatory się kręcą), świecące paski i pierścienie w kolorze gracza, kable, złota moneta z literą W i ząbkami na rancie,
   4. Ekspres do kawy: szczotkowana stal, reling na górze, manometr pod szkłem, przyciski z podświetleniem, kolba z gumowym uchwytem, dysza pary, kratka ociekacza, szklana filiżanka z kawą i pianką na spodku, para.
+- **Nowe pionki (od 17.10.2026, prośba autora):** razem 8 do wyboru, też ze skryptu `tools/blender/pawns.py`.
+  5. Robot: korpus w kolorze gracza, gąsienice, ręce na przegubach, panel z diodami, głowa z wizjerem i świecącymi oczami, antena ze świecącą kulką,
+  6. Dron: czterowirnikowiec na smukłym statywie, cztery śmigła w osłonach kręcą się w grze, kamera na gimbalu, diody pozycyjne,
+  7. Biret absolwenta: stos czterech książek (okładki w kolorze gracza i w granacie uczelni, złote paski na grzbietach), czarny biret ze złotym chwostem, zwinięty dyplom z kokardą,
+  8. Rakieta startupu: biały kadłub, nos, pas i trzy stateczniki w kolorze gracza, bulaj, dysza z migoczącym płomieniem i obłoki dymu przy starcie.
 - **Animacje pionków:** lekki „oddech”, gdy stoją, ugięcie przy lądowaniu, podskok z pełnym obrotem przy kupnie pola i przy wygranej, smutne przechylenie przed zniknięciem przy bankructwie.
 
 ## Serwer i logowanie
@@ -505,11 +510,11 @@ Do każdej pory dnia jest delikatna korekcja kolorów (tablica LUT liczona w kod
 - Wybór jednej z 5 wersji wyglądu planszy.
 - Sala balowa i Kuchnia: czy zostają i gdzie.
 - Ekonomia: ceny, czynsze i kwoty są tymczasowe (opis w sekcji „Rozgrywka”). Do potwierdzenia albo zmiany.
-- Kto wygrywa: na razie największy majątek, remis rozstrzyga skuteczność, do tego tytuł „Prymus”. 4 monopole i 4 pola specjalne kończą grę od razu. Do potwierdzenia.
+- Kto wygrywa: na razie największy majątek, remis rozstrzyga skuteczność, do tego tytuł „Prymus”. 3 monopole i 4 pola specjalne kończą grę od razu (3 monopole: decyzja autora z 17.10.2026).
 - Czy można odkupić pole przeciwnika (jak w Business Tour) i za ile. Na razie nie można.
 - Czy pytanie pada też przy czynszu. Na razie nie, ale pada przy kupnie parkingu i pola specjalnego.
 - Prawdziwe pytania od wykładowców i pytania do kategorii „Dziekanat”.
-- Długości gry z limitem czasu do wyboru.
+- Długości gry z limitem czasu: ustalone 17.10.2026 (15 min, 30 min, 1 h, 90 min, bez limitu).
 - Dźwięk kostek: na razie generowany w kodzie. Można podmienić na własne nagranie albo dźwięk CC0.
 - Karta tematu pracy inżynierskiej (tezy i inne): później.
 - Wybór kart ułatwień i utrudnień.

@@ -15,16 +15,16 @@ const names = (doc: Document) => doc.getRoot().listNodes().map(n => n.getName())
 const materials = (doc: Document) => doc.getRoot().listMaterials().map(m => m.getName());
 
 describe('modele z Blendera', () => {
-  it('pionki: cztery modele, materiały gracza, ruchome części i cień kontaktowy', async () => {
+  it('pionki: osiem modeli, materiały gracza, ruchome części i cień kontaktowy', async () => {
     const doc = await read('assets/models/pawns.glb');
-    expect(roots(doc).map(n => n.getName()).sort()).toEqual(['banner', 'espresso', 'miner', 'printer']);
+    expect(roots(doc).map(n => n.getName()).sort()).toEqual(['banner', 'cap', 'drone', 'espresso', 'miner', 'printer', 'robot', 'rocket']);
     expect(materials(doc)).toEqual(expect.arrayContaining(['player', 'player_band', 'player_glow', 'gold', 'glass']));
     const n = names(doc);
-    for (const part of ['coin', 'print', 'carriage', 'fan_0', 'fan_5']) expect(n).toContain(part);
+    for (const part of ['coin', 'print', 'carriage', 'fan_0', 'fan_5', 'flame']) expect(n).toContain(part);
     for (const mesh of doc.getRoot().listMeshes()) {
       for (const prim of mesh.listPrimitives()) expect(prim.getAttribute('COLOR_0'), mesh.getName()).toBeTruthy();
     }
-    expect(statSync('assets/models/pawns.glb').size).toBeLessThan(1.2e6);
+    expect(statSync('assets/models/pawns.glb').size).toBeLessThan(1.4e6);
   }, 30_000);
 
   it('budynki: pięć poziomów, ekrany z mapowaniem obrazu, materiały gracza', async () => {
