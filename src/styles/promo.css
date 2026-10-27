@@ -160,8 +160,8 @@ body.promo-open .menu, body.promo-open .g-hud, body.promo-open .g-layer { displa
 .pr-cta button:focus-visible { outline: 3px solid #8FB8F7; outline-offset: 3px; }
 
 /* Prezentacja premium: typografia jak w reklamach Apple, hasła jak u Nike, ziarno filmowe, produkty w studiu */
-/* prezentacja ma własne czcionki (Figtree, Inter Tight, Anton); sama gra używa jednej, systemowej */
-.promo { --body: "Figtree", system-ui, sans-serif; --pr-font: "Inter Tight", "Figtree", system-ui, sans-serif; --pr-impact: "Anton", "Inter Tight", Impact, sans-serif; }
+/* prezentacja ma dodatkowe czcionki (Inter Tight, Anton); sama gra używa tylko Figtree */
+.promo { --pr-font: "Inter Tight", "Figtree", system-ui, sans-serif; --pr-impact: "Anton", "Inter Tight", Impact, sans-serif; }
 .promo .pr-h, .promo .pr-sub, .promo .pr-eyebrow, .promo .pr-count, .promo .pr-spec b, .promo .pr-spec > span, .promo .pr-level b,
 .promo .pr-level span, .promo .pr-q, .promo .pr-q-text, .promo .pr-cta button, .promo .pr-start b, .promo .pr-start span { font-family: var(--pr-font); }
 .promo .pr-h { font-weight: 800; letter-spacing: -.055em; }

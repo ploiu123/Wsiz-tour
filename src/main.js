@@ -1,5 +1,5 @@
-// Wejście aplikacji: style i gra. Gra ma jedną, systemową czcionkę; poniższe czcionki (z naszego serwera,
-// bez Google Fonts) są tylko dla prezentacji, w zestawach łacińskich z polskimi literami.
+// Wejście aplikacji: czcionki (z naszego serwera, bez Google Fonts), style i gra. Gra ma jedną czcionkę, Figtree;
+// Inter Tight i Anton są tylko w prezentacji. Tylko zestawy łacińskie (z polskimi literami).
 import '@fontsource/figtree/latin-400.css';
 import '@fontsource/figtree/latin-ext-400.css';
 import '@fontsource/figtree/latin-500.css';

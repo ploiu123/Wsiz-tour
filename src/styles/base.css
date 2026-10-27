@@ -21,8 +21,8 @@
   --shadow: 0 10px 30px rgba(0, 27, 80, .14);
   --veil-top: rgba(236, 241, 250, .5);
   --veil-bottom: rgba(204, 211, 225, .66);
-  /* jedna czcionka w całej grze: systemowa (na Macu SF Pro, na Windows Segoe UI), z pełnymi polskimi literami */
-  --font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* jedna czcionka w całej grze (Figtree, w paczce gry): wygląda tak samo na każdym komputerze, ma wszystkie polskie litery */
+  --font: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
   --display: var(--font);
   --body: var(--font);
 }

@@ -41,8 +41,8 @@ const $ = id => document.getElementById(id);
 // ---------------------------------------------------------------------------
 const NAVY = '#1E2A47';
 const GOLD = '#E0B04A';
-// Jedna czcionka w całej grze (menu i napisy na planszy): systemowa, bez pobierania, z pełnymi polskimi literami
-const UI_FONT = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+// Jedna czcionka w całej grze (menu i napisy na planszy): Figtree z paczki gry, taka sama na każdym komputerze
+const UI_FONT = 'Figtree, system-ui, sans-serif';
 
 // Wygląd planszy: jasne pola, trawa na środku, plansza na wyspie kampusu
 const LOOK = {
@@ -131,7 +131,18 @@ labelRenderer.domElement.className = 'labels';
 labelRenderer.domElement.hidden = true;
 renderer.domElement.after(labelRenderer.domElement);
 
-const modelsReady = loadModels();   // modele z Blendera wczytują się w tle
+// Czcionka do napisów na planszy. Czekamy najwyżej 3 s; jeśli dojdzie później, tekstury z napisami
+// rysują się jeszcze raz (inaczej napisy na polach zostawały w zapasowej czcionce).
+const modelsReady = loadModels();   // modele z Blendera wczytują się razem z czcionką
+let fontsOk = false;
+const fontsLoaded = Promise.all([
+  // z polskimi literami w tekście: przeglądarka pobiera też zestaw latin-ext (inaczej „ą”, „ł”, „ż” na planszy
+  // mogły się rysować w zapasowej czcionce)
+  document.fonts.load('700 120px Figtree', 'Aąćęłńóśźż ĄĆĘŁŃÓŚŹŻ'),
+  document.fonts.load('600 30px Figtree', 'Aąćęłńóśźż ĄĆĘŁŃÓŚŹŻ'),
+]).then(() => { fontsOk = true; }, () => {});
+await Promise.race([fontsLoaded, new Promise(r => setTimeout(r, 3000))]);
+const fontsLate = !fontsOk;
 await Promise.race([modelsReady, new Promise(r => setTimeout(r, 2500))]);   // modele z Blendera są potrzebne już do makiety
 
 // Logo uczelni. Plik jest okrągły na białym tle, więc rysujemy je przycięte do koła.
@@ -2892,6 +2903,12 @@ for (let i = 0; i < TOTAL; i++) {
 }
 
 const center = mesh(new THREE.PlaneGeometry(INNER, INNER), new THREE.MeshStandardMaterial({ map: centerTexture(), roughness: 0.85 }), false, true);
+if (fontsLate) fontsLoaded.then(() => {   // czcionka doszła później: przerysuj pola i środek planszy
+  if (!fontsOk) return;
+  const swap = (m, t) => { const old = m.map; m.map = t; m.needsUpdate = true; old?.dispose(); };
+  tileTops.forEach(top => { const old = top.material; top.material = tileMaterial(top.userData.cell); old.map?.dispose(); old.roughnessMap?.dispose(); old.dispose(); });
+  swap(center.material, centerTexture());
+});
 center.rotation.x = -Math.PI / 2;
 center.position.y = CENTER_Y;
 board.add(center);
