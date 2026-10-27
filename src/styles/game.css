@@ -33,6 +33,7 @@
 .fp-text b { color: var(--ink); }
 .fp-close { position: absolute; top: 12px; right: 12px; width: 36px; height: 36px; border: 0; border-radius: 12px; background: var(--chip); color: var(--ink); font-size: 20px; line-height: 1; cursor: pointer; }
 .fp-close:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.fp-close svg { display: block; width: 18px; height: 18px; margin: auto; }
 @media (max-width: 640px) {
   .fp, .fp.fp-plain { grid-template-columns: minmax(0, 1fr); padding: 16px; }
   .fp-card { width: min(220px, 70%); margin: 0 auto; }

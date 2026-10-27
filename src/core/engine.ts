@@ -462,7 +462,7 @@ export class GameEngine {
     const rent = R.rentOf(s, i);
     if (o.off > 0) { this.notice('Brak prądu', `${fname(i)} nie pobiera czynszu jeszcze przez ${o.off} ${o.off === 1 ? 'turę' : 'tury'}.`, '', 1800); return; }
     const owner = s.players[o.owner];
-    this.notice(`Czynsz: ${money(rent)}`, `${p.name} → ${owner.name} · ${fname(i)}`, owner.hex, 1800);
+    this.notice(`Czynsz: ${money(rent)}`, `${p.name} płaci graczowi ${owner.name} · ${fname(i)}`, owner.hex, 1800);
     this.pay(p, rent, owner);
   }
 

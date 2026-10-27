@@ -98,6 +98,7 @@ python3 pytania/excel-na-js.py
 
 - [Three.js](https://threejs.org) do grafiki 3D: WebGPU, a w starszych przeglądarkach WebGL2 (licencja MIT), [Rapier](https://rapier.rs) do fizyki kości (Apache 2.0), [Vite](https://vite.dev) do budowania paczki (MIT), [Socket.IO](https://socket.io) do trybu online (MIT).
 - Gra ma jedną czcionkę, Figtree, w menu i w napisach na planszy, więc wygląda tak samo na każdym komputerze. Prezentacja ma dodatkowo Inter Tight i Anton. Wszystkie z pakietów Fontsource (z pełnym zestawem polskich liter), dołączone do paczki (licencja SIL Open Font License). Gra nie łączy się z Google Fonts.
+- Ikony w grze: [Phosphor Icons](https://phosphoricons.com) (licencja MIT), dołączone do paczki (`src/ui/icons.js`). W grze nie ma emoji.
 - Modele 3D powstają z naszych skryptów w Blenderze (`tools/blender/`, Blender jako moduł Pythona `bpy`, licencja GPL dotyczy programu, nie modeli). Grafiki pól i ilustracje kart są rysowane w kodzie. Bez gotowych plików 3D i bez generatorów obrazów.
 - [glTF Transform](https://gltf-transform.dev) i [meshoptimizer](https://meshoptimizer.org) do kompresji modeli (MIT).
 - Dźwięki i muzyka zapasowa są generowane w kodzie (Web Audio). Utwory z plików i ich licencje: `assets/muzyka/AUTORZY.md`.

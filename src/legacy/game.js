@@ -12,6 +12,7 @@ import { ACHIEVEMENTS, unlock } from '../ui/achievements.js';
 import { wealthChartSvg } from '../ui/wealthChart.js';
 import { pickMoments, rentScore, poolScore } from '../ui/moments.js';
 import { TIPS, createTips } from '../ui/tips.js';
+import { icon, iconGroup, drawIcon } from '../ui/icons.js';
 import { audio, audioStarted, click, knock } from '../audio/synth.js';
 import { playSfx } from '../audio/sfx.js';
 import { createMusic } from '../audio/music.js';
@@ -3336,38 +3337,10 @@ const store = {
   set(k, v) { try { localStorage.setItem('wsiz-tour-' + k, JSON.stringify(v)); } catch (e) { /* bez pamięci */ } },
   del(k) { try { localStorage.removeItem('wsiz-tour-' + k); } catch (e) { /* bez pamięci */ } },
 };
-const PAWN_ICONS = {
-  Sztandar: '<path d="M6 21V3.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/><circle cx="6" cy="2.9" r="1.3" fill="currentColor"/><path d="M7.2 4.6c3-1.5 5.4 1.3 9.4-.2.5-.2 1 .2.9.7l-1.1 6.5c-.1.4-.4.7-.8.8-3.5 1.2-5.6-1.5-8.4-.2z" fill="currentColor"/><circle cx="12" cy="8.1" r="1.6" fill="#00276F" opacity=".55"/>',
-  'Drukarka 3D': '<path d="M4.5 20.5V5A1.5 1.5 0 0 1 6 3.5h12A1.5 1.5 0 0 1 19.5 5v15.5M3 20.5h18M4.5 8h15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M10.4 8h3.2v2.2L12 11.9l-1.6-1.7z" fill="currentColor"/><path d="M8.6 20.5l1.1-4.4h4.6l1.1 4.4z" fill="currentColor" opacity=".75"/>',
-  'Koparka kryptowalut': '<rect x="3" y="10.5" width="18" height="10" rx="2.2" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="8.3" cy="15.5" r="2.5" stroke="currentColor" stroke-width="1.6" fill="none"/><circle cx="15.7" cy="15.5" r="2.5" stroke="currentColor" stroke-width="1.6" fill="none"/><circle cx="8.3" cy="15.5" r=".9" fill="currentColor"/><circle cx="15.7" cy="15.5" r=".9" fill="currentColor"/><circle cx="12" cy="5.3" r="3.3" fill="currentColor"/><path d="M12 3.7v3.2" stroke="#00276F" stroke-width="1.2" stroke-linecap="round" opacity=".55"/>',
-  'Ekspres do kawy': '<path d="M6 3.5h12a1 1 0 0 1 1 1V20.5H5V4.5a1 1 0 0 1 1-1zM5 8h14" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" fill="none"/><path d="M11 8v2.4M13 8v2.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M8.8 13.3h5.8v2.6a2.2 2.2 0 0 1-2.2 2.2h-1.4a2.2 2.2 0 0 1-2.2-2.2z" fill="currentColor"/><path d="M14.6 14.1h.7a1.25 1.25 0 0 1 0 2.5h-.7" stroke="currentColor" stroke-width="1.3" fill="none"/>',
-};
-PAWN_ICONS.Robot = '<rect x="6" y="6.5" width="12" height="9" rx="2.6" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="10" cy="11" r="1.4" fill="currentColor"/><circle cx="14" cy="11" r="1.4" fill="currentColor"/><path d="M12 6.5V3.8M8.5 19.5h7M9.5 15.5v4M14.5 15.5v4M6 10H4M20 10h-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="3" r="1.3" fill="currentColor"/>';
-PAWN_ICONS.Dron = '<rect x="9" y="10" width="6" height="4.6" rx="1.6" fill="currentColor"/><path d="M9.5 10.5 6.5 7.5M14.5 10.5l3-3M9.5 14.2l-3 3M14.5 14.2l3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M3.2 6.8h6.6M14.2 6.8h6.6M3.2 17.9h6.6M14.2 17.9h6.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>';
-PAWN_ICONS['Biret absolwenta'] = '<path d="M12 4.5 2.5 9 12 13.5 21.5 9z" fill="currentColor"/><path d="M6.5 11.2v4.3c0 1.4 2.5 2.8 5.5 2.8s5.5-1.4 5.5-2.8v-4.3" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M19.5 10v5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="19.5" cy="16.5" r="1.2" fill="currentColor"/>';
-PAWN_ICONS['Rakieta startupu'] = '<path d="M12 2.8c3 2.3 4.4 5.5 4.4 9.2v4H7.6v-4c0-3.7 1.4-6.9 4.4-9.2z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" fill="none"/><circle cx="12" cy="9.6" r="1.8" fill="currentColor"/><path d="M7.6 12.5 5 15.5v2h2.6M16.4 12.5l2.6 3v2h-2.6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" fill="none"/><path d="M10.4 18.5h3.2l-1.6 3z" fill="currentColor"/>';
-const pawnSvg = (name, color) => `<svg viewBox="0 0 24 24" aria-hidden="true" style="color:${color}">${PAWN_ICONS[name]}</svg>`;
-// Ikony menu (rysowane w kodzie, linią)
-const ICONS = {
-  play: '<path d="M8 5.5v13l10.5-6.5z" fill="currentColor" stroke="none"/>',
-  trophy: '<path d="M8 4h8v4a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4"/><path d="M12 12v4M9 20h6M10 16h4"/>',
-  book: '<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 21.5v-16M8 7h8"/>',
-  cards: '<rect x="3" y="6" width="11" height="15" rx="2"/><path d="M9 3h10a2 2 0 0 1 2 2v12"/>',
-  gear: '<circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="7.2"/><path d="M12 2v2.6M12 19.4V22M2 12h2.6M19.4 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/>',
-  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>',
-  door: '<path d="M5 21V4a1 1 0 0 1 1-1h9v18"/><path d="M15 21h4"/><circle cx="12" cy="12" r="1" fill="currentColor"/>',
-  logout: '<path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/><path d="M15 8l4 4-4 4M19 12H9"/>',
-  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
-  moon: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
-  back: '<path d="M15 5l-7 7 7 7"/>',
-  monitor: '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',
-  globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/>',
-  chev: '<path d="M6 9l6 6 6-6"/>',
-  eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
-  key: '<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M15 8l2 2"/>',
-  film: '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.2v5.6l4.8-2.8z" fill="currentColor"/>',
-};
-const ico = (n, cls = '') => `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]}</svg>`;
+// Ikony: biblioteka Phosphor Icons (src/ui/icons.js). Pionki w kafelkach, menu i przyciski.
+const PAWN_ICONS = { Sztandar: 'flag', 'Drukarka 3D': 'printer', 'Koparka kryptowalut': 'gpu', 'Ekspres do kawy': 'coffee', Robot: 'robot', Dron: 'drone', 'Biret absolwenta': 'cap', 'Rakieta startupu': 'rocket' };
+const pawnSvg = (name, color) => icon(PAWN_ICONS[name], '', color);
+const ico = (n, cls = '') => icon(n, cls);
 const escHtml = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const avatar = (pawn, color) => `<span class="m-avatar" style="--c:${PAWN_COLORS[color].hex}">${pawnSvg(PLAYERS[pawn].pawn, '#ffffff')}</span>`;
 const chipHtml = (label, attrs, pressed, disabled = false) =>
@@ -3843,7 +3816,7 @@ $('rules').addEventListener('click', e => {
 // Profil
 // Odznaka osiągnięcia: zdobyta w kolorze uczelni ze złotą gwiazdką, niezdobyta szara z opisem, co zrobić
 const achHtml = (a, got, date) => `<div class="m-ach${got ? ' is-got' : ''}">
-  <span class="m-ach-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2.8l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 16.8l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg></span>
+  <span class="m-ach-ico" aria-hidden="true">${icon(a.icon || 'star')}</span>
   <span class="m-ach-txt"><b>${a.name}</b><small>${a.desc}${date ? ` · ${date.split('-').reverse().join('.')}` : ''}</small></span></div>`;
 function renderProfilePage() {
   $('profNick').value = profile.nick;
@@ -4707,7 +4680,7 @@ function deedArt(i, id, c) {
       <path d="M160 70 Q160 124 200 124 Q240 124 240 70" fill="none" stroke="#2B3A5E" stroke-width="7"/><path d="M200 124 V178 M170 182 H230" stroke="#2B3A5E" stroke-width="8" stroke-linecap="round"/>
       ${face(200, 74, 0.32, '#fff')}
       <path d="M100 70 Q90 92 100 114 M76 56 Q58 92 76 128 M300 70 Q310 92 300 114 M324 56 Q342 92 324 128" fill="none" stroke="${c}" stroke-width="6" stroke-linecap="round"/>
-      <text x="64" y="176" class="svg-display" font-size="30" fill="${c}">♪</text><text x="320" y="40" class="svg-display" font-size="26" fill="#F2B72E">♫</text>`;
+      ${iconGroup('music', 66, 160, 38, c)}${iconGroup('music', 322, 30, 32, '#F2B72E')}`;
     case 29: return `${gs(150)}
       <path d="M96 90 Q96 64 126 64 H274 Q304 64 304 90 L320 150 Q326 178 300 176 Q284 174 270 150 H130 Q116 174 100 176 Q74 178 80 150 Z" fill="${c}"/>
       <path d="M124 92 V122 M109 107 H139" stroke="#fff" stroke-width="8" stroke-linecap="round"/>
@@ -4846,7 +4819,7 @@ function openPopup(html, plain, label) {
   const bd = document.createElement('div');
   bd.className = 'fp-bd';
   bd.innerHTML = `<div class="m-card fp${plain ? ' fp-plain' : ''}" role="dialog" aria-modal="true" aria-label="${escHtml(label)}">
-    <button class="fp-close" type="button" data-close aria-label="Zamknij">×</button>${html}</div>`;
+    <button class="fp-close" type="button" data-close aria-label="Zamknij">${icon('close')}</button>${html}</div>`;
   bd.addEventListener('click', e => { if (e.target === bd || e.target.closest('[data-close]')) closeFieldInfo(); });
   $('stage').append(bd);
   fieldPop = bd;
@@ -5111,18 +5084,12 @@ function hop(p, from, to, height = 0.42, dur = 230) {
 // ---------------------------------------------------------------------------
 function iconSprite(kind) {
   const [c, g] = makeCanvas(128, 128);
-  g.lineJoin = 'round'; g.lineCap = 'round';
-  if (kind === 'shield') {
-    g.fillStyle = '#2F7FF0'; g.strokeStyle = '#FFFFFF'; g.lineWidth = 8;
-    g.beginPath(); g.moveTo(64, 10); g.lineTo(110, 26); g.quadraticCurveTo(110, 92, 64, 118); g.quadraticCurveTo(18, 92, 18, 26); g.closePath();
-    g.fill(); g.stroke();
-    g.lineWidth = 12; g.beginPath(); g.moveTo(42, 64); g.lineTo(58, 80); g.lineTo(88, 48); g.stroke();
-  } else {
-    g.fillStyle = '#2E3138'; g.beginPath(); g.arc(64, 64, 54, 0, Math.PI * 2); g.fill();
-    g.fillStyle = '#F2B72E';
-    g.beginPath(); g.moveTo(72, 18); g.lineTo(38, 72); g.lineTo(62, 72); g.lineTo(54, 110); g.lineTo(90, 54); g.lineTo(66, 54); g.closePath(); g.fill();
-    g.strokeStyle = '#D6534F'; g.lineWidth = 12; g.beginPath(); g.moveTo(26, 26); g.lineTo(102, 102); g.stroke();
-  }
+  // ikony z biblioteki (src/ui/icons.js) na krążku, żeby były czytelne nad każdym polem
+  const shield = kind === 'shield';
+  g.fillStyle = shield ? '#FFFFFF' : '#2E3138';
+  g.beginPath(); g.arc(64, 64, 58, 0, Math.PI * 2); g.fill();
+  if (shield) drawIcon(g, 'shield', 64, 64, 92, '#2F7FF0');
+  else drawIcon(g, 'noPower', 64, 64, 80, '#F2B72E');
   const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex(c), depthTest: false, transparent: true }));
   s.scale.setScalar(0.5);
   s.renderOrder = 5;
@@ -5460,7 +5427,7 @@ function rollButton(onRoll) {
   b.onclick = () => { b.hidden = true; b.onclick = null; $('gTip').hidden = true; audio(); onRoll(); };
   b.focus();
 }
-const diceIco = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="8.5" cy="8.5" r="1.6" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/></svg>';
+const diceIco = icon('dice');
 
 // ---------------------------------------------------------------------------
 // Odtwarzanie zdarzeń silnika: po kolei, z animacjami; pauza zatrzymuje kolejkę
@@ -6411,16 +6378,7 @@ const fadeP = (cls, html, d) => `<p class="${cls} pr-fade" style="--d:${d}s">${h
 const logoHtml = d => `<div class="pr-logo-wrap pr-fade" style="--d:${d}s"><img class="pr-logo" src="assets/logo-wsiz.png" alt=""></div>`;
 const BUILD_AT = V3(1.6, 0.6, 5.0);
 const MONO_AT = cellTarget(6).add(cellTarget(7)).multiplyScalar(0.5);   // grupa 2 (Sala 10 i 11): monopol w prezentacji   // punkt obok Sali 05: budynek wypada po prawej od napisów
-const PROMO_ICONS = {
-  prev: '<path d="M15 5l-7 7 7 7"/>',
-  next: '<path d="M9 5l7 7-7 7"/>',
-  pause: '<path d="M8 5v14M16 5v14" stroke-width="3"/>',
-  play: '<path d="M8 5.5v13l10.5-6.5z" fill="currentColor" stroke="none"/>',
-  sound: '<path d="M4 9v6h4l5 4V5L8 9z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>',
-  mute: '<path d="M4 9v6h4l5 4V5L8 9z" fill="currentColor"/><path d="M17 9l5 6M22 9l-5 6"/>',
-  close: '<path d="M6 6l12 12M18 6L6 18"/>',
-};
-const pIco = n => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${PROMO_ICONS[n]}</svg>`;
+const pIco = n => icon(n === 'prev' ? 'back' : n);   // przyciski prezentacji: te same ikony co w menu
 
 // ---------------------------------------------------------------------------
 // Studio: pionek pokazany jak produkt w reklamie (jasne tło bez krawędzi, matowa podłoga,

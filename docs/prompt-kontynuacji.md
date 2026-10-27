@@ -31,7 +31,7 @@ Robię grę **WSiZ Tour** jako pracę inżynierską. To gra planszowa 3D w przeg
 
 ## Zasady pracy
 
-1. **Wszystkie grafiki, modele i ilustracje robimy sami, w kodzie.** Bez gotowych modeli, bez generatorów obrazów AI i bez cudzych grafik, żebym miał do nich prawa. Wyjątek: dźwięki na licencji CC0 albo moje własne nagrania.
+1. **Wszystkie grafiki, modele i ilustracje robimy sami, w kodzie.** Bez gotowych modeli, bez generatorów obrazów AI i bez cudzych grafik, żebym miał do nich prawa. Wyjątki: dźwięki na licencji CC0 albo moje własne nagrania oraz ikony z biblioteki Phosphor Icons (MIT, od 27.10.2026: „w grze użyj biblioteki ikon, nie emoji”, plik `src/ui/icons.js`).
 2. **Kolory uczelni:** granat `#00276F`, jasny szaroniebieski `#CCD3E1`, biel i szarość. Czcionka gry: jedna, Figtree, w menu i w napisach na planszy (stała `UI_FONT` w `game.js`, zmienna `--font` w `base.css`), taka sama na każdym komputerze. W prezentacji dodatkowo Inter Tight i Anton. Wszystkie z pakietów Fontsource w paczce gry (bez Google Fonts).
 3. **Nazwy gry nie ma na planszy.** W menu może być.
 4. Po każdej zmianie sprawdź grę w przeglądarce. Sprawdź też konsolę i czy nic się nie wysypało.

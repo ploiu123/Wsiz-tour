@@ -12,7 +12,8 @@ Ten plik zbiera wszystko, co ustaliliśmy o grze. Aktualizujemy go przy każdej 
 ## Licencje i prawa
 
 - Kod, modele 3D i grafiki robimy sami, od zera. Nie używamy gotowych modeli ani generatorów obrazów.
-- Three.js ma licencję MIT, czcionki z Google Fonts licencję OFL. Obie są darmowe.
+- Wyjątek od 27.10.2026 (decyzja autora): ikony w grze (menu, przyciski, awatary pionków, osiągnięcia, znaczniki na polach) są z biblioteki Phosphor Icons (licencja MIT), a nie z emoji ani rysowane ręcznie. Biblioteka jest w paczce gry, bez internetu (`src/ui/icons.js`).
+- Three.js ma licencję MIT, Phosphor Icons licencję MIT, czcionki z pakietów Fontsource licencję OFL. Wszystkie są darmowe.
 - Logo uczelni: potrzebna zgoda uczelni.
 - Pytania: przygotowują wykładowcy, potrzebna ich zgoda.
 - W pracy inżynierskiej trzeba opisać, do czego użyto AI. Autor ustala to z opiekunem.
