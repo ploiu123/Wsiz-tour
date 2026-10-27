@@ -98,7 +98,7 @@ export class PawnPreview {
     this.renderer = null;
     this.ready = null;
     this.W = this.H = 0;
-    r.dispose();
+    r.dispose().catch(() => {});   // zwalnianie jest asynchroniczne; błąd przy sprzątaniu nie przeszkadza w grze
   }
 
   // Płótna, których nie ma już na stronie (np. miejsce gracza zostało puste)

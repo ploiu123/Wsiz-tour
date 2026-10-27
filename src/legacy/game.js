@@ -2094,11 +2094,9 @@ function motorboat(stripe = '#F2B72E') {
   updateWaterSky = (top, bottom, sunPos, sunColor) => {
     wsTop.value.copy(top); wsBottom.value.copy(bottom);
     wsSun.value.copy(sunPos).normalize(); wsSunCol.value.copy(sunColor);
-    const next = pmrem.fromScene(wsScene, 0, 0.1, 20);
-    waterMat.envMap = next.texture;
-    waterMat.needsUpdate = true;
-    wsTarget?.dispose();
-    wsTarget = next;
+    // ta sama tekstura za każdym razem (nowe niebo rysuje się w nią): materiał wody nie musi się przebudowywać
+    wsTarget = pmrem.fromScene(wsScene, 0, 0.1, 20, wsTarget ? { renderTarget: wsTarget } : {});
+    if (waterMat.envMap !== wsTarget.texture) waterMat.envMap = wsTarget.texture;
   };
   updateWaterSky(wsTop.value, wsBottom.value, wsSun.value, wsSunCol.value);
   const waveH = varyingProperty('float', 'vWaveH'), waveN = varyingProperty('vec3', 'vWaveN');
