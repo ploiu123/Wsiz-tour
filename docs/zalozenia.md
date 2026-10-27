@@ -516,7 +516,11 @@ Do każdej pory dnia jest delikatna korekcja kolorów (tablica LUT liczona w kod
 - Prawdziwe pytania od wykładowców i pytania do kategorii „Dziekanat”.
 - Długości gry z limitem czasu: ustalone 17.10.2026 (15 min, 30 min, 1 h, 90 min, bez limitu).
 - Dźwięk kostek: na razie generowany w kodzie. Można podmienić na własne nagranie albo dźwięk CC0.
-- Karta tematu pracy inżynierskiej (tezy i inne): później.
+- Karta tematu pracy inżynierskiej: wypełniona 27.10.2026 (plik Word i PDF u autora, poza repozytorium, bo są w nim dane osobowe).
+  - Temat: „Projekt i implementacja edukacyjnej gry planszowej 3D w przeglądarce internetowej z trybem wieloosobowym online”.
+  - Promotor: dr n. t. Monika Marecka, prof. WSIZ. Opiekun: mgr Paweł Łaba. Specjalność: Systemy Informatyczne, specjalizacja: Programowanie gier i witryn.
+  - Tezy: (1) WebGPU z zapasowym WebGL 2 i Three.js pozwalają zbudować grę 3D wysokiej jakości, która działa płynnie bez instalacji; (2) połączenie gry ekonomicznej z pytaniami z przedmiotów (grywalizacja) sprzyja zaangażowaniu w powtarzanie materiału; (3) logika gry oddzielona od grafiki i rozgrywka online prowadzona na serwerze dają spójny stan gry, powrót po zerwaniu połączenia i łatwe testy reguł.
+  - Do uzupełnienia z promotorką: drugie kody efektów kształcenia (K_W, K_U), prace dyplomowe WSIZ w bibliografii, nazwy przedmiotów z planu studiów. Asystenta AI autor na razie nie wpisuje do karty.
 - Wybór kart ułatwień i utrudnień.
 - Czy monopol chroni przed kartami ataku.
 - Wybór jednego z 2 wyglądów środka planszy (Pieczęć albo Wzór z logo).

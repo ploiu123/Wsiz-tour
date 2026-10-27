@@ -70,7 +70,7 @@ Po końcu gry silnik przerywa turę wyjątkiem `STOP`. Symulacja wielu gier bot�
 ## Później
 
 - **Grafika planszy:** dopracowany styl animowany z liniami rysunkowymi (kontury jak w kreskówce). Teraz wygląda jak gra sprzed kilkunastu lat.
-- Karta tematu pracy inżynierskiej (tezy i inne).
+- Karta tematu pracy inżynierskiej: wypełniona 27.10.2026, opis w `docs/zalozenia.md`. Zostało: kody efektów (K_W, K_U), prace dyplomowe WSIZ w bibliografii, nazwy przedmiotów z planu studiów.
 - Pluginy i skille do Claude, które znalazłem.
 
 ---
