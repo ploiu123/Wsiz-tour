@@ -132,7 +132,8 @@ Tam, gdzie autor jeszcze nie zdecydował, przyjęte są ustawienia tymczasowe. W
 - **Ranking (leaderboard):** rozegrane gry, wygrane, procent wygranych, procent dobrych odpowiedzi, najlepsza skuteczność w jednej grze i najlepszy majątek. Ładny i czytelny. Od 14.10.2026 tylko Twoje wyniki (bez przykładowych graczy); ranking wszystkich graczy przyjdzie z serwerem i logowaniem.
 - **Online:** 1 na 1 na 1 na 1 albo 2 na 2. Można dodać graczy albo boty. Dwie osoby mogą grać na jednym komputerze i połączyć się z innymi.
 - **Solo (offline):** jeden komputer, nikt z zewnątrz nie dołączy. Kilka osób gra na zmianę przy jednym urządzeniu, można dodać boty.
-- Motyw jasny i ciemny. Wybór pionka i koloru: 4 pionki × 4 kolory, można np. 4 takie same pionki w różnych kolorach.
+- Motyw jasny i ciemny. Wybór pionka i koloru: 8 pionków × 8 kolorów, można np. 4 takie same pionki w różnych kolorach.
+- **Karty graczy jak w Business Tour (od 27.10.2026):** na stronie „Nowa gra” każde miejsce to karta z obracającym się pionkiem 3D (podgląd z modelu z Blendera, w kolorze gracza, z ruchomymi częściami jak w grze). Strzałki ‹ › zmieniają pionek, przeciągnięcie myszą albo palcem obraca pionek. Pod nim nazwa i opis pionka, kropki z numerem pionka, „Gracz / Bot” (online też „Online”), poziom bota i 8 kolorów w jednym rzędzie. Krzyżyk zwalnia miejsce, a puste miejsce ma przyciski „Gracz przy tym komputerze”, „Dodaj bota” (online też „Gracz online z kodem party”). Profil ma duży podgląd pionka ze strzałkami obok listy pionków.
 - Ustawienia: głośność muzyki, rozmiar elementów i podobne. Animacji nie da się wyłączyć.
 - Podgląd w menu: karty i zasady. Zasady szczegółowe, z animacjami sytuacji i przykładowym pytaniem (np. prosta matematyka), nigdy z prawdziwej bazy.
 
@@ -380,7 +381,7 @@ Do każdej pory dnia jest delikatna korekcja kolorów (tablica LUT liczona w kod
 ## Ikony, awatary i pionki w kolorach uczelni (od 13.10.2026)
 
 - **Awatar gracza:** granatowy kafel uczelni z lekkim połyskiem, biała ikona pionka i kropka w kolorze gracza w rogu (kolor gracza dalej widać też na pasku przy jego nazwie).
-- **Ikony pionków** narysowane od nowa, jedną grubością linii: sztandar z godłem, drukarka 3D z wydrukiem, koparka z wentylatorami i monetą, ekspres z filiżanką.
+- **Ikony pionków** (od 27.10.2026 z biblioteki Phosphor Icons, wypełnione): flaga, drukarka, karta graficzna, filiżanka, robot, dron, biret, rakieta.
 - **Menu:** ikony w kafelkach w kolorach uczelni (jasny szaroniebieski kafel, granatowa linia; w ciemnym motywie jasna linia), cieńsza i równa linia ikon, przycisk „Prezentacja gry” bez niebieskiego gradientu, z granatowym kafelkiem.
 - **Pionki 3D** stoją na podeście w kolorach uczelni: lakierowany granat, pas w kolorze gracza, jasna szaroniebieska płytka ze srebrnym rantem. Główna bryła pionka jest w kolorze gracza (z połyskiem lakieru), a ciemne i jasne części w granacie i szaroniebieskim uczelni.
 

@@ -219,6 +219,68 @@ body.menu-open .hud, body.menu-open .vignette { display: none !important; }
 .m-pawn[aria-pressed="true"] { border-color: var(--ink); color: var(--ink); }
 .m-pawn:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .m-slot .swatch { width: 26px; height: 26px; }
+
+/* karty graczy jak w Business Tour: pionek w 3D ze strzałkami, nazwa i opis, kto gra, kolor */
+.m-seats { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.m-seat { position: relative; display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 12px; border-radius: 18px; background: var(--chip); border: 1px solid var(--panel-line); }
+.m-seat-top { display: flex; align-items: center; gap: 10px; min-height: 40px; }
+.m-seat-top .m-avatar { width: 40px; height: 40px; border-radius: 12px; }
+.m-seat-x { all: unset; box-sizing: border-box; flex: none; width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; cursor: pointer; color: var(--ink-soft); transition: background .15s, color .15s; }
+.m-seat-x:hover { background: var(--panel-hover); color: var(--ink); }
+.m-seat-x:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.m-seat-x svg { width: 16px; height: 16px; }
+.m-stage {
+  position: relative; flex: none; height: 196px; border-radius: 14px; overflow: hidden;
+  background:
+    radial-gradient(60% 46% at 50% 76%, color-mix(in srgb, var(--c) 34%, transparent), transparent 72%),
+    linear-gradient(180deg, var(--panel-hover), var(--panel));
+  box-shadow: inset 0 0 0 1px var(--panel-line);
+}
+.m-stage.is-big { height: 300px; border-radius: 18px; }
+.m-stage-cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; touch-action: pan-y; }
+.m-stage-cv.is-drag { cursor: grabbing; }
+.m-arrow {
+  all: unset; box-sizing: border-box; position: absolute; top: 50%; translate: 0 -50%; z-index: 1;
+  width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  background: var(--panel); color: var(--ink); box-shadow: 0 4px 12px rgba(0, 27, 80, .16), inset 0 0 0 1px var(--panel-line);
+  transition: scale .18s cubic-bezier(.2, 1.3, .4, 1);
+}
+.m-arrow.is-prev { left: 8px; }
+.m-arrow.is-next { right: 8px; }
+.m-arrow svg { width: 16px; height: 16px; }
+.m-arrow:hover { scale: 1.08; }
+.m-arrow:active { scale: .95; }
+.m-arrow:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.m-stage .m-team { position: absolute; left: 8px; top: 8px; z-index: 1; }
+.m-seat-pawn { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 8px; }
+.m-seat-pawn b { font: 700 15px/1.2 var(--display); color: var(--ink); }
+.m-dots { display: flex; gap: 4px; }
+.m-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--panel-line); }
+.m-dots i.on { background: var(--c); }
+.m-seat-desc { flex-basis: 100%; margin: 0; font-size: 12.5px; line-height: 1.4; color: var(--ink-soft); }
+.m-seat .chips .chip { padding: 6px 11px; font-size: 13px; }
+.m-seat-colors { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px; margin-top: auto; padding-top: 2px; }
+.m-seat .swatch { width: 100%; max-width: 26px; height: auto; aspect-ratio: 1; justify-self: center; }
+.m-seat.is-empty { background: transparent; border-style: dashed; }
+.m-seat.is-empty .m-avatar { background: var(--panel-line); box-shadow: none; }
+.m-seat.is-empty .m-avatar::after { display: none; }
+.m-seat-add { flex: 1; display: grid; align-content: center; gap: 8px; }
+.m-add {
+  all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 14px;
+  background: var(--chip); border: 1px solid var(--panel-line); font: 600 14px/1.25 var(--body); color: var(--ink); transition: background .15s, translate .15s;
+}
+.m-add svg { flex: none; width: 30px; height: 30px; padding: 6px; border-radius: 9px; box-sizing: border-box; color: var(--uni-ico); background: var(--uni-tile); }
+.m-add:hover { background: var(--panel-hover); }
+.m-add:active { translate: 0 1px; }
+.m-add:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+/* profil: duży pionek obok listy pionków */
+.m-prof-pawn { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 16px; align-items: start; }
+.m-prof-stage { display: grid; gap: 10px; }
+.m-prof-pawn .m-pawn-pick { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.m-prof-pawn .m-pawn-pick button { grid-auto-flow: column; justify-content: start; align-items: center; padding: 10px 12px; text-align: left; }
+.m-prof-pawn .m-pawn-pick button .m-avatar { width: 40px; height: 40px; border-radius: 12px; }
+@media (max-width: 760px) { .m-prof-pawn { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .m-arrow, .m-add { transition: none; } }
 .m-code { font: 700 26px var(--display); letter-spacing: .2em; padding: 6px 16px; border-radius: 12px; background: var(--chip); color: var(--ink); }
 /* poczekalnia party online */
 .m-slot.is-waiting .m-avatar { opacity: .45; }

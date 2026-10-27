@@ -164,7 +164,7 @@
         <div class="m-card m-section">
           <h3>Gracze</h3>
           <div class="chips" id="teamChips" style="margin-bottom: 12px"></div>
-          <div class="m-slots" id="slots"></div>
+          <div class="m-seats" id="slots"></div>
         </div>
         <div class="m-grid2" style="margin-top: 14px">
           <div class="m-card m-section"><h3>Semestr pytań</h3><div class="chips" id="semChips"></div></div>
@@ -214,7 +214,12 @@
           <input class="m-input" id="profNick" maxlength="20" autocomplete="nickname" style="max-width: 360px">
           <p class="m-err" id="profErr" hidden style="margin-top: 6px">Nick musi mieć od 3 do 20 znaków.</p>
         </div>
-        <div class="m-card m-section"><h3>Pionek</h3><div class="m-pawn-pick" id="pawnPick"></div></div>
+        <div class="m-card m-section"><h3>Pionek</h3>
+          <div class="m-prof-pawn">
+            <div class="m-prof-stage"><div class="m-stage is-big" id="profStage"></div><div class="m-seat-pawn" id="profPawnInfo"></div></div>
+            <div class="m-pawn-pick" id="pawnPick"></div>
+          </div>
+        </div>
         <div class="m-card m-section"><h3>Kolor</h3><div class="row" id="colorPick"></div></div>
         <div class="m-card m-section"><h3>Statystyki</h3><div class="m-stats" id="profStats"></div></div>
         <div class="m-card m-section"><h3>Osiągnięcia <small class="m-ach-count" id="profAchCount"></small></h3><div class="m-achv" id="profAch"></div></div>

@@ -9,6 +9,31 @@ test('menu: logo, nazwa gry i przycisk Graj', async ({ page, errors }) => {
   expect(errors).toEqual([]);
 });
 
+test('nowa gra: karty graczy z pionkiem 3D, strzałki, puste miejsce i bot', async ({ page, errors }) => {
+  await page.goto('./');
+  await page.locator('[data-go="play"]').click();
+  const seats = page.locator('#slots .m-seat');
+  await expect(seats).toHaveCount(4);
+  await expect(seats.first().locator('.m-seat-pawn b')).toHaveText('Sztandar');
+  await seats.first().locator('.m-arrow.is-next').click();
+  await expect(seats.first().locator('.m-seat-pawn b')).toHaveText('Drukarka 3D');
+  // pionek w 3D: płótno w karcie ma obraz, a nie same przezroczyste piksele
+  await expect.poll(() => page.evaluate(() => {
+    const c = document.querySelector('#slots .m-stage-cv');
+    if (!c || !c.width) return 0;
+    const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+    let n = 0;
+    for (let k = 3; k < d.length; k += 4) if (d[k] > 0) n++;
+    return n;
+  }), { timeout: 60000 }).toBeGreaterThan(500);
+  // miejsce 4: zwolnij, potem dodaj bota
+  await seats.nth(3).locator('.m-seat-x').click();
+  await expect(seats.nth(3)).toHaveClass(/is-empty/);
+  await seats.nth(3).locator('.m-add[data-v="bot"]').click();
+  await expect(seats.nth(3).locator('.chip[aria-pressed="true"]').first()).toHaveText('Bot');
+  expect(errors).toEqual([]);
+});
+
 test('gra: 4 graczy po 2000 zł, rzut kostkami', async ({ page, errors }) => {
   await startGame(page);
   const players = page.locator('.g-player');

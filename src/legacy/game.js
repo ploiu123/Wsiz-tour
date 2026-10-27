@@ -7,6 +7,7 @@ import { Graphics, LEVELS as GFX_LEVELS } from '../render/graphics.js';
 import { buildRoom } from '../scene/room.js';
 import { loadDicePhysics, diceReady, simulateThrow, FACE_AXES } from '../render/dice.js';
 import { loadModels, cloneModel } from '../render/assets.js';
+import { PawnPreview } from '../render/preview.js';
 import { RippleSim } from '../scene/ripples.js';
 import { ACHIEVEMENTS, unlock } from '../ui/achievements.js';
 import { wealthChartSvg } from '../ui/wealthChart.js';
@@ -300,6 +301,56 @@ const flags = [];
 const steams = [];
 const coins = [];
 const liveParts = [];   // ruchome części modeli z Blendera: wentylatory, rosnący wydruk, głowica drukarki
+const sceneParts = { flags, steams, coins, parts: liveParts };
+// Ruch części modeli: flagi falują, para i płomień migocą, monety i wentylatory się kręcą, wydruk rośnie.
+// Ten sam ruch w scenie gry (sceneParts) i w podglądzie pionków w menu (każdy pionek ma tam własne listy).
+function animateParts(set, t, dt) {
+  for (const f of set.flags) {
+    const pos = f.geo.attributes.position;
+    for (let j = 0; j < pos.count; j++) {
+      const x = f.base[j * 3], y = f.base[j * 3 + 1];
+      pos.setZ(j, 0.035 * (x / f.width) * Math.sin(x * 14 - t * 3.2 + y * 3));
+    }
+    pos.needsUpdate = true;
+    f.geo.computeVertexNormals();
+  }
+  for (const s of set.steams) {
+    s.material.opacity = 0.28 + 0.2 * Math.sin(t * 2 + s.userData.phase);
+    s.position.y = 0.02 * Math.sin(t * 1.5 + s.userData.phase);
+  }
+  for (const c of set.coins) { c.rotation.y += dt * 2.2; c.position.y = 0.52 + 0.02 * Math.sin(t * 2); }
+  for (const p of set.parts) {
+    if (p.kind === 'fan') p.obj.rotateY(dt * 16);
+    else if (p.kind === 'print') p.obj.scale.y = 0.12 + 0.88 * Math.min(1, ((t * 0.07 + p.phase) % 1.15));   // wydruk rośnie i zaczyna od nowa
+    else if (p.kind === 'slide') p.obj.position.x = p.x0 + 0.035 * Math.sin(t * 2.1 + p.phase);
+    else if (p.kind === 'flame') p.obj.scale.set(1, 0.8 + 0.2 * Math.sin(t * 23 + p.phase) + 0.1 * Math.sin(t * 37), 1);   // płomień rakiety migocze
+  }
+}
+// Podgląd pionków w menu (src/render/preview.js): pionek ma własne listy ruchomych części, poza sceną gry
+const preview = new PawnPreview({ spin: !reduceMotion, onDrop: dropPreviewPawn });
+function previewPawn(k, hex) {
+  const n = { flags: flags.length, steams: steams.length, coins: coins.length, parts: liveParts.length };
+  const o = PLAYERS[k].make(hex);
+  o.userData.anim = { flags: flags.splice(n.flags), steams: steams.splice(n.steams), coins: coins.splice(n.coins), parts: liveParts.splice(n.parts) };
+  return o;
+}
+function dropPreviewPawn(o) {
+  const a = o.userData.anim;
+  o.traverse(m => { if (m.isMesh && a.flags.some(f => f.geo === m.geometry)) { m.material.map?.dispose(); m.material.dispose(); } });
+  for (const st of a.steams) st.material.dispose();
+  disposeTree(o);   // siatki z pliku GLB są wspólne i zostają
+}
+// Płótna podglądu zostają między przerysowaniami kart, więc pionek nie powstaje od nowa przy każdym kliknięciu
+const stageCanvases = new Map();
+function stageCanvas(key) {
+  if (!stageCanvases.has(key)) {
+    const c = document.createElement('canvas');
+    c.className = 'm-stage-cv';
+    c.setAttribute('aria-hidden', 'true');
+    stageCanvases.set(key, c);
+  }
+  return stageCanvases.get(key);
+}
 
 // ---------------------------------------------------------------------------
 // Tekstury pól
@@ -3475,26 +3526,50 @@ function pickColor(i, c) {
   if (other) setSlotColor(other, slotColor(s));   // zamiana kolorów
   setSlotColor(s, c);
 }
+const KIND_SHORT = { local: 'Gracz', bot: 'Bot', online: 'Online' };
+const KIND_ADD = { bot: ['robot', 'Dodaj bota'], local: ['monitor', 'Gracz przy tym komputerze'], online: ['globe', 'Gracz online z kodem party'] };
+// Karta gracza jak w Business Tour: pionek w 3D ze strzałkami, nazwa i opis pionka, kto gra, kolor.
+// Puste miejsce to karta z przyciskami „Dodaj bota” i „Gracz przy tym komputerze” (online też „Gracz online”).
 function slotHtml(s, i) {
-  const empty = s.kind === 'empty';
-  const pawn = slotPawn(s), color = slotColor(s);
   const name = { me: profile.nick, bot: `Bot ${i + 1}`, local: `Gracz ${i + 1}`, online: `Miejsce ${i + 1}`, empty: `Miejsce ${i + 1}` }[s.kind];
   const sub = { me: 'Ty', bot: `Bot · poziom ${s.level}`, local: 'Gra przy tym komputerze', online: 'Czeka na dołączenie kodem party', empty: 'Nikt tu nie gra' }[s.kind];
-  const team = setup.teams && !empty ? TEAMS[i % 2] : null;
-  const kindSel = s.kind === 'me' ? '' :
-    `<select class="m-select" data-kind="${i}" aria-label="Kto gra na miejscu ${i + 1}">${KINDS[setup.mode]
-      .map(k => `<option value="${k}"${k === s.kind ? ' selected' : ''}>${KIND_LABEL[k]}</option>`).join('')}</select>`;
-  const levels = s.kind === 'bot'
-    ? `<div class="chips">${BOT_LEVELS.map(l => chipHtml(l, `data-level="${i}" data-v="${l}"`, s.level === l)).join('')}</div>` : '';
-  const looks = empty ? '' : `
-    <div class="m-pawns" role="group" aria-label="Pionek">${PLAYERS.map((p, k) =>
-      `<button type="button" class="m-pawn" data-pawn="${i}" data-v="${k}" aria-pressed="${k === pawn}" aria-label="${p.pawn}" title="${p.pawn}">${pawnSvg(p.pawn, 'currentColor')}</button>`).join('')}</div>
-    <div class="row" role="group" aria-label="Kolor">${PAWN_COLORS.map((c, k) =>
-      `<button type="button" class="swatch" style="--c:${c.hex}" data-color="${i}" data-v="${k}" aria-pressed="${k === color}" aria-label="${c.name}"></button>`).join('')}</div>`;
-  return `<div class="m-slot${empty ? ' is-empty' : ''}">
-    <div class="m-slot-top">${empty ? '<span class="m-avatar"></span>' : avatar(pawn, color)}<span class="m-slot-name"><b>${escHtml(name)}</b><small>${sub}</small></span>${team ? `<span class="m-team" style="--t:${team.color}">${team.name}</span>` : ''}</div>
-    ${kindSel}${levels}${looks}
+  const kinds = KINDS[setup.mode].filter(k => k !== 'empty');
+  if (s.kind === 'empty') {
+    return `<div class="m-seat is-empty">
+    <div class="m-seat-top"><span class="m-avatar"></span><span class="m-slot-name"><b>${name}</b><small>${sub}</small></span></div>
+    <div class="m-seat-add" role="group" aria-label="Kto zagra na miejscu ${i + 1}">${kinds
+      .map(k => `<button type="button" class="m-add" data-kind="${i}" data-v="${k}">${icon(KIND_ADD[k][0])}${KIND_ADD[k][1]}</button>`).join('')}</div>
   </div>`;
+  }
+  const pawn = slotPawn(s), color = slotColor(s), n = PLAYERS.length;
+  const prev = (pawn + n - 1) % n, next = (pawn + 1) % n;
+  const team = setup.teams ? TEAMS[i % 2] : null;
+  const who = s.kind === 'me' ? '' : `<div class="chips" role="group" aria-label="Kto gra na miejscu ${i + 1}">${kinds
+    .map(k => chipHtml(KIND_SHORT[k], `data-kind="${i}" data-v="${k}"`, s.kind === k)).join('')}</div>`;
+  const levels = s.kind === 'bot'
+    ? `<div class="chips" role="group" aria-label="Poziom bota">${BOT_LEVELS.map(l => chipHtml(l, `data-level="${i}" data-v="${l}"`, s.level === l)).join('')}</div>` : '';
+  return `<div class="m-seat" style="--c:${PAWN_COLORS[color].hex}">
+    <div class="m-seat-top">${avatar(pawn, color)}<span class="m-slot-name"><b>${escHtml(name)}</b><small>${sub}</small></span>${s.kind === 'me' ? ''
+      : `<button type="button" class="m-seat-x" data-kind="${i}" data-v="empty" aria-label="Zwolnij miejsce ${i + 1}" title="Zwolnij miejsce">${icon('close')}</button>`}</div>
+    <div class="m-stage" data-stage="${i}">${team ? `<span class="m-team" style="--t:${team.color}">${team.name}</span>` : ''}
+      <button type="button" class="m-arrow is-prev" data-pawn="${i}" data-v="${prev}" aria-label="Poprzedni pionek: ${PLAYERS[prev].pawn}">${icon('back')}</button>
+      <button type="button" class="m-arrow is-next" data-pawn="${i}" data-v="${next}" aria-label="Następny pionek: ${PLAYERS[next].pawn}">${icon('next')}</button></div>
+    <div class="m-seat-pawn"><b>${PLAYERS[pawn].pawn}</b><span class="m-dots" role="img" aria-label="Pionek ${pawn + 1} z ${n}">${PLAYERS.map((_, k) => `<i${k === pawn ? ' class="on"' : ''}></i>`).join('')}</span></div>
+    <p class="m-seat-desc">${PAWN_DESC[pawn]}</p>
+    ${who}${levels}
+    <div class="m-seat-colors" role="group" aria-label="Kolor">${PAWN_COLORS.map((c, k) =>
+      `<button type="button" class="swatch" style="--c:${c.hex}" data-color="${i}" data-v="${k}" aria-pressed="${k === color}" aria-label="${c.name}"></button>`).join('')}</div>
+  </div>`;
+}
+// Pionki w 3D w kartach graczy (płótna zostają, zmienia się tylko pionek albo kolor)
+function mountStages(root) {
+  preview.init();
+  for (const st of root.querySelectorAll('[data-stage]')) {
+    const s = setup.slots[+st.dataset.stage], pawn = slotPawn(s), hex = PAWN_COLORS[slotColor(s)].hex;
+    const cv = stageCanvas(`play-${st.dataset.stage}`);
+    st.prepend(cv);
+    preview.set(cv, `${pawn}|${hex}`, () => previewPawn(pawn, hex));
+  }
 }
 function renderPlay() {
   const online = setup.mode === 'online';
@@ -3523,6 +3598,7 @@ function renderPlay() {
   $('teamChips').innerHTML = chipHtml(online ? '1 na 1 na 1 na 1' : 'Każdy na siebie', 'data-team="0"', !setup.teams)
     + chipHtml('2 na 2', 'data-team="1"', setup.teams, n !== 4);
   $('slots').innerHTML = setup.slots.map(slotHtml).join('');
+  mountStages($('slots'));
   $('semChips').innerHTML = [1, 2, 3, 4, 5, 6, 7, 8].map(k =>
     chipHtml(k === 8 ? 'Mieszane (1–7)' : `Semestr ${k}`, `data-sem="${k}"`, setup.semester === k)).join('');
   $('timeChips').innerHTML = TIMERS.map(([v, l]) => chipHtml(l, `data-time="${v}"`, setup.timer === v)).join('');
@@ -3545,6 +3621,7 @@ $('pgPlay').addEventListener('click', e => {
   else if (d.team) setup.teams = d.team === '1';
   else if (d.sem) setup.semester = +d.sem;
   else if (d.time) setup.timer = +d.time;
+  else if (d.kind) setup.slots[+d.kind].kind = d.v;
   else if (d.level) setup.slots[+d.level].level = d.v;
   else if (d.pawn) {
     const s = setup.slots[+d.pawn];
@@ -3553,13 +3630,10 @@ $('pgPlay').addEventListener('click', e => {
   else if (d.online) setup.online = d.online;
   else return;
   netError = '';
+  // strzałka pionka po przerysowaniu kart zostaje pod klawiaturą (można przewijać pionki dalej)
+  const keep = b.classList.contains('m-arrow') ? `.m-arrow.${b.classList.contains('is-prev') ? 'is-prev' : 'is-next'}[data-pawn="${d.pawn}"]` : '';
   renderPlay();
-});
-$('pgPlay').addEventListener('change', e => {
-  const sel = e.target.closest('[data-kind]');
-  if (!sel) return;
-  setup.slots[+sel.dataset.kind].kind = sel.value;
-  renderPlay();
+  if (keep) $('pgPlay').querySelector(keep)?.focus();
 });
 $('pgPlay').addEventListener('input', e => {
   if (e.target.id !== 'joinCode') return;
@@ -3823,6 +3897,19 @@ function renderProfilePage() {
   $('profErr').hidden = true;
   $('pawnPick').innerHTML = PLAYERS.map((p, i) =>
     `<button type="button" data-v="${i}" aria-pressed="${i === profile.pawn}">${avatar(i, profile.color)}${p.pawn}</button>`).join('');
+  // duży pionek w 3D ze strzałkami, pod nim nazwa i opis
+  const n = PLAYERS.length, pawn = profile.pawn, hex = PAWN_COLORS[profile.color].hex;
+  const stage = $('profStage');
+  stage.style.setProperty('--c', hex);
+  stage.innerHTML = `
+    <button type="button" class="m-arrow is-prev" data-v="${(pawn + n - 1) % n}" aria-label="Poprzedni pionek: ${PLAYERS[(pawn + n - 1) % n].pawn}">${icon('back')}</button>
+    <button type="button" class="m-arrow is-next" data-v="${(pawn + 1) % n}" aria-label="Następny pionek: ${PLAYERS[(pawn + 1) % n].pawn}">${icon('next')}</button>`;
+  preview.init();
+  const cv = stageCanvas('profile');
+  stage.prepend(cv);
+  preview.set(cv, `${pawn}|${hex}`, () => previewPawn(pawn, hex));
+  $('profPawnInfo').style.setProperty('--c', hex);
+  $('profPawnInfo').innerHTML = `<b>${PLAYERS[pawn].pawn}</b><span class="m-dots" role="img" aria-label="Pionek ${pawn + 1} z ${n}">${PLAYERS.map((_, k) => `<i${k === pawn ? ' class="on"' : ''}></i>`).join('')}</span><p class="m-seat-desc">${PAWN_DESC[pawn]}</p>`;
   $('colorPick').innerHTML = PAWN_COLORS.map((c, i) =>
     `<button type="button" class="swatch" style="--c:${c.hex}" data-v="${i}" aria-pressed="${i === profile.color}" aria-label="${c.name}"></button>`).join('');
   const st = profile.stats || {};
@@ -3838,6 +3925,14 @@ $('pawnPick').addEventListener('click', e => {
   profile.pawn = +b.dataset.v;
   store.set('profil', profile);
   renderMe(); renderProfilePage();
+});
+$('profStage').addEventListener('click', e => {
+  const b = e.target.closest('[data-v]');
+  if (!b) return;
+  profile.pawn = +b.dataset.v;
+  store.set('profil', profile);
+  renderMe(); renderProfilePage();
+  $('profStage').querySelector(b.classList.contains('is-prev') ? '.is-prev' : '.is-next')?.focus();
 });
 $('colorPick').addEventListener('click', e => {
   const b = e.target.closest('[data-v]');
@@ -7274,32 +7369,15 @@ function frame() {
   sky.position.copy(camera.position);
   if (!reduceMotion) {
     worldTick(t, dt);
-    for (const f of flags) {
-      const pos = f.geo.attributes.position;
-      for (let j = 0; j < pos.count; j++) {
-        const x = f.base[j * 3], y = f.base[j * 3 + 1];
-        pos.setZ(j, 0.035 * (x / f.width) * Math.sin(x * 14 - t * 3.2 + y * 3));
-      }
-      pos.needsUpdate = true;
-      f.geo.computeVertexNormals();
-    }
-    for (const s of steams) {
-      s.material.opacity = 0.28 + 0.2 * Math.sin(t * 2 + s.userData.phase);
-      s.position.y = 0.02 * Math.sin(t * 1.5 + s.userData.phase);
-    }
+    animateParts(sceneParts, t, dt);
     if (view === 'models') turntables.forEach(o => { o.rotation.y += dt * 0.45; });
-    for (const c of coins) { c.rotation.y += dt * 2.2; c.position.y = 0.52 + 0.02 * Math.sin(t * 2); }
     if (G) for (const p of G.players) {   // pionki lekko „oddychają”, gdy stoją
       const m = p.obj.children[0];
       if (m) m.scale.y = PAWN_SCALE * (1 + 0.014 * Math.sin(t * 2.3 + p.idx * 1.7));
     }
-    for (const p of liveParts) {
-      if (p.kind === 'fan') p.obj.rotateY(dt * 16);
-      else if (p.kind === 'print') p.obj.scale.y = 0.12 + 0.88 * Math.min(1, ((t * 0.07 + p.phase) % 1.15));   // wydruk rośnie i zaczyna od nowa
-      else if (p.kind === 'slide') p.obj.position.x = p.x0 + 0.035 * Math.sin(t * 2.1 + p.phase);
-      else if (p.kind === 'flame') p.obj.scale.set(1, 0.8 + 0.2 * Math.sin(t * 23 + p.phase) + 0.1 * Math.sin(t * 37), 1);   // płomień rakiety migocze
-    }
   }
+  // podgląd pionków w kartach graczy i w profilu (tylko gdy menu jest otwarte)
+  if (menuOpen) preview.render(dt, o => { if (!reduceMotion) animateParts(o.userData.anim, t, dt); });
   controls.update();
   // Bliska płaszczyzna odcięcia rośnie z odległością kamery od celu (dokładniejsza głębia):
   // cienkie warstwy (napisy na polach, plac, cienie, opaska) nie migają nawet przy dalekich ujęciach
