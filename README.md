@@ -55,7 +55,7 @@ Paczkę można sprawdzić przed wysłaniem: `npm run preview` (adres http://loca
 | `npm run check` | lint, typy, testy i paczka naraz |
 | `npm run sim -- 300` | symulacja 300 gier botów: długość gier, bankructwa, majątek (do strojenia ekonomii) |
 | GitHub Actions | przy każdej zmianie na GitHubie sam uruchamia lint, typy, testy i paczkę (`.github/workflows/testy.yml`) |
-| `npm run assets` | modele z Blendera od nowa (pionki, budynki, ikony pól) do `assets/models/`; potrzebny Blender jako moduł Pythona, raz: `python3 -m venv tools/blender/.venv && tools/blender/.venv/bin/pip install bpy==5.0.1`. Gotowe modele są w repozytorium, więc do gry Blender nie jest potrzebny |
+| `npm run assets` | modele z Blendera od nowa (pionki, budynki, ikony pól, makieta, łodzie) do `assets/models/`; potrzebny Blender jako moduł Pythona, raz: `python3 -m venv tools/blender/.venv && tools/blender/.venv/bin/pip install bpy==5.0.1`. Gotowe modele są w repozytorium, więc do gry Blender nie jest potrzebny |
 
 ## Co jest w repozytorium
 
@@ -75,7 +75,7 @@ Paczkę można sprawdzić przed wysłaniem: `npm run preview` (adres http://loca
 | `src/styles/` | Wygląd: podstawy, menu, rozgrywka, prezentacja |
 | `tests/` | Testy jednostkowe (`unit`) i w przeglądarce (`e2e`) |
 | `assets/` | Logo uczelni, muzyka (podpisy autorów w `assets/muzyka/AUTORZY.md`) i modele 3D z Blendera (`assets/models/`) |
-| `tools/blender/` | Skrypty Blendera, z których powstają modele: pionki, budynki, ikony pól (`npm run assets`) |
+| `tools/blender/` | Skrypty Blendera, z których powstają modele: pionki, budynki, ikony pól, drzewa i samochody, łodzie (`npm run assets`) |
 | `docs/zalozenia.md` | Wszystkie ustalenia dotyczące gry: zasady, pola, karty, harmonogram |
 | `docs/plan-techniczny.md` | Plan rozwoju krok po kroku (Vite, serwer, grafika 4K, fizyka kości) |
 | `druk/karty-pytan.html` | Karty z pytaniami do druku (63 × 88 mm) i gotowe pliki PDF obok |

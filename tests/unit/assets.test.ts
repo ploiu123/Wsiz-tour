@@ -46,4 +46,12 @@ describe('modele z Blendera', () => {
     expect(roots(icons).map(n => n.getName()).sort()).toEqual(['icon_chance', 'icon_parking']);
     expect(statSync('assets/models/nature.glb').size + statSync('assets/models/icons.glb').size).toBeLessThan(0.8e6);
   }, 30_000);
+
+  it('łodzie: jacht i motorówka, pasy i grot w kolorze łodzi, żagle widoczne z obu stron', async () => {
+    const doc = await read('assets/models/boats.glb');
+    expect(roots(doc).map(n => n.getName()).sort()).toEqual(['motorboat', 'sailboat']);
+    expect(materials(doc)).toEqual(expect.arrayContaining(['boat_stripe', 'boat_sail', 'sail_white', 'boat_bottom', 'gelcoat', 'teak']));
+    for (const m of doc.getRoot().listMaterials().filter(m => /sail/.test(m.getName()))) expect(m.getDoubleSided(), m.getName()).toBe(true);
+    expect(statSync('assets/models/boats.glb').size).toBeLessThan(0.6e6);
+  }, 30_000);
 });

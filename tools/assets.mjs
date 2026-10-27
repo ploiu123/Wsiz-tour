@@ -13,7 +13,7 @@ import { dedup, meshopt, prune, weld } from '@gltf-transform/functions';
 import { MeshoptEncoder, MeshoptDecoder } from 'meshoptimizer';
 
 const PY = 'tools/blender/.venv/bin/python';
-const MODELS = (process.argv.slice(2).length ? process.argv.slice(2) : ['pawns', 'buildings', 'icons', 'nature']);
+const MODELS = (process.argv.slice(2).length ? process.argv.slice(2) : ['pawns', 'buildings', 'icons', 'nature', 'boats']);
 if (!existsSync(PY)) {
   console.error('Brak Blendera. Najpierw: python3 -m venv tools/blender/.venv && tools/blender/.venv/bin/pip install bpy==5.0.1');
   process.exit(1);

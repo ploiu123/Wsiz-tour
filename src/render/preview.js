@@ -89,6 +89,18 @@ export class PawnPreview {
     if (v.obj) { this.scene.remove(v.obj); this.opts.onDrop?.(v.obj); }
   }
 
+  // Menu zamknięte: renderer podglądu znika razem z pionkami. Sam drugi kontekst WebGL (nawet bezczynny)
+  // spowalniał grę; przy następnym otwarciu kart init() i set() budują wszystko od nowa.
+  sleep() {
+    const r = this.renderer;
+    if (!r) return;
+    for (const el of [...this.views.keys()]) { this.drop(el); el.width = el.height = 0; }   // płótna w kartach też zwalniają pamięć
+    this.renderer = null;
+    this.ready = null;
+    this.W = this.H = 0;
+    r.dispose();
+  }
+
   // Płótna, których nie ma już na stronie (np. miejsce gracza zostało puste)
   prune() { for (const el of [...this.views.keys()]) if (!el.isConnected) this.drop(el); }
 

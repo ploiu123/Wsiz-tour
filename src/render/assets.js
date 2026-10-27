@@ -4,7 +4,7 @@
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 
-const FILES = ['assets/models/pawns.glb', 'assets/models/buildings.glb', 'assets/models/icons.glb', 'assets/models/nature.glb'];
+const FILES = ['assets/models/pawns.glb', 'assets/models/buildings.glb', 'assets/models/icons.glb', 'assets/models/nature.glb', 'assets/models/boats.glb'];
 const lib = new Map();   // nazwa modelu (korzeń w pliku GLB) → obiekt
 let loading = null;
 

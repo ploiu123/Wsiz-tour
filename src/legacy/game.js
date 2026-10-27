@@ -1342,6 +1342,7 @@ const WAVES = (() => {
 })();
 const WAVE_MAX = WAVES.reduce((s2, [, , L, st]) => s2 + st * L / (2 * Math.PI), 0);   // najwyższy możliwy grzbiet
 const WAVE_SPEED = 0.55;
+let updateWaterSky = () => {};   // niebo odbijane w wodzie: odświeża je pora dnia (setWorldMood)
 const waterLight = TSL.uniform(1);   // ile światła rozprasza się w wodzie (dzień 1, nocą mało), ustawia pora dnia
 // Zmarszczki z symulacji (równanie falowe, src/scene/ripples.js) na całej powierzchni wody: fale od łodzi i ryb
 const ripples = new RippleSim({ nx: 200, nz: 56, x0: -BX, x1: BX, z0: WZ0, z1: BZF, speed: 2.6, decay: 0.55 });
@@ -1397,19 +1398,6 @@ function strataTexture() {
   return t;
 }
 // Kaustyki: jasna sieć światła na dnie, przesuwana jak przez falującą wodę
-function causticsTexture() {
-  const s = 512, [c, g] = makeCanvas(s, s);
-  g.fillStyle = '#000'; g.fillRect(0, 0, s, s);
-  g.strokeStyle = 'rgba(255,255,255,.9)'; g.lineWidth = 3; g.shadowColor = '#fff'; g.shadowBlur = 8;
-  for (let k = 0; k < 70; k++) {
-    const x = wr() * s, y = wr() * s;
-    g.beginPath(); g.moveTo(x, y);
-    g.bezierCurveTo(x + wrr(-60, 60), y + wrr(-60, 60), x + wrr(-60, 60), y + wrr(-60, 60), x + wrr(-70, 70), y + wrr(-70, 70));
-    g.stroke();
-  }
-  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(5, 4);
-  return t;
-}
 // Tekstury: trawa, kostka brukowa, skała, piasek
 // Generator liczb losowych dla tekstur (osobny, żeby nie przestawiać rozmieszczenia drzew i rekwizytów)
 const texRng = (seed = 7) => () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
@@ -1921,7 +1909,20 @@ function railing(g, sec, L, from, to, height, material) {
     }
   }
 }
+// Łodzie z Blendera (assets/models/boats.glb, tools/blender/boats.py): gładki kadłub z pasami, kabina z oknami,
+// olinowanie i relingi, wybrzuszone żagle. Pasy i grot gra barwi na kolor łodzi. Bez pliku zostają łodzie z kodu (niżej).
+const boatMats = new Map();
+function glbBoat(name, sail, stripe) {
+  const once = (key, make) => { if (!boatMats.has(key)) boatMats.set(key, make()); return boatMats.get(key); };
+  return cloneModel(name, n => {
+    if (n === 'boat_stripe') return once(`stripe${stripe}`, () => new THREE.MeshPhysicalMaterial({ color: stripe, roughness: 0.28, clearcoat: 0.7, clearcoatRoughness: 0.1, vertexColors: true }));
+    if (n === 'boat_sail') return once(`sail${sail}`, () => new THREE.MeshStandardMaterial({ color: sail === '#FFFFFF' ? '#F3F0E8' : sail, roughness: 0.8, side: THREE.DoubleSide, vertexColors: true }));
+    return null;
+  });
+}
 function sailboat(sail, stripe = sail === '#FFFFFF' ? '#2F7FF0' : sail) {
+  const glb = glbBoat('sailboat', sail, stripe);
+  if (glb) return glb;
   const g = new THREE.Group();
   const L = 3.0, B = 1.05, H = 0.42, draft = 0.3;
   const { hull, deck, transom, sec } = hullGeometry(L, B, H, draft);
@@ -1964,6 +1965,8 @@ function sailboat(sail, stripe = sail === '#FFFFFF' ? '#2F7FF0' : sail) {
 }
 // Motorówka (zamiast skutera z ludzikiem): ostry kadłub, konsola z szybą, kanapy i silnik za rufą
 function motorboat(stripe = '#F2B72E') {
+  const glb = glbBoat('motorboat', '#FFFFFF', stripe);
+  if (glb) return glb;
   const g = new THREE.Group();
   const L = 2.7, B = 1.15, H = 0.36, draft = 0.2;
   const { hull, deck, transom, sec } = hullGeometry(L, B, H, draft);
@@ -2024,11 +2027,27 @@ function motorboat(stripe = '#F2B72E') {
   const wedgeGeo = new THREE.ExtrudeGeometry(prof, { depth: BX * 2, bevelEnabled: false });
   wedgeGeo.rotateY(-Math.PI / 2);
   wedgeGeo.translate(BX, 0, 0);
-  const caus = causticsTexture();
-  const sandM = new THREE.MeshStandardMaterial({ color: '#E9D3A0', roughness: 1, emissive: '#BFF6FF', emissiveMap: caus, emissiveIntensity: 0.45 });
+  // Kaustyki: fale skupiają światło na dnie w siatkę jasnych linii. Linie to krawędzie komórek Voronoi
+  // (szum MaterialX), dwie warstwy płyną w różne strony; im głębiej, tym słabsze
+  const causT = TSL.uniform(0);
+  const sandM = new THREE.MeshStandardNodeMaterial({ color: '#E9D3A0', roughness: 1 });
+  {
+    const { vec3, smoothstep, max, exp, float, positionWorld, mx_worley_noise_vec2, mx_noise_vec3 } = TSL;
+    // współrzędne lekko falują (szum), więc komórki mają różne kształty jak prawdziwe kaustyki
+    const warp = mx_noise_vec3(vec3(positionWorld.x.mul(0.3), positionWorld.z.mul(0.3), causT.mul(0.08))).xy.mul(0.9);
+    const px = positionWorld.x.add(warp.x), pz = positionWorld.z.add(warp.y);
+    const net = (sc, sx, sz, st) => {
+      const f = mx_worley_noise_vec2(vec3(px.mul(sc).add(causT.mul(sx)), pz.mul(sc).add(causT.mul(sz)), causT.mul(st)));
+      return smoothstep(0.15, 0, f.y.sub(f.x));
+    };
+    const c = max(net(0.8, 0.05, 0.03, 0.22), net(1.3, -0.04, 0.05, 0.3).mul(0.7));
+    const depth = max(float(WATER_Y).sub(positionWorld.y), 0);
+    const under = smoothstep(SHORE_Z + 0.4, SHORE_Z + 1.6, positionWorld.z);
+    sandM.emissiveNode = vec3(0.96, 1, 0.94).mul(c).mul(under).mul(exp(depth.mul(-0.55))).mul(waterLight).mul(0.65);
+  }
   const wedge = mesh(wedgeGeo, sandM, false, true);
   world.add(wedge);
-  worldAnim.push(t => { caus.offset.set(t * 0.02, Math.sin(t * 0.3) * 0.05); });
+  worldAnim.push(t => { causT.value = t; });
   // Plaża: pas piasku zaraz za stołem, wzdłuż całego boku
   const sand = sandTextures(), BEACH_D = SHORE_Z - SAND_Z + 0.02;
   for (const t of [sand.map, sand.normalMap]) t.repeat.set(BX * 2 / 6, BEACH_D / 6);
@@ -2053,11 +2072,35 @@ function motorboat(stripe = '#F2B72E') {
   const {
     Fn, uniform, vec2, vec3, vec4, float, uv, positionLocal, positionWorld, normalLocal, cameraPosition, screenUV,
     smoothstep, mix, sin, cos, cross, normalize, pow, clamp, dot, abs, exp, max, varyingProperty, output, select,
-    texture, viewportSharedTexture, transformNormalToView, normalView, positionViewDirection, mx_noise_float,
+    texture, viewportSharedTexture, transformNormalToView, mx_noise_float, mx_noise_vec3,
   } = TSL;
-  const waterU = { uTime: uniform(0), uSky: uniform(new THREE.Color('#DCE6EF')) };
+  const waterU = { uTime: uniform(0), uSunDir: uniform(new THREE.Vector3(0.4, 0.8, 0.3)) };
   const ripTex = ripples.getTexture();
-  const waterMat = new THREE.MeshStandardNodeMaterial({ roughness: 0.075, metalness: 0, transparent: true });
+  const waterMat = new THREE.MeshStandardNodeMaterial({ roughness: 0.06, metalness: 0, transparent: true });
+  // Odbicia w wodzie: osobna mapa otoczenia z nieba (ten sam gradient co tło i ciepła poświata wokół słońca).
+  // Wspólna mapa sceny (pokój z lampami) dawała na falach białe prostokątne pasy, których na morzu nie ma.
+  const wsTop = uniform(new THREE.Color('#DCE6EF')), wsBottom = uniform(new THREE.Color('#F4F1EB'));
+  const wsSun = uniform(new THREE.Vector3(0.4, 0.8, 0.3)), wsSunCol = uniform(new THREE.Color('#FFF4E2'));
+  const wsMat = new THREE.MeshBasicNodeMaterial({ side: THREE.BackSide, depthWrite: false });
+  wsMat.colorNode = Fn(() => {
+    const d = normalize(positionLocal);
+    const base = mix(wsBottom, wsTop, d.y.mul(1.6).add(0.08).clamp(0, 1).pow(0.8));
+    const glow = pow(max(dot(d, wsSun), 0), 10).mul(0.35).add(pow(max(dot(d, wsSun), 0), 90).mul(1.2));
+    return base.add(wsSunCol.mul(glow));
+  })();
+  const wsScene = new THREE.Scene();
+  wsScene.add(new THREE.Mesh(new THREE.SphereGeometry(5, 48, 24), wsMat));
+  let wsTarget = null;
+  updateWaterSky = (top, bottom, sunPos, sunColor) => {
+    wsTop.value.copy(top); wsBottom.value.copy(bottom);
+    wsSun.value.copy(sunPos).normalize(); wsSunCol.value.copy(sunColor);
+    const next = pmrem.fromScene(wsScene, 0, 0.1, 20);
+    waterMat.envMap = next.texture;
+    waterMat.needsUpdate = true;
+    wsTarget?.dispose();
+    wsTarget = next;
+  };
+  updateWaterSky(wsTop.value, wsBottom.value, wsSun.value, wsSunCol.value);
   const waveH = varyingProperty('float', 'vWaveH'), waveN = varyingProperty('vec3', 'vWaveN');
   // fale Gerstnera i zmarszczki z symulacji liczone na karcie graficznej: przesunięcie powierzchni i nowa normalna
   waterMat.positionNode = Fn(() => {
@@ -2087,14 +2130,13 @@ function motorboat(stripe = '#F2B72E') {
   const ripH = texture(ripTex, ripUV).r;
   const gx = texture(ripTex, ripUV.add(vec2(rdx, 0))).r.sub(texture(ripTex, ripUV.sub(vec2(rdx, 0))).r).div(2 * ripples.dx);
   const gz = texture(ripTex, ripUV.add(vec2(0, rdz))).r.sub(texture(ripTex, ripUV.sub(vec2(0, rdz))).r).div(2 * ripples.dz);
-  let csx = float(0), csz = float(0);
-  const near = smoothstep(45, 14, positionWorld.distance(cameraPosition));   // z daleka bez drobnych zmarszczek (nie migoczą)
-  for (const [dx, dz, L, a] of [[0.8, 0.6, 0.95, 0.011], [-0.3, 1, 0.62, 0.008]]) {
-    const k = 2 * Math.PI / L, f = positionWorld.x.mul(dx).add(positionWorld.z.mul(dz)).mul(k).sub(waterU.uTime.mul(Math.sqrt(9.8 * k) * 0.6));
-    const c = cos(f).mul(near.mul(a * k));
-    csx = csx.add(c.mul(dx)); csz = csz.add(c.mul(dz));
-  }
-  const nW = normalize(waveN.add(vec3(gx.add(csx).negate(), 0, gz.add(csz).negate())));
+  // drobne zmarszczki od wiatru: dwie warstwy szumu płynące z wiatrem (bez regularnych pasów); z daleka słabną, żeby nie migotały
+  const near = smoothstep(55, 12, positionWorld.distance(cameraPosition));
+  const wp2 = positionWorld.xz, tt = waterU.uTime;
+  const ch1 = mx_noise_vec3(vec3(wp2.x.mul(0.85).sub(tt.mul(0.32)), wp2.y.mul(0.85).sub(tt.mul(0.11)), tt.mul(0.22))).xy;
+  const ch2 = mx_noise_vec3(vec3(wp2.x.mul(2.4).add(tt.mul(0.2)), wp2.y.mul(2.4).sub(tt.mul(0.45)), tt.mul(0.5))).xy;
+  const chop = ch1.mul(0.075).add(ch2.mul(0.04)).mul(near);
+  const nW = normalize(waveN.add(vec3(gx.add(chop.x).negate(), 0, gz.add(chop.y).negate())));
   waterMat.normalNode = transformNormalToView(vec3(nW.x, nW.z.negate(), nW.y));
   // grubość wody pod punktem: poziom wody minus dno (ten sam profil co seabedY: suma odcinków)
   let bed = float(SEABED[0][1]);
@@ -2104,17 +2146,26 @@ function motorboat(stripe = '#F2B72E') {
   }
   const depth = max(float(WATER_Y).sub(bed), 0);
   const cosV = max(abs(normalize(cameraPosition.sub(positionWorld)).y), 0.2);
-  const T = exp(vec3(0.42, 0.11, 0.075).mul(depth.div(cosV)).negate());   // Beer–Lambert: ile światła przechodzi
+  const depthN = depth.mul(mx_noise_float(vec3(positionWorld.x.mul(0.11), positionWorld.z.mul(0.16), 3.7)).mul(0.35).add(1));   // nierówne dno: granica płycizny nie jest prostą linią
+  const T = exp(vec3(0.42, 0.11, 0.075).mul(depthN.div(cosV)).negate());   // Beer–Lambert: ile światła przechodzi
   const refr = screenUV.add(vec2(nW.x, nW.z.negate()).mul(0.045).mul(smoothstep(0, 1.4, depth)));
   waterMat.backdropNode = viewportSharedTexture(refr).rgb.mul(T).add(vec3(0.02, 0.27, 0.38).mul(waterLight).mul(T.oneMinus()));
   waterMat.backdropAlphaNode = float(1);
-  // po oświetleniu: odbicie nieba pod małym kątem i piana: na najwyższych grzbietach (poszarpana szumem)
-  // i tam, gdzie łodzie i ryby mocno wzburzyły wodę
-  const fres = pow(clamp(dot(normalView, positionViewDirection), 0, 1).oneMinus(), 5);
-  const breakup = smoothstep(-0.15, 0.55, mx_noise_float(vec3(positionWorld.x.mul(1.6), positionWorld.z.mul(1.6), waterU.uTime.mul(0.25))));
+  // Odbicie nieba liczy materiał (Fresnel, mapa otoczenia wyżej). Po oświetleniu dochodzą:
+  // piana: rzadko na najwyższych grzbietach, za łodziami (strome zmarszczki) i przy brzegu, zawsze poszarpana szumem;
+  // prześwit: grzbiet fali pod słońce świeci turkusem, bo światło przechodzi przez cienką wodę
+  const lace = mx_noise_float(vec3(positionWorld.x.mul(1.9), positionWorld.z.mul(1.9), tt.mul(0.3)))
+    .add(mx_noise_float(vec3(positionWorld.x.mul(5.2), positionWorld.z.mul(5.2), tt.mul(0.6))).mul(0.5));
   const ripSlope = vec2(gx, gz).length();
-  const foamAmt = smoothstep(WAVE_MAX * 0.6, WAVE_MAX * 0.9, waveH).mul(0.6).add(smoothstep(0.22, 0.55, ripSlope).mul(0.8)).mul(breakup);
-  waterMat.outputNode = vec4(mix(output.rgb, waterU.uSky, fres.mul(0.65)).add(clamp(foamAmt, 0, 1).mul(0.55)), 1);
+  const swash = sin(tt.mul(0.9).add(positionWorld.x.mul(0.21))).mul(0.5).add(0.5);   // przypływ i odpływ fali na plaży
+  const crestFoam = smoothstep(WAVE_MAX * 0.78, WAVE_MAX * 0.97, waveH).mul(smoothstep(0.15, 0.6, lace));
+  const wakeFoam = smoothstep(0.2, 0.5, ripSlope).mul(smoothstep(-0.1, 0.4, lace));
+  const shoreFoam = smoothstep(mix(0.14, 0.32, swash), 0.02, depth).mul(smoothstep(-0.25, 0.35, lace));
+  const foamAmt = clamp(crestFoam.mul(0.5).add(wakeFoam.mul(0.75)).add(shoreFoam.mul(0.85)), 0, 1);
+  const toCam = normalize(positionWorld.sub(cameraPosition));
+  const sss = smoothstep(WAVE_MAX * 0.2, WAVE_MAX, waveH).mul(pow(max(dot(toCam, waterU.uSunDir), 0), 4))
+    .mul(waterLight).mul(0.22);
+  waterMat.outputNode = vec4(output.rgb.add(vec3(0.06, 0.52, 0.48).mul(sss)).add(foamAmt.mul(0.62)), 1);
   const water = new THREE.Mesh(new THREE.PlaneGeometry(BX * 2, WD, 260, 100), waterMat);
   water.rotation.x = -Math.PI / 2;
   water.position.set(0, WATER_Y, WZ0 + WD / 2);
@@ -2122,34 +2173,9 @@ function motorboat(stripe = '#F2B72E') {
   world.add(water);
   worldAnim.push((t, dt) => {
     waterU.uTime.value = t;
-    waterU.uSky.value.copy(skyU.bottom.value).lerp(skyU.top.value, 0.35);
+    waterU.uSunDir.value.copy(sun.position).normalize();
     ripples.step(dt);
     ripples.upload();
-  });
-  // piana na linii brzegu: biała, poszarpana, lekko przypływa i odpływa
-  const [fc2, fg2] = makeCanvas(512, 64);
-  {
-    const r = texRng(9);
-    fg2.fillStyle = '#000'; fg2.fillRect(0, 0, 512, 64);
-    for (let k = 0; k < 900; k++) {
-      const x = r() * 512, y = 6 + Math.pow(r(), 1.6) * 52, rad = 2 + r() * 7 * (1 - y / 64);
-      fg2.fillStyle = `rgba(255,255,255,${0.35 + 0.5 * r()})`;
-      fg2.beginPath(); fg2.ellipse(x, y, rad * 2.2, rad, 0, 0, Math.PI * 2); fg2.fill();
-      if (x < 20) { fg2.beginPath(); fg2.ellipse(x + 512, y, rad * 2.2, rad, 0, 0, Math.PI * 2); fg2.fill(); }
-      if (x > 492) { fg2.beginPath(); fg2.ellipse(x - 512, y, rad * 2.2, rad, 0, 0, Math.PI * 2); fg2.fill(); }
-    }
-  }
-  const foamTex = new THREE.CanvasTexture(fc2); foamTex.wrapS = THREE.RepeatWrapping; foamTex.repeat.set(BX * 2 / 9, 1);
-  const foamMat = new THREE.MeshBasicMaterial({ color: '#FFFFFF', alphaMap: foamTex, transparent: true, opacity: 0.85, depthWrite: false });
-  const foam = new THREE.Mesh(new THREE.PlaneGeometry(BX * 2 - 0.1, 1.1), foamMat);
-  foam.rotation.x = -Math.PI / 2;
-  foam.renderOrder = 4;
-  world.add(foam);
-  worldAnim.push(t => {
-    const w = Math.sin(t * 0.9);
-    foam.position.set(0, WATER_Y + 0.05, SHORE_Z + 1.05 + 0.18 * w);
-    foamTex.offset.x = t * 0.004;
-    foamMat.opacity = 0.62 + 0.25 * (0.5 + 0.5 * w);
   });
   // przekrój wody: z przodu i po bokach, jaśniejszy przy powierzchni, ciemniejszy w głębi
   const sideWaterMat = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, fog: false });
@@ -2525,6 +2551,8 @@ function motorboat(stripe = '#F2B72E') {
   // Żaglówki i motorówka: płyną wzdłuż plaży i zawracają, kołyszą się na fali; za nimi zostaje prawdziwy klin fal
   // z symulacji zmarszczek (piana pojawia się tam, gdzie fale są najbardziej strome)
   const along = (obj, z, speed, x0, x1, ph, tilt = 0.8) => {
+    const fenders = obj.getObjectByName('sailboat_fender');   // odbijacze wiszą tylko przy pomoście, w rejsie są schowane
+    if (fenders) fenders.visible = false;
     world.add(obj);
     worldAnim.push(t => {
       const u = ((t * speed + ph) % 2 + 2) % 2, back = u > 1, k = back ? 2 - u : u;
@@ -2767,6 +2795,7 @@ function applyLights() {
   sun.color.set(m.sun[0]); sun.intensity = m.sun[1]; sun.position.set(...m.sun[2]);
   hemi.color.set(m.hemi[0]); hemi.groundColor.set(m.hemi[1]); hemi.intensity = m.hemi[2];
   scene.environmentIntensity = m.env;
+  updateWaterSky(skyU.top.value, skyU.bottom.value, sun.position, sun.color);
 }
 setWorldMood('dzien');
 function worldTick(t, dt) {
@@ -4024,6 +4053,7 @@ function openMenu() {
 }
 function closeMenu(message) {
   menuOpen = false;
+  preview.sleep();   // podgląd pionków nie jest potrzebny w grze
   closeDropdown();
   clearInterval(exampleTimer);
   document.body.classList.remove('menu-open');
