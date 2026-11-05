@@ -528,7 +528,8 @@ Do każdej pory dnia jest delikatna korekcja kolorów (tablica LUT liczona w kod
   - Temat: „Projekt i implementacja edukacyjnej gry planszowej 3D w przeglądarce internetowej z trybem wieloosobowym online”.
   - Promotor: dr n. t. Monika Marecka, prof. WSIZ. Opiekun: mgr Paweł Łaba. Specjalność: Systemy Informatyczne, specjalizacja: Programowanie gier i witryn.
   - Tezy: (1) WebGPU z zapasowym WebGL 2 i Three.js pozwalają zbudować grę 3D wysokiej jakości, która działa płynnie bez instalacji; (2) połączenie gry ekonomicznej z pytaniami z przedmiotów (grywalizacja) sprzyja zaangażowaniu w powtarzanie materiału; (3) logika gry oddzielona od grafiki i rozgrywka online prowadzona na serwerze dają spójny stan gry, powrót po zerwaniu połączenia i łatwe testy reguł.
-  - Do uzupełnienia z promotorką: drugie kody efektów kształcenia (K_W, K_U), prace dyplomowe WSIZ w bibliografii, nazwy przedmiotów z planu studiów. Asystenta AI autor na razie nie wpisuje do karty.
+  - Punkt 8 „Efekty uczenia się” (5.11.2026, od autora, z programu studiów): wiedza K_W22 i K_W21, umiejętności K_U24 i K_U07, kompetencje społeczne K_K06 i K_K05.
+  - Do uzupełnienia z promotorką: prace dyplomowe WSIZ w bibliografii, nazwy przedmiotów z planu studiów. Asystenta AI autor na razie nie wpisuje do karty.
 - Wybór kart ułatwień i utrudnień.
 - Czy monopol chroni przed kartami ataku.
 - Wybór jednego z 2 wyglądów środka planszy (Pieczęć albo Wzór z logo).
