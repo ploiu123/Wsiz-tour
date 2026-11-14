@@ -525,7 +525,7 @@ Do każdej pory dnia jest delikatna korekcja kolorów (tablica LUT liczona w kod
 - Długości gry z limitem czasu: ustalone 17.10.2026 (15 min, 30 min, 1 h, 90 min, bez limitu).
 - Dźwięk kostek: na razie generowany w kodzie. Można podmienić na własne nagranie albo dźwięk CC0.
 - Karta tematu pracy inżynierskiej: wypełniona 27.10.2026 (plik Word i PDF u autora, poza repozytorium, bo są w nim dane osobowe).
-  - Temat: „Projekt i implementacja edukacyjnej gry planszowej 3D w przeglądarce internetowej z trybem wieloosobowym online”.
+  - Temat: „Projekt i implementacja edukacyjnej gry planszowej 3D w przeglądarce internetowej z trybem wieloosobowym online oraz jej wersji fizycznej” (wersja fizyczna dopisana 14.11.2026).
   - Promotor: dr n. t. Monika Marecka, prof. WSIZ. Opiekun: mgr Paweł Łaba. Specjalność: Systemy Informatyczne, specjalizacja: Programowanie gier i witryn.
   - Tezy: (1) WebGPU z zapasowym WebGL 2 i Three.js pozwalają zbudować grę 3D wysokiej jakości, która działa płynnie bez instalacji; (2) połączenie gry ekonomicznej z pytaniami z przedmiotów (grywalizacja) sprzyja zaangażowaniu w powtarzanie materiału; (3) logika gry oddzielona od grafiki i rozgrywka online prowadzona na serwerze dają spójny stan gry, powrót po zerwaniu połączenia i łatwe testy reguł.
   - Punkt 8 „Efekty uczenia się” (5.11.2026, od autora, z programu studiów): wiedza K_W22 i K_W21, umiejętności K_U24 i K_U07, kompetencje społeczne K_K06 i K_K05.
