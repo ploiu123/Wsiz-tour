@@ -70,7 +70,7 @@ Po końcu gry silnik przerywa turę wyjątkiem `STOP`. Symulacja wielu gier bot�
 ## Później
 
 - **Grafika planszy:** dopracowany styl animowany z liniami rysunkowymi (kontury jak w kreskówce). Teraz wygląda jak gra sprzed kilkunastu lat.
-- Karta tematu pracy inżynierskiej: wypełniona 27.10.2026, opis w `docs/zalozenia.md`. Efekty uczenia się od autora wpisane 5.11.2026 (K_W22, K_W21, K_U24, K_U07, K_K06, K_K05). Zostało: prace dyplomowe WSIZ w bibliografii, nazwy przedmiotów z planu studiów.
+- Karta tematu pracy inżynierskiej: wypełniona 27.10.2026, opis w `docs/zalozenia.md`. Efekty uczenia się od autora wpisane 5.11.2026 (K_W22, K_W21, K_U24, K_U07, K_K06, K_K05). 14.11.2026: w dziele (punkt 3) mechanika gry bez designu i wersja fizyczna gry (plansza, figurki pionków i budynków do druku 3D, karty, akty, banknoty, kości, instrukcja, pudełko); w punkcie 6 samo miejsce wdrożenia. Zostało: prace dyplomowe WSIZ w bibliografii, nazwy przedmiotów z planu studiów.
 - Pluginy i skille do Claude, które znalazłem.
 
 ---
