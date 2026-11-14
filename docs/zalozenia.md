@@ -531,7 +531,8 @@ Do każdej pory dnia jest delikatna korekcja kolorów (tablica LUT liczona w kod
   - Punkt 8 „Efekty uczenia się” (5.11.2026, od autora, z programu studiów): wiedza K_W22 i K_W21, umiejętności K_U24 i K_U07, kompetencje społeczne K_K06 i K_K05.
   - Punkt 3 „Dzieło informatyczne” (14.11.2026, decyzja autora): mechanika gry i wszystko, co autor zrobił, bez designu: mechanika, silnik gry z botami, tryb online, baza pytań, funkcje dla graczy, testy i wdrożenie. Do tego **wersja fizyczna gry**: plansza z 32 polami, 8 figurek pionków i figurki budynków na pięciu poziomach (modele do druku 3D), karty z pytaniami (format kart do pokera, klucz odpowiedzi na odwrocie), karty ułatwień i utrudnień, karty „Wyjście z dziekanatu”, akty własności 23 pól, banknoty, znaczniki właściciela, dwie kości, instrukcja z zasadami i pudełko.
   - Punkt 6 „Miejsce wdrożenia”: tylko miejsce, czyli Wyższa Szkoła Informatyki i Zarządzania w Bielsku-Białej (serwer uczelni). Bez wzmianki o dziale IT.
-  - Do uzupełnienia z promotorką: prace dyplomowe WSIZ w bibliografii, nazwy przedmiotów z planu studiów. Asystenta AI autor na razie nie wpisuje do karty.
+  - Bibliografia, punkt 1 „Prace PD i ZPI WSIZ” (14.11.2026): pięć prac dyplomowych WSIZ z lat 2023–2026, wybranych z listy dyplomów od autora (przejrzane prace od 2019 roku): gra edukacyjna, dwie gry planszowe z wersją fizyczną (grafika, projekt 3D i druk), mechanika gry 3D i strona internetowa z grafiką 3D. Lista dyplomów zostaje u autora, poza repozytorium. Projektów ZPI na tej liście nie ma.
+  - Do uzupełnienia z promotorką: nazwy przedmiotów z planu studiów. Asystenta AI autor na razie nie wpisuje do karty.
 - Wybór kart ułatwień i utrudnień.
 - Czy monopol chroni przed kartami ataku.
 - Wybór jednego z 2 wyglądów środka planszy (Pieczęć albo Wzór z logo).
