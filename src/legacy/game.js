@@ -9,6 +9,7 @@ import { loadDicePhysics, diceReady, simulateThrow, FACE_AXES } from '../render/
 import { loadModels, cloneModel } from '../render/assets.js';
 import { PawnPreview } from '../render/preview.js';
 import { RippleSim } from '../scene/ripples.js';
+import { createDucks } from '../scene/ducks.js';
 import { ACHIEVEMENTS, unlock } from '../ui/achievements.js';
 import { wealthChartSvg } from '../ui/wealthChart.js';
 import { pickMoments, rentScore, poolScore } from '../ui/moments.js';
@@ -2581,6 +2582,15 @@ function motorboat(stripe = '#F2B72E') {
     world.add(b);
     worldAnim.push(t => floatOn(b, x, SHORE_Z + 5.5, 0, t, -0.05, 1.5));
   });
+  // Kaczki krzyżówki (src/scene/ducks.js): mama z kaczątkami płynie gęsiego między plażą a bojami,
+  // a para krzyżówek dalej w prawo co jakiś czas żeruje (głowa pod wodę, kuper do góry)
+  const ducks = createDucks({
+    waterY: WATER_Y, waveAt, ripples,
+    family: { x0: -11, x1: 5, zc: SHORE_Z + 3.15, r: 1.25 },
+    pair: { x0: 13.5, x1: 23, zc: SHORE_Z + 3.2, r: 1.15 },
+  });
+  world.add(ducks.group);
+  worldAnim.push(t => ducks.update(t));
 
   // Mewy krążą nad wodą: machają skrzydłami (ramię i dłoń osobno), a co jakiś czas szybują
   const gullWhite = mat('#FFFFFF', { roughness: 0.55 }), gullGrey = mat('#B7C1CD', { roughness: 0.6, side: THREE.DoubleSide });
