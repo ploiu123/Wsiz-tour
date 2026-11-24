@@ -1,0 +1,66 @@
+# Wdrożenie na serwer: po zielonych testach zmiany wysłanej na gałąź main gra (i serwer gry do trybu online)
+# trafia na serwer przez SSH, a serwer gry uruchamia się od nowa. Można je też uruchomić ręcznie:
+# Actions → Wdrożenie → Run workflow. Instrukcja krok po kroku: docs/github-wdrozenie.md.
+# Dopóki w ustawieniach repozytorium nie ma zmiennej DEPLOY_HOST, wdrożenie jest pomijane (testy działają jak dotąd).
+name: Wdrożenie
+on:
+  workflow_run:
+    workflows: [Testy]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: wdrozenie
+  cancel-in-progress: false
+jobs:
+  deploy:
+    # tylko kod z tego repozytorium wysłany na main (nigdy pull request) po udanych testach albo ręcznie z main
+    if: >-
+      vars.DEPLOY_HOST != '' && (
+        (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
+          && github.event.workflow_run.event == 'push'
+          && github.event.workflow_run.head_repository.full_name == github.repository)
+        || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Sprawdzenie kodu i paczka gry
+        run: npm run check
+        env:
+          VITE_SERVER_URL: ${{ vars.VITE_SERVER_URL }}
+      - name: Klucz SSH i odcisk serwera
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          [ -n "$DEPLOY_SSH_KEY" ] || { echo "::error::Brak sekretu DEPLOY_SSH_KEY (klucz prywatny SSH do wdrożeń)"; exit 1; }
+          [ -n "$DEPLOY_KNOWN_HOSTS" ] || { echo "::error::Brak zmiennej DEPLOY_KNOWN_HOSTS (odcisk serwera z ssh-keyscan)"; exit 1; }
+          install -m 600 /dev/null "$RUNNER_TEMP/wsiz_tour_key"
+          printf '%s\n' "$DEPLOY_SSH_KEY" > "$RUNNER_TEMP/wsiz_tour_key"
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$RUNNER_TEMP/wsiz_tour_known_hosts"
+      - name: Wysłanie gry na serwer
+        env:
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+          DEPLOY_PORT: ${{ vars.DEPLOY_PORT }}
+          DEPLOY_MODE: ${{ vars.DEPLOY_MODE }}
+          DEPLOY_RESTART: ${{ vars.DEPLOY_RESTART }}
+          DEPLOY_URL: ${{ vars.DEPLOY_URL }}
+          DEPLOY_KEY_FILE: ${{ runner.temp }}/wsiz_tour_key
+          DEPLOY_KNOWN_HOSTS_FILE: ${{ runner.temp }}/wsiz_tour_known_hosts
+        run: bash scripts/wdrozenie.sh
+      - name: Usunięcie klucza z maszyny GitHuba
+        if: always()
+        run: rm -f "$RUNNER_TEMP/wsiz_tour_key"
